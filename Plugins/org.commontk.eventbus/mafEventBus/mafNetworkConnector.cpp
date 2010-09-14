@@ -1,0 +1,20 @@
+/*
+ *  mafNetworkConnector.cpp
+ *  mafEventBus
+ *
+ *  Created by Daniele Giunchi on 11/04/10.
+ *  Copyright 2009 B3C. All rights reserved.
+ *
+ *  See Licence at: http://tiny.cc/QXJ4D
+ *
+ */
+
+#include "mafNetworkConnector.h"
+
+using namespace mafEventBus;
+using namespace mafCore;
+
+mafNetworkConnector::mafNetworkConnector(const mafString code_location) : mafObjectBase(code_location) {
+
+}
+
