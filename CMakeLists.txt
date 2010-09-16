@@ -306,6 +306,7 @@ SET(CTK_APPLICATIONS
   ctkDICOMDemoSCU:OFF
   ctkDICOMQuery:OFF
   ctkDICOMRetrieve:OFF
+  ctkEventBusDemo:OFF
   ctkExampleHost:OFF
   ctkPluginBrowser:OFF
   ctkPluginGenerator:OFF
