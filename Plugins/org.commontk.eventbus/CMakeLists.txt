@@ -2,11 +2,6 @@ PROJECT(org_commontk_eventbus)
 
 SET(PLUGIN_export_directive "org_commontk_eventbus_EXPORT")
 
-FILE(GLOB include_mafCore_file_list "${PROJECT_SOURCE_DIR}/mafCore/*.h")
-FILE(GLOB implementation_mafCore_file_list "${PROJECT_SOURCE_DIR}/mafCore/*.cpp")
-FILE(GLOB templete_mafCore_file_list1 "${PROJECT_SOURCE_DIR}/mafCore/*.txx")
-FILE(GLOB templete_mafCore_file_list2 "${PROJECT_SOURCE_DIR}/mafCore/*.tpp")
-
 FILE(GLOB include_mafEventBus_file_list "${PROJECT_SOURCE_DIR}/mafEventBus/*.h")
 FILE(GLOB implementation_mafEventBus_file_list "${PROJECT_SOURCE_DIR}/mafEventBus/*.cpp")
 FILE(GLOB templete_mafEventBus_file_list1 "${PROJECT_SOURCE_DIR}/mafEventBus/*.txx")
@@ -24,7 +19,7 @@ SET(PLUGIN_export_directive "org_commontk_dicom_wg23_core_EXPORT")
 
 # Additional directories to include
 SET(PLUGIN_include_directories
-    mafCore
+    
 )
 
 
@@ -32,9 +27,6 @@ SET(PLUGIN_SRCS
   ctkEventBusImpl.cpp
   ctkEventBusPlugin.cpp
   
-  ${implementation_mafCore_file_list}
-  ${templete_mafCore_file_list1}
-  ${templete_mafCore_file_list2}
   ${implementation_mafEventBus_file_list}
   ${templete_mafEventBus_file_list1}
   ${templete_mafEventBus_file_list2}
@@ -45,7 +37,6 @@ SET(PLUGIN_MOC_SRCS
   ctkEventBusPlugin_p.h
   ctkEventHandlerWrapper_p.h
   
-  ${include_mafCore_file_list}
   ${include_mafEventBus_file_list}
 )
 
