@@ -13,7 +13,6 @@
 #define MAFEVENTDISPATCHER_H
 
 #include "mafEventDefinitions.h"
-#include <mafIdProvider.h>
 
 namespace mafEventBus {
 
@@ -21,14 +20,12 @@ namespace mafEventBus {
  Class name: mafEventDispatcher
  This allows dispatching events coming from local application to attached observers.
  */
-class MAFEVENTBUSSHARED_EXPORT mafEventDispatcher : public mafCore::mafObjectBase {
+class MAFEVENTBUSSHARED_EXPORT mafEventDispatcher : public QObject {
     Q_OBJECT
-    /// typedef macro.
-    mafSuperclassMacro(mafCore::mafObjectBase);
 
 public:
     /// object constructor.
-    mafEventDispatcher(const mafString code_location = "");
+    mafEventDispatcher();
 
     /// object destructor.
     /*virtual*/ ~mafEventDispatcher();
@@ -51,10 +48,10 @@ public:
     bool removeSignal(const mafEvent &props);
 
     /// method used to check if the given signal has been already registered for the given id.
-    bool isSignalPresent(const mafCore::mafId id) const;
+    bool isSignalPresent(const mafString topic) const;
 
     /// method used to check if the given signal has been already registered for the given id.
-    bool isSignalPresent(const mafString &id_name) const;
+    //bool isSignalPresent(const mafString &id_name) const;
 
     /// Emit event corresponding to the given id (present into the event_dictionary) locally to the application.
     virtual void notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
@@ -77,7 +74,11 @@ protected:
     bool removeEventItem(const mafEvent &props);
 
     /// Return the signal item property associated to the given ID.
-    mafEventItemListType signalItemProperty(const mafCore::mafId id) const;
+    mafEventItemListType signalItemProperty(const mafString topic) const;
+
+    /// filter event using the class passed inside the properties of the event. If returning true
+    /// the event can be dispatched else it is rejected.
+    bool filterEvent(const mafEvent &event_dictionary) const;
 
 private:
     /// method used to check if the given object has been already registered for the given id and signature.
@@ -98,17 +99,12 @@ private:
 // Inline methods
 /////////////////////////////////////////////////////////////
 
-inline mafEventItemListType mafEventDispatcher::signalItemProperty(const mafCore::mafId id) const {
-    return m_SignalsHash.values(id);
+inline mafEventItemListType mafEventDispatcher::signalItemProperty(const mafString topic) const {
+    return m_SignalsHash.values(topic);
 }
 
-inline bool mafEventDispatcher::isSignalPresent(const mafCore::mafId id) const {
-    return m_SignalsHash.contains(id);
-}
-
-inline bool mafEventDispatcher::isSignalPresent(const mafString &id_name) const {
-    mafCore::mafId id = mafCore::mafIdProvider::instance()->idValue(id_name);
-    return m_SignalsHash.contains(id);
+inline bool mafEventDispatcher::isSignalPresent(const mafString topic) const {
+    return m_SignalsHash.contains(topic);
 }
 
 } // namespace mafEventBus

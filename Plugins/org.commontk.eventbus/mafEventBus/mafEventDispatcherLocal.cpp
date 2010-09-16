@@ -12,12 +12,11 @@
 #include "mafEventDispatcherLocal.h"
 #include "mafEvent.h"
 
-#include <mafIdProvider.h>
+//#include <mafIdProvider.h>
 
 using namespace mafEventBus;
-using namespace mafCore;
 
-mafEventDispatcherLocal::mafEventDispatcherLocal(const mafString code_location) : mafEventDispatcher(code_location) {
+mafEventDispatcherLocal::mafEventDispatcherLocal() : mafEventDispatcher() {
     this->initializeGlobalEvents();
 }
 
@@ -26,28 +25,31 @@ mafEventDispatcherLocal::~mafEventDispatcherLocal() {
 }
 
 void mafEventDispatcherLocal::initializeGlobalEvents() {
-    mafId id = mafIdProvider::instance()->idValue("GLOBAL_UPDATE_EVENT");
-    mafEvent *properties = mafNEW(mafEventBus::mafEvent);
-    (*properties)["EventId"] =  (int) id;
-    (*properties)["EventType"] = mafEventTypeLocal;
-    (*properties)["SignatureType"] = mafSignatureTypeSignal;
+    mafEvent *properties = new mafEvent();
+    mafString topic = "local.app.GLOBAL_UPDATE_EVENT";
+    (*properties)[TOPIC] =  topic;
+    (*properties)[TYPE] = mafEventTypeLocal;
+    (*properties)[SIGTYPE] = mafSignatureTypeSignal;
     mafVariant var;
     var.setValue((QObject*)this);
-    (*properties)["ObjectPointer"] = var;
-    (*properties)["Signature"] = "notifyDefaultEvent()";
+    (*properties)[OBJECT] = var;
+    (*properties)[SIGNATURE] = "notifyDefaultEvent()";
     registerSignal(*properties);
 
-    Superclass::initializeGlobalEvents();
+    mafEventDispatcher::initializeGlobalEvents();
 }
 
 void mafEventDispatcherLocal::notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
-    mafId id = (int)event_dictionary["EventId"].toInt();
-    mafEventItemListType items = signalItemProperty(id);
+    if(!filterEvent(event_dictionary)) {
+        return;
+    }
+    mafString topic = event_dictionary[TOPIC].toString();
+    mafEventItemListType items = signalItemProperty(topic);
     mafEvent *itemEventProp;
     foreach(itemEventProp, items) {
-        if((*itemEventProp)["Signature"].toString().length() != 0) {
-            mafString signal_to_emit = (*itemEventProp)["Signature"].toString().split("(")[0];
-            QObject *obj = (*itemEventProp)["ObjectPointer"].value<QObject *>();
+        if((*itemEventProp)[SIGNATURE].toString().length() != 0) {
+            mafString signal_to_emit = (*itemEventProp)[SIGNATURE].toString().split("(")[0];
+            QObject *obj = (*itemEventProp)[OBJECT].value<QObject *>();
             if(argList != NULL) {
                 if (returnArg == NULL || returnArg->data() == NULL) { //don't use return value
                     switch (argList->count()) {

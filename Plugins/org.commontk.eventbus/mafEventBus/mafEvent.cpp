@@ -11,19 +11,25 @@
 
 #include "mafEvent.h"
 
-using namespace mafCore;
 using namespace mafEventBus;
 
-mafEvent::mafEvent(const mafString code_location) : mafDictionary(code_location) {
+mafEvent::mafEvent() {
+    m_EventHash = new mafEventHash();
 }
 
 /// Overload object constructor.
-mafEvent::mafEvent(mafCore::mafId id, mafEventType event_type, mafSignatureType signature_type, QObject *objectPointer, mafString signature, const mafString code_location) : mafDictionary(code_location) {
-    entries()->insert("EventId", (int) id);
-    entries()->insert("EventType", event_type);
-    entries()->insert("SignatureType", signature_type);
+mafEvent::mafEvent(mafString topic, mafEventType event_type, mafSignatureType signature_type, QObject *objectPointer, mafString signature) {
+    m_EventHash = new mafEventHash();
+    entries()->insert(TOPIC, topic);
+    entries()->insert(TYPE, static_cast<int>(event_type));
+    entries()->insert(SIGTYPE, static_cast<int>(signature_type));
     mafVariant var;
     var.setValue(objectPointer);
-    entries()->insert("ObjectPointer", var);
-    entries()->insert("Signature", signature);
+    entries()->insert(OBJECT, var);
+    entries()->insert(SIGNATURE, signature);
+}
+
+mafEvent::~mafEvent() {
+    m_EventHash->clear();
+    delete m_EventHash;
 }

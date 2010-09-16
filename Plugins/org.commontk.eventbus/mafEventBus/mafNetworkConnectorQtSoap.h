@@ -27,12 +27,10 @@ namespace mafEventBus {
  */
 class MAFEVENTBUSSHARED_EXPORT mafNetworkConnectorQtSoap : public mafNetworkConnector {
     Q_OBJECT
-    /// typedef macro.
-    mafSuperclassMacro(mafEventBus::mafNetworkConnector);
 
 public:
     /// object constructor.
-    mafNetworkConnectorQtSoap(const mafString code_location = "");
+    mafNetworkConnectorQtSoap();
 
     /// object destructor.
     /*virtual*/ ~mafNetworkConnectorQtSoap();
@@ -67,6 +65,9 @@ public:
 
     /// return the response retrieved from the service
     mafSoapType *response();
+
+    //retrieve an instance of the object
+    virtual mafNetworkConnector *clone();
 
 signals:
     /// signal for the registration of the functions with parameters

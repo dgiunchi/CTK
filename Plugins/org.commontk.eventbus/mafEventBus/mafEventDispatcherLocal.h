@@ -23,12 +23,10 @@ namespace mafEventBus {
  */
 class MAFEVENTBUSSHARED_EXPORT mafEventDispatcherLocal : public mafEventDispatcher {
     Q_OBJECT
-    /// typedef macro.
-    mafSuperclassMacro(mafEventBus::mafEventDispatcher);
 
 public:
     /// object constructor.
-    mafEventDispatcherLocal(const mafString code_location = "");
+    mafEventDispatcherLocal();
 
     /// object destructor.
     /*virtual*/ ~mafEventDispatcherLocal();

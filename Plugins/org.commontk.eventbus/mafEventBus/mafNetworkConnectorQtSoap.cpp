@@ -12,25 +12,20 @@
 #include "mafNetworkConnectorQtSoap.h"
 #include "mafEventBusManager.h"
 
-#include <mafObjectFactory.h>
-#include <mafIdProvider.h>
 #include "mafEvent.h"
 
 using namespace mafEventBus;
-using namespace mafCore;
 
-mafNetworkConnectorQtSoap::mafNetworkConnectorQtSoap(const mafString code_location) : mafNetworkConnector(code_location), m_Http(NULL), m_WSDLUrl(""),m_Response(NULL) {
-    //generate remote signal, this signal must map in the
-    //possible connection with the remote server.
-    //Server, in this case SOAP, will register a method with id REMOTE_COMMUNICATION
-    //and parameters mafList<mafVariant>
-
-    //mafId id = mafIdProvider::instance()->createNewId("REMOTE_COMMUNICATION_SOAP");
-    //mafRegisterRemoteSignal(id, NULL, "remoteCommunication()");
+mafNetworkConnectorQtSoap::mafNetworkConnectorQtSoap() : mafNetworkConnector(), m_Http(NULL), m_WSDLUrl(""),m_Response(NULL) {
 }
 
 mafNetworkConnectorQtSoap::~mafNetworkConnectorQtSoap() {
-    mafDEL(m_Http);
+    if(m_Http) delete m_Http;
+}
+
+//retrieve an instance of the object
+mafNetworkConnector *mafNetworkConnectorQtSoap::clone() {
+    return new mafNetworkConnectorQtSoap();
 }
 
 void mafNetworkConnectorQtSoap::registerServerMethod(mafString methodName, mafList<mafVariant::Type> types) {
@@ -203,13 +198,13 @@ mafSoapType *mafNetworkConnectorQtSoap::marshall(const mafString name, const maf
         }
     }
 
-    ENSURE(returnValue != NULL);
+    //ENSURE(returnValue != NULL);
     return returnValue;
 }
 
 void mafNetworkConnectorQtSoap::send(const mafString &methodName, mafList<mafVariant> *params) {
-    REQUIRE(!params->at(0).isNull());
-    REQUIRE(params->at(0).canConvert(mafVariant::Hash) == true);
+    //REQUIRE(!params->at(0).isNull());
+    //REQUIRE(params->at(0).canConvert(mafVariant::Hash) == true);
 
     m_Request.clear();
     m_Request.setMethod(methodName);

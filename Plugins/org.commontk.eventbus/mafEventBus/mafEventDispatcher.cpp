@@ -9,78 +9,70 @@
  *
  */
 
+
 #include "mafEventDispatcher.h"
 #include "mafEvent.h"
-#include <mafContracts.h>
 
 #define CALLBACK_SIGNATURE "1"
 #define SIGNAL_SIGNATURE   "2"
 
 using namespace mafEventBus;
-using namespace mafCore;
 
-mafEventDispatcher::mafEventDispatcher(const mafString code_location) : mafObjectBase(code_location) {
+mafEventDispatcher::mafEventDispatcher() {
 
 }
 
 mafEventDispatcher::~mafEventDispatcher() {
     // delete all lists present into the hash.
-    mafHash<mafCore::mafId, mafEvent *>::iterator i;
+    mafHash<mafString, mafEvent *>::iterator i;
     for (i = m_CallbacksHash.begin(); i != m_CallbacksHash.end(); ++i) {
-        mafDEL(i.value());
+        delete i.value();
     }
     m_CallbacksHash.clear();
 
     for (i = m_SignalsHash.begin(); i != m_SignalsHash.end(); ++i) {
-        mafDEL(i.value());
+        delete i.value();
     }
     m_SignalsHash.clear();
 }
 
 void mafEventDispatcher::initializeGlobalEvents() {
-    //events notified when remote communication is ok or failed
-    mafId done_id = mafIdProvider::instance()->idValue("REMOTE_COMMUNICATION_DONE");
-    if(done_id == -1) {
-        done_id = mafIdProvider::instance()->createNewId("REMOTE_COMMUNICATION_DONE");
-    }
-    mafEvent *remote_done = mafNEW(mafEventBus::mafEvent);
-    (*remote_done)["EventId"] = (int)done_id;
-    (*remote_done)["EventType"] = mafEventTypeLocal;
-    (*remote_done)["SignatureType"] = mafSignatureTypeSignal;
+    mafEvent *remote_done = new mafEvent();
+    mafString eventId = "local.app.REMOTE_COMMUNICATION_DONE";
+
+    (*remote_done)[TOPIC] = eventId;
+    (*remote_done)[TYPE] = mafEventTypeLocal;
+    (*remote_done)[SIGTYPE] = mafSignatureTypeSignal;
     mafVariant var;
     var.setValue((QObject*)this);
-    (*remote_done)["ObjectPointer"] = var;
-    (*remote_done)["Signature"] = "remoteCommunicationDone()";
+    (*remote_done)[OBJECT] = var;
+    (*remote_done)[SIGNATURE] = "remoteCommunicationDone()";
     this->registerSignal(*remote_done);
 
-    mafId fail_id = mafIdProvider::instance()->idValue("REMOTE_COMMUNICATION_FAILED");
-    if(fail_id == -1) {
-        fail_id = mafIdProvider::instance()->createNewId("REMOTE_COMMUNICATION_FAILED");
-    }
-    mafEvent *remote_failed = mafNEW(mafEventBus::mafEvent);
-    (*remote_failed)["EventId"] = (int)fail_id;
-    (*remote_failed)["EventType"] = mafEventTypeLocal;
-    (*remote_failed)["SignatureType"] = mafSignatureTypeSignal;
+    mafEvent *remote_failed = new mafEvent();
+    (*remote_failed)[TOPIC] = "local.app.REMOTE_COMMUNICATION_FAILED";
+    (*remote_failed)[TYPE] = mafEventTypeLocal;
+    (*remote_failed)[SIGTYPE] = mafSignatureTypeSignal;
     var.setValue((QObject*)this);
-    (*remote_failed)["ObjectPointer"] = var;
-    (*remote_failed)["Signature"] = "remoteCommunicationFailed()";
+    (*remote_failed)[OBJECT] = var;
+    (*remote_failed)[SIGNATURE] = "remoteCommunicationFailed()";
     this->registerSignal(*remote_failed);
 }
 
 bool mafEventDispatcher::isSignaturePresent(const mafEvent &props) const {
-    mafId id = props["EventId"].toInt();
+    mafString topic = props[TOPIC].toString();
     mafEventItemListType itemEventPropList;
     mafEvent *itemEventProp;
-    if(props["SignatureType"].toInt() == mafSignatureTypeCallback) {
-        itemEventPropList = m_CallbacksHash.values(id);
+    if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
+        itemEventPropList = m_CallbacksHash.values(topic);
     } else {
-        itemEventPropList = m_SignalsHash.values(id);
+        itemEventPropList = m_SignalsHash.values(topic);
     }
 
-    QObject *objParameter = props["ObjectPointer"].value<QObject *>();
+    QObject *objParameter = props[OBJECT].value<QObject *>();
     foreach(itemEventProp, itemEventPropList) {
-        QObject *objInList = (*itemEventProp)["ObjectPointer"].value<QObject *>();
-        if(objInList == objParameter && (*itemEventProp)["Signature"].toString() == props["Signature"].toString()) {
+        QObject *objInList = (*itemEventProp)[OBJECT].value<QObject *>();
+        if(objInList == objParameter && (*itemEventProp)[SIGNATURE].toString() == props[SIGNATURE].toString()) {
             return true;
         }
     }
@@ -88,7 +80,7 @@ bool mafEventDispatcher::isSignaturePresent(const mafEvent &props) const {
 }
 
 bool mafEventDispatcher::disconnectSignal(const mafEvent &props) {
-    mafEventItemListType observerIdList = m_CallbacksHash.values(props["EventId"].toInt());
+    mafEventItemListType observerIdList = m_CallbacksHash.values(props[TOPIC].toString());
     mafEvent *item;
     bool result = true;
     foreach(item, observerIdList) {
@@ -100,15 +92,14 @@ bool mafEventDispatcher::disconnectSignal(const mafEvent &props) {
 bool mafEventDispatcher::disconnectCallback(const mafEvent &props) {
     //need to disconnect observer from the signal
     mafString observer_sig = CALLBACK_SIGNATURE;
-    observer_sig.append(props["Signature"].toString());
+    observer_sig.append(props[SIGNATURE].toString());
 
-    mafId v = props["EventId"].toInt();
-    mafEvent *itemSignal = m_SignalsHash.value(v);
+    mafEvent *itemSignal = m_SignalsHash.value(props[TOPIC].toString());
     mafString event_sig = SIGNAL_SIGNATURE;
-    event_sig.append((*itemSignal)["Signature"].toString());
+    event_sig.append((*itemSignal)[SIGNATURE].toString());
 
-    QObject *objSignal = (*itemSignal)["ObjectPointer"].value<QObject *>();
-    QObject *objSlot = props["ObjectPointer"].value<QObject *>();
+    QObject *objSignal = (*itemSignal)[OBJECT].value<QObject *>();
+    QObject *objSlot = props[OBJECT].value<QObject *>();
 
     return disconnect(objSignal, event_sig.toAscii(), objSlot, observer_sig.toAscii());
 }
@@ -118,15 +109,15 @@ bool mafEventDispatcher::removeEventItem(const mafEvent &props) {
     bool isPresent = isSignaturePresent(props);
     if(isPresent == true) {
         //mafEventItemListType itemEventPropList;
-        if(props["SignatureType"].toInt() == mafSignatureTypeCallback) {
+        if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
             isDisconnected = disconnectCallback(props);
             //iterator for erasing hash entry
-            mafEventsHashType::iterator i = m_CallbacksHash.find(props["EventId"].toInt());
-            while (i != m_CallbacksHash.end() && i.key() == props["EventId"].toInt()) {
-                QObject *obj = (*(i.value()))["ObjectPointer"].value<QObject *>();
-                QObject *objCheck = props["ObjectPointer"].value<QObject *>();
-                if (obj == objCheck && (*(i.value()))["Signature"].toString() == props["Signature"].toString()) {
-                    mafDEL(i.value());
+            mafEventsHashType::iterator i = m_CallbacksHash.find(props[TOPIC].toString());
+            while (i != m_CallbacksHash.end() && i.key() == props[TOPIC]) {
+                QObject *obj = (*(i.value()))[OBJECT].value<QObject *>();
+                QObject *objCheck = props[OBJECT].value<QObject *>();
+                if (obj == objCheck && (*(i.value()))[SIGNATURE].toString() == props[SIGNATURE].toString()) {
+                    delete i.value();
                     i = m_CallbacksHash.erase(i);
                 } else {
                     ++i;
@@ -135,18 +126,18 @@ bool mafEventDispatcher::removeEventItem(const mafEvent &props) {
         } else {
             //itemEventPropList = m_SignalsHash.values();
             isDisconnected = disconnectSignal(props);
-            mafEventsHashType::iterator i = m_CallbacksHash.find(props["EventId"].toInt());
-            while (i != m_CallbacksHash.end() && i.key() == props["EventId"].toInt()) {
-                mafDEL(i.value());
+            mafEventsHashType::iterator i = m_CallbacksHash.find(props[TOPIC].toString());
+            while (i != m_CallbacksHash.end() && i.key() == props[TOPIC].toString()) {
+                delete i.value();
                 i++;
             }
-            i = m_SignalsHash.find(props["EventId"].toInt());
-            while (i != m_SignalsHash.end() && i.key() == props["EventId"].toInt()) {
-                mafDEL(i.value());
+            i = m_SignalsHash.find(props[TOPIC].toString());
+            while (i != m_SignalsHash.end() && i.key() == props[TOPIC].toString()) {
+                delete i.value();
                 i++;
             }
-            m_SignalsHash.remove(props["EventId"].toInt()); //in signal hash the id is unique
-            m_CallbacksHash.remove(props["EventId"].toInt()); //remove also all the id associated in callback
+            m_SignalsHash.remove(props[TOPIC].toString()); //in signal hash the id is unique
+            m_CallbacksHash.remove(props[TOPIC].toString()); //remove also all the id associated in callback
         }
 
         //itemEventPropList.removeAt(idx);
@@ -155,43 +146,43 @@ bool mafEventDispatcher::removeEventItem(const mafEvent &props) {
 }
 
 bool mafEventDispatcher::addObserver(const mafEvent &props) {
-    QObject *obj = props["ObjectPointer"].value<QObject *>();
-    REQUIRE(obj != NULL);
+    //QObject *obj = props[OBJECT].value<QObject *>();
+    //REQUIRE(obj != NULL);
 
-    mafId id = props["EventId"].toInt();
+    mafString topic = props[TOPIC].toString();
     // check if the object has been already registered with the same signature to avoid duplicates.
-    if(m_CallbacksHash.contains(id) && this->isSignaturePresent(props) == true) {
+    if(m_CallbacksHash.contains(topic) && this->isSignaturePresent(props) == true) {
         return false;
     }
 
     mafEvent *itemEventProp;
-    itemEventProp = m_SignalsHash.value(id);
-    mafVariant sigVariant = (*itemEventProp)["Signature"];
+    itemEventProp = m_SignalsHash.value(topic);
+    mafVariant sigVariant = (*itemEventProp)[SIGNATURE];
     mafString sig = sigVariant.toString();
     if(sig.length() > 0) {
         mafString observer_sig = CALLBACK_SIGNATURE;
-        observer_sig.append(props["Signature"].toString());
+        observer_sig.append(props[SIGNATURE].toString());
 
         mafString event_sig = SIGNAL_SIGNATURE;
         event_sig.append(sig);
 
         // Add the new observer to the Hash.
         mafEvent *dict = const_cast<mafEvent *>(&props);
-        this->m_CallbacksHash.insertMulti(id, dict);
-        QObject *objSignal = (*itemEventProp)["ObjectPointer"].value<QObject *>();
-        QObject *objSlot = props["ObjectPointer"].value<QObject *>();
+        this->m_CallbacksHash.insertMulti(topic, dict);
+        QObject *objSignal = (*itemEventProp)[OBJECT].value<QObject *>();
+        QObject *objSlot = props[OBJECT].value<QObject *>();
         return connect(objSignal, event_sig.toAscii(), objSlot, observer_sig.toAscii());
     }
     return false;
 }
 
 bool mafEventDispatcher::removeObserver(const mafEvent &props) {
-    QObject *objSlot = props["ObjectPointer"].value<QObject *>();
+    QObject *objSlot = props[OBJECT].value<QObject *>();
     if (objSlot == NULL) {
         // remove all observer for that 'id'
         bool result = disconnectSignal(props);
 
-        int num = m_CallbacksHash.remove(props["EventId"].toInt());
+        int num = m_CallbacksHash.remove(props[TOPIC].toString());
         return result && num > 0;
     }
 
@@ -203,30 +194,30 @@ bool mafEventDispatcher::registerSignal(const mafEvent &props) {
     if(props["Signature"].toString().length() == 0) {
         QVariant var;
         var.setValue((QObject *)this);
-        props["ObjectPointer"] = var;
-        props["Signature"] = "notifyDefaultEvent()";
+        props[OBJECT] = var;
+        props[SIGNATURE] = "notifyDefaultEvent()";
     }
 
-    mafId id = props["EventId"].toInt();
+    mafString topic = props[TOPIC].toString();
     // Check if a signal (corresponding to a mafID) already is present.
-    if(m_SignalsHash.contains(id)) {// && (this->isSignaturePresent(signal_props) == true)) {
+    if(m_SignalsHash.contains(topic)) {// && (this->isSignaturePresent(signal_props) == true)) {
         // Only one signal for a given id can be registered!!
-        QObject *obj = props["ObjectPointer"].value<QObject *>();
-        mafMsgWarning("%s", mafTr("Object %1 is trying to register a signal with ID '%2' that has been already registered!!").arg(obj->metaObject()->className(), mafIdProvider::instance()->idName(id)).toAscii().data());
+        QObject *obj = props[OBJECT].value<QObject *>();
+        mafMsgWarning("%s", mafTr("Object %1 is trying to register a signal with ID '%2' that has been already registered!!").arg(obj->metaObject()->className(), topic).toAscii().data());
         return false;
     }
 
     // Add the new signal to the Hash.
     mafEvent *dict = const_cast<mafEvent *>(&props);
-    this->m_SignalsHash.insert(id, dict);
+    this->m_SignalsHash.insert(topic, dict);
     return true;
 }
 
 bool mafEventDispatcher::removeSignal(const mafEvent &props) {
-    QObject *obj = props["ObjectPointer"].value<QObject *>();
+    QObject *obj = props[OBJECT].value<QObject *>();
     if(obj == NULL) {
         // Remove all events corresponding to particular id
-        int num = m_SignalsHash.remove(props["Id"].toInt());
+        int num = m_SignalsHash.remove(props[TOPIC].toString());
         return num > 0;
     }
 
@@ -237,4 +228,17 @@ void mafEventDispatcher::notifyEvent(const mafEvent &event_dictionary, mafEventA
     Q_UNUSED(event_dictionary);
     Q_UNUSED(argList);
     Q_UNUSED(returnArg);
+}
+
+bool mafEventDispatcher::filterEvent(const mafEvent &event_dictionary) const {
+    if(!event_dictionary[FILTER].isValid() || event_dictionary[FILTER].isNull()) {
+        return true; //no filter applied
+    }
+
+    QObject *filter = event_dictionary[FILTER].value<QObject *>();
+    if(filter) {
+        return true;
+    } else {
+        return false;
+    }
 }
