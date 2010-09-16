@@ -15,8 +15,6 @@ ENDIF()
 # TODO: Fix this after discussing include dependencies with Jc
 SET(CTK_BASE_INCLUDE_DIRS ${CTK_BASE_INCLUDE_DIRS} ${QTSOAP_INCLUDE_DIR} CACHE INTERNAL "CTK includes" FORCE)
 
-SET(PLUGIN_export_directive "org_commontk_dicom_wg23_core_EXPORT")
-
 # Additional directories to include
 SET(PLUGIN_include_directories
     
@@ -40,9 +38,13 @@ SET(PLUGIN_MOC_SRCS
   ${include_mafEventBus_file_list}
 )
 
+SET(PLUGIN_UI_FORMS
+ 
+ )
+
 SET(PLUGIN_resources
-  org_commontk_eventbus.qrc
-)
+     org_commontk_eventbus.qrc
+ )
 
 ctkMacroGetTargetLibraries(PLUGIN_target_libraries)
 
@@ -52,6 +54,7 @@ ctkMacroBuildPlugin(
   INCLUDE_DIRECTORIES ${PLUGIN_include_directories}
   SRCS ${PLUGIN_SRCS}
   MOC_SRCS ${PLUGIN_MOC_SRCS}
+  UI_FORMS ${PLUGIN_UI_FORMS}
   RESOURCES ${PLUGIN_resources}
   TARGET_LIBRARIES ${PLUGIN_target_libraries}
 )

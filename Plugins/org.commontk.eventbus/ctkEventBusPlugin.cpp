@@ -18,7 +18,7 @@ using namespace QtMobility;
 
 void ctkEventBusPlugin::start(ctkPluginContext* context)
 {
-  Q_UNUSED(context)
+  context->registerService(QStringList("ctkEventBus"),ctkEventBusImpl::instance());
   std::cout << "ctkCore Plugin started\n";
 }
 
