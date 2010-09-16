@@ -4,7 +4,7 @@
 #include "ctkEvent.h"
 
 
-class ctkEventBus {
+class CTK_PLUGINFW_EXPORT ctkEventBus {
 
 public:
 
