@@ -21,8 +21,9 @@
 #include <ctkPluginFrameworkFactory.h>
 #include <ctkPluginFramework.h>
 #include <ctkPluginException.h>
+#include <ctkServiceReference.h>
 
-#include <ctkEventBusImpl_p.h>
+#include <EventBus/ctkEventBus.h>
 
 #include <QApplication>
 #include <QString>
@@ -62,13 +63,8 @@ int main(int argv, char** argc) {
 
   // construct the name of the plugin with the business logic
   // (thus the actual logic of the hosted app)
-  QString pluginName;
-  if(qApp->arguments().size()>5) {
-    pluginName = qApp->arguments().at(5);
-  } else {
-    pluginName = "org_commontk_eventbus";
-    pluginName += QFileInfo(qApp->arguments().at(0)).fileName();
-  }
+  QString pluginName = "org_commontk_eventbus";
+
 
   // try to find the plugin and install all plugins available in 
   // pluginPath (but do not start them)
@@ -77,11 +73,12 @@ int main(int argv, char** argc) {
   QDirIterator dirIter(pluginPath, libFilter, QDir::Files);
   bool pluginFound = false;
   QString pluginFileLocation;
+  ctkPlugin* plugin;
   while(dirIter.hasNext()) {
     try {
       QString fileLocation = dirIter.next();
       if (fileLocation.contains("org_commontk_eventbus")) {
-        ctkPlugin* plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
+        plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
         plugin->start(ctkPlugin::START_TRANSIENT);
       }
       if (fileLocation.contains(pluginName)) {
@@ -101,22 +98,15 @@ int main(int argv, char** argc) {
     exit(3);
   }
 
+
+  ctkServiceReference *ebr = framework->getPluginContext()->getServiceReference("ctkEventBus");
+  ctkEventBus * eb = (ctkEventBus *)framework->getPluginContext()->getService(ebr);
+
   // setup the communication infrastructure: DicomAppServer and DicomHostService
 //  ctkDicomAppServer * appServer = new ctkDicomAppServer(QUrl(appURL).port()); // accesses the app-plugin via getService("ctkDicomAppInterface");
 //  ctkDicomHostInterface * hostInterface = new ctkDicomHostService(QUrl(hostURL).port());
 //  framework->getPluginContext()->registerService(QStringList("ctkDicomHostInterface"), hostInterface);
 
-  // install and start the plugin with the business logic and remember pointer to start it later
-  ctkPlugin* plugin;
-  try
-  {
-    ctkPlugin* plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(pluginFileLocation));
-    plugin->start(ctkPlugin::START_TRANSIENT);
-  }
-  catch (const ctkPluginException& e)
-  {
-    qCritical() << e.what();
-  }
 
   framework->start();
 
