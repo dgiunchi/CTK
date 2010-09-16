@@ -24,7 +24,7 @@ public:
   ctkEventHandlerWrapper(const QObject* subscriber, const char* handler, const ctkEventBus::Properties& properties)
     : properties(properties)
   {
-    connect(this, SIGNAL(notifySubscriber(Event)), subscriber, handler);
+    connect(this, SIGNAL(notifySubscriber(ctkEvent)), subscriber, handler);
   }
 
   QStringList topics() const

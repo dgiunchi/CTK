@@ -44,19 +44,19 @@ public:
     void notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
 
     /// Notify event associated to the given id locally to the application.
-    void notifyEvent(const mafString id, mafEventType ev_type = mafEventTypeLocal, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
+    //void notifyEvent(const mafString id, mafEventType ev_type = mafEventTypeLocal, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
 
     /// Notify event associated to the given id locally to the application.
-    void notifyEvent(const mafCore::mafId id, mafEventType ev_type = mafEventTypeLocal, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
+    void notifyEvent(const mafString topic, mafEventType ev_type = mafEventTypeLocal, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
 
     /// Notify the event remotely by using the current active network connector given by the mafEventDispatcherRemote.
-//    void notifyEventRemote(const mafString id, mafList<mafVariant> *argList = NULL) const;
+   //void notifyEventRemote(const mafString id, mafList<mafVariant> *argList = NULL) const;
 
     /// Enable/Disable event logging to allow dumping events notification into the selected logging output stream.
     void enableEventLogging(bool enable = true);
 
-    /// When logging is enabled, allows logging events releted to specific id (require a valid mafCore::mafId).
-    void logEventId(const mafCore::mafId id);
+    /// When logging is enabled, allows logging events releted to specific id (require a valid topic).
+    void logEventTopic(const mafString topic);
 
     /// When enabled, allows logging all events. It reset the value for m_LogEventId to -1 (the default)
     void logAllEvents();
@@ -65,13 +65,13 @@ public:
     void shutdown();
 
     /// Retrieve if the signal has been registered previously.
-    bool isSignalPresent(const mafCore::mafId id) const;
+    bool isSignalPresent(const mafString topic) const;
 
     /// Retrieve if the signal has been registered previously.
-    bool isSignalPresent(const mafString &id_name) const;
+    //bool isSignalPresent(const mafString &id_name) const;
 
     /// Plug a new network connector into the connector hash for the given network protocol (protocol eg. "XMLRPC") (connector_type eg. "mafEventBus::mafNetworkConnectorQXMLRPC").
-    void plugNetworkConnector(const mafString &protocol, const mafString &connector_type);
+    void plugNetworkConnector(const mafString &protocol, mafNetworkConnector *connector);
 
     /// Create the server for remote communication according to the given protocol and listen port.
     bool createServer(const mafString &communication_protocol, unsigned int listen_port);
@@ -93,7 +93,7 @@ private:
     mafEventDispatcherRemote *m_RemoteDispatcher; ///< Dispatcher class dispatches events remotely to another applications or via network.
 
     bool m_EnableEventLogging; ///< Flag to enable/disable logging for event sent.
-    mafCore::mafId m_LogEventId; ///< Store the current Event_Id to track through the logger.
+    mafString m_LogEventTopic; ///< Store the current Event_Id to track through the logger.
     mafNetworkConnectorHash m_NetworkConnectorHash; ///< Hash table used to store the association of network protocols and network connector types.
 };
 
@@ -101,17 +101,17 @@ private:
 // Inline methods
 /////////////////////////////////////////////////////////////
 
-inline void mafEventBusManager::plugNetworkConnector(const mafString &protocol, const mafString &connector_type) {
-    m_NetworkConnectorHash.insert(protocol, connector_type);
+inline void mafEventBusManager::plugNetworkConnector(const mafString &protocol, mafNetworkConnector *connector) {
+    m_NetworkConnectorHash.insert(protocol, connector);
 }
 
-inline bool mafEventBusManager::isSignalPresent(const mafCore::mafId id) const {
-    return m_LocalDispatcher->isSignalPresent(id);
+inline bool mafEventBusManager::isSignalPresent(const mafString topic) const {
+    return m_LocalDispatcher->isSignalPresent(topic);
 }
 
-inline bool mafEventBusManager::isSignalPresent(const mafString &id_name) const {
+/*inline bool mafEventBusManager::isSignalPresent(const mafString &id_name) const {
     return m_LocalDispatcher->isSignalPresent(id_name);
-}
+}*/
 
 } // namespace mafEventBus
 

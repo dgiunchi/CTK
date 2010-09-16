@@ -10,38 +10,34 @@
  */
 
 #include "mafEventBusManager.h"
-#include "mafEventBusRegistration.h"
-#include <mafIdProvider.h>
-#include <mafObjectFactory.h>
-#include <mafContracts.h>
+#include "mafNetworkConnectorQtSoap.h"
 
 using namespace mafEventBus;
-using namespace mafCore;
 
 
-mafEventBusManager::mafEventBusManager() : m_EnableEventLogging(false), m_LogEventId(-1) {
-    // register all object's module.
-    mafEventBusRegistration::registerEventBusObjects();
-
-    // Create ID for global notification event.
-    mafIdProvider::instance()->createNewId("GLOBAL_UPDATE_EVENT");
+mafEventBusManager::mafEventBusManager() : m_EnableEventLogging(false), m_LogEventTopic("*") {
 
     // Create local event dispatcher.
-    m_LocalDispatcher = mafNEW(mafEventBus::mafEventDispatcherLocal);
+    m_LocalDispatcher = new mafEventDispatcherLocal();
     m_LocalDispatcher->setObjectName("Local Event Dispatcher");
 
     // Create the remote event dispatcher.
-    m_RemoteDispatcher = mafNEW(mafEventBus::mafEventDispatcherRemote);
+    m_RemoteDispatcher = new mafEventDispatcherRemote();
     m_RemoteDispatcher->setObjectName("Remote Event Dispatcher");
 
     // register default remote connection protocol.
-    plugNetworkConnector("XMLRPC", "mafEventBus::mafNetworkConnectorQXMLRPC");
-    plugNetworkConnector("SOAP", "mafEventBus::mafNetworkConnectorQtSoap");
+    //plugNetworkConnector("XMLRPC", new mafNetworkConnectorQXMLRPC());
+    plugNetworkConnector("SOAP", new mafNetworkConnectorQtSoap());
 }
 
 mafEventBusManager::~mafEventBusManager() {
-    mafDEL(m_LocalDispatcher);
-    mafDEL(m_RemoteDispatcher);
+    mafNetworkConnectorHash::iterator i = m_NetworkConnectorHash.begin();
+    while(i != m_NetworkConnectorHash.end()) {
+        delete i.value();
+        ++i;
+    }
+    if(m_LocalDispatcher) delete m_LocalDispatcher;
+    if(m_RemoteDispatcher) delete m_RemoteDispatcher;
 }
 
 mafEventBusManager* mafEventBusManager::instance() {
@@ -54,18 +50,18 @@ void mafEventBusManager::shutdown() {
 
 bool mafEventBusManager::addEventProperty(const mafEvent &props) const {
     // Design by contract condition.
-    REQUIRE(props["EventId"].toInt() >= 0);
+    //REQUIRE(!props[TOPIC].toString().isEmpty());
 
-    if(props["EventType"].toInt() == mafEventTypeLocal) {
+    if(props[TYPE].toInt() == mafEventTypeLocal) {
         // Local event dispatching.
-        if(props["SignatureType"].toInt() == mafSignatureTypeCallback) {
+        if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
             return m_LocalDispatcher->addObserver(props);
         } else {
             return m_LocalDispatcher->registerSignal(props);
         }
     } else {
         // Remote event dispatching.
-        if(props["SignatureType"].toInt() == mafSignatureTypeCallback) {
+        if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
             mafMsgWarning("%s", mafTr("Local Observer can't register in Remote dispatcher").toAscii().data());
             return false;
         } else {
@@ -77,18 +73,18 @@ bool mafEventBusManager::addEventProperty(const mafEvent &props) const {
 
 bool mafEventBusManager::removeEventProperty(const mafEvent &props) const {
     // Design by contract condition.
-    REQUIRE(props.eventId() >= 0);
+    //REQUIRE(!props.eventTopic().isEmpty());
 
     if(props.eventType() == mafEventTypeLocal) {
         // Local event dispatching.
-        if(props["SignatureType"].toInt() == mafSignatureTypeCallback) {
+        if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
             return m_LocalDispatcher->removeObserver(props);
         } else {
             return m_LocalDispatcher->removeSignal(props);
         }
     } else {
         // Remote event dispatching.
-        if(props["SignatureType"].toInt() == mafSignatureTypeCallback) {
+        if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
             return m_RemoteDispatcher->removeObserver(props);
         } else {
             return m_RemoteDispatcher->removeSignal(props);
@@ -97,36 +93,36 @@ bool mafEventBusManager::removeEventProperty(const mafEvent &props) const {
     return false;
 }
 
-void mafEventBusManager::notifyEvent(const mafString id, mafEventType ev_type, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
+/*void mafEventBusManager::notifyEvent(const mafString id, mafEventType ev_type, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
     mafId numeric_id = mafIdProvider::instance()->idValue(id);
     if(numeric_id != -1) {
         notifyEvent(numeric_id, ev_type, argList, returnArg);
     } else {
         mafMsgWarning("%s", mafTr("ID named '%1' is not mapped into the mafIdProvider!!").arg(id).toAscii().data());
     }
-}
+}*/
 
-void mafEventBusManager::notifyEvent(const mafId id, mafEventType ev_type, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
+void mafEventBusManager::notifyEvent(const mafString topic, mafEventType ev_type, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
     // Design by contract condition.
-    REQUIRE(id >= 0);
+    //REQUIRE(!topic.isEmpty());
 
     if(m_EnableEventLogging) {
-        if(m_LogEventId == -1 || m_LogEventId == id) {
-            mafMsgDebug() << mafTr("Event notification for ID: ") << id << mafTr(" named: ") << mafIdProvider::instance()->idName(id) << "\n";
+        if(m_LogEventTopic == "*" || m_LogEventTopic == topic) {
+            mafMsgDebug() << mafTr("Event notification for ID: ") << topic << mafTr(" named: ") << topic << "\n";
         }
     }
 
     //event dispatched in local channel
-    mafEvent *event_dic = mafNEW(mafEventBus::mafEvent);
-    (*event_dic)["EventId"] = (int)id;
-    (*event_dic)["EventType"] = ev_type;
+    mafEvent *event_dic = new mafEventBus::mafEvent;
+    (*event_dic)[TOPIC] = topic;
+    (*event_dic)[TYPE] = static_cast<int>(ev_type);
     notifyEvent(*event_dic, argList, returnArg);
-    mafDEL(event_dic);
+    delete event_dic;
 }
 
 void mafEventBusManager::notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
     //event dispatched in remote channel
-    if(event_dictionary["EventType"].toInt() == mafEventTypeLocal) {
+    if(event_dictionary[TYPE].toInt() == mafEventTypeLocal) {
         m_LocalDispatcher->notifyEvent(event_dictionary, argList, returnArg);
     } else {
         m_RemoteDispatcher->notifyEvent(event_dictionary, argList);
@@ -137,25 +133,27 @@ void mafEventBusManager::enableEventLogging(bool enable) {
     m_EnableEventLogging = enable;
 }
 
-void mafEventBusManager::logEventId(const mafId id) {
+void mafEventBusManager::logEventTopic(const mafString topic) {
     // Design by contract condition.
-    REQUIRE(id >= 0);
+    //REQUIRE(!topic.isEmpty());
 
-    m_LogEventId = id;
+    m_LogEventTopic = topic;
 }
 
 void mafEventBusManager::logAllEvents() {
-    m_LogEventId = -1;
+    m_LogEventTopic = "*";
 }
 
 bool mafEventBusManager::createServer(const mafString &communication_protocol, unsigned int listen_port) {
     bool res(m_NetworkConnectorHash.contains(communication_protocol));
     if(res) {
-        mafString connector_type = m_NetworkConnectorHash.value(communication_protocol);
-        m_RemoteDispatcher->setNetworkConnectorServer(connector_type);
-        mafNetworkConnector *connector = m_RemoteDispatcher->networkConnectorServer();
+        mafNetworkConnector *connector = m_NetworkConnectorHash.value(communication_protocol);
+        m_RemoteDispatcher->setNetworkConnectorServer(connector);
+        //mafNetworkConnector *connector = m_RemoteDispatcher->networkConnectorServer();
         res = connector != NULL;
-        connector->createServer(listen_port);
+        if(res) {
+            connector->createServer(listen_port);
+        }
     }
     return res;
 }
@@ -172,11 +170,12 @@ void mafEventBusManager::startListen() {
 bool mafEventBusManager::createClient(const mafString &communication_protocol, const mafString &server_host, unsigned int port) {
     bool res(m_NetworkConnectorHash.contains(communication_protocol));
     if(res) {
-        mafString connector_type = m_NetworkConnectorHash.value(communication_protocol);
-        m_RemoteDispatcher->setNetworkConnectorClient(connector_type);
+        m_RemoteDispatcher->setNetworkConnectorClient(m_NetworkConnectorHash.value(communication_protocol));
         mafNetworkConnector *connector = m_RemoteDispatcher->networkConnectorClient();
         res = connector != NULL;
-        connector->createClient(server_host, port);
+        if(res) {
+            connector->createClient(server_host, port);
+        }
     }
     return res;
 }

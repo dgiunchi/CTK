@@ -21,14 +21,12 @@ namespace mafEventBus {
  Class name: mafNetworkConnector
  This class is the interface class for client/server objects that works over network.
  */
-class MAFEVENTBUSSHARED_EXPORT mafNetworkConnector : public mafCore::mafObjectBase {
+class MAFEVENTBUSSHARED_EXPORT mafNetworkConnector : public QObject {
     Q_OBJECT
-    /// typedef macro.
-    mafSuperclassMacro(mafCore::mafObjectBase);
 
 public:
     /// object constructor.
-    mafNetworkConnector(const mafString code_location = "");
+    mafNetworkConnector();
 
     /// create the unique instance of the client.
     virtual void createClient(const mafString hostName, const unsigned int port) = 0;
@@ -41,6 +39,9 @@ public:
 
     /// Allow to send a network request.
     virtual void send(const mafString &event_id, mafList<mafVariant> *params) = 0;
+
+    //retrieve an instance of the object
+    virtual mafNetworkConnector *clone() = 0;
 };
 
 } //namespace mafEventBus

@@ -28,6 +28,7 @@
     QVariant property(const QString& name) const;
     QStringList propertyNames() const;
 
+    //to put inside the Properties
     const QString& topic() const;
 
     bool matches(const ctkLDAPSearchFilter& filter) const;

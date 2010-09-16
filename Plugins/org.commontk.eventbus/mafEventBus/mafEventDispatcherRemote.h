@@ -26,12 +26,10 @@ class mafNetworkConnector;
  */
 class MAFEVENTBUSSHARED_EXPORT mafEventDispatcherRemote : public mafEventDispatcher {
     Q_OBJECT
-    /// typedef macro.
-    mafSuperclassMacro(mafEventBus::mafEventDispatcher);
 
 public:
     /// object constructor.
-    mafEventDispatcherRemote(const mafString code_location = "");
+    mafEventDispatcherRemote();
 
     /// object destructor.
     /*virtual*/ ~mafEventDispatcherRemote();
@@ -43,13 +41,13 @@ public:
     /*virtual*/ void notifyEventRemote(const mafEvent &event_dictionary, mafList<mafVariant> *argList = NULL) const;
 
     /// Set the active server side network connector type.
-    void setNetworkConnectorServer(const mafString &connector_type);
+    void setNetworkConnectorServer(mafNetworkConnector *connector);
 
     /// return the current instantiated server side network connector.
     mafNetworkConnector *networkConnectorServer();
 
     /// Set the active client side network connector type.
-    void setNetworkConnectorClient(const mafString &connector_type);
+    void setNetworkConnectorClient(mafNetworkConnector *connector);
 
     /// return the current instantiated client side network connector.
     mafNetworkConnector *networkConnectorClient();

@@ -12,63 +12,54 @@
 #include "mafEventDispatcherRemote.h"
 #include "mafEvent.h"
 #include "mafNetworkConnector.h"
-#include <mafIdProvider.h>
-#include <mafObjectFactory.h>
 
 using namespace mafEventBus;
-using namespace mafCore;
 
-mafEventDispatcherRemote::mafEventDispatcherRemote(const mafString code_location) : mafEventDispatcher(code_location), m_NetworkConnectorServer(NULL), m_NetworkConnectorClient(NULL) {
+mafEventDispatcherRemote::mafEventDispatcherRemote() : mafEventDispatcher(), m_NetworkConnectorServer(NULL), m_NetworkConnectorClient(NULL) {
     this->initializeGlobalEvents();
 }
 
 mafEventDispatcherRemote::~mafEventDispatcherRemote() {
-    mafDEL(m_NetworkConnectorServer);
-    mafDEL(m_NetworkConnectorClient);
+    if(m_NetworkConnectorServer) delete m_NetworkConnectorServer;
+    m_NetworkConnectorServer = NULL;
+    if(m_NetworkConnectorClient) delete m_NetworkConnectorClient;
+    m_NetworkConnectorClient = NULL;
 }
 
 void mafEventDispatcherRemote::initializeGlobalEvents() {
-    mafEvent *properties = mafNEW(mafEventBus::mafEvent);
-    (*properties)["EventId"] = (int) mafIdProvider::instance()->idValue("GLOBAL_UPDATE_EVENT");
-    (*properties)["EventType"] = mafEventTypeRemote;
-    (*properties)["SignatureType"] = mafSignatureTypeSignal;
-    (*properties)["Signature"] = "notifyDefaultEvent()";
+    mafEvent *properties = new mafEvent();
+    mafString topic = "remote.app.GLOBAL_UPDATE_EVENT";
+    (*properties)[TOPIC] = topic;
+    (*properties)[TYPE] = mafEventTypeRemote;
+    (*properties)[SIGTYPE] = mafSignatureTypeSignal;
+    (*properties)[SIGNATURE] = "notifyDefaultEvent()";
     this->registerSignal(*properties);
 
-    Superclass::initializeGlobalEvents();
+    mafEventDispatcher::initializeGlobalEvents();
 }
 
-void mafEventDispatcherRemote::setNetworkConnectorServer(const mafString &connector_type) {
-    if(m_NetworkConnectorServer != NULL) {
-        mafString obj_type = m_NetworkConnectorServer->metaObject()->className();
-        if(obj_type != connector_type) {
-            mafNetworkConnector *newNC = (mafNetworkConnector *)mafNEWFromString(connector_type);
-            if(newNC != NULL) {
-                mafDEL(m_NetworkConnectorServer);
-                m_NetworkConnectorServer = newNC;
-            }
+void mafEventDispatcherRemote::setNetworkConnectorServer(mafNetworkConnector *connector) {
+    if(m_NetworkConnectorServer != connector) {
+        if(m_NetworkConnectorServer != NULL) {
+            delete m_NetworkConnectorServer;
         }
-    } else {
-        m_NetworkConnectorServer = (mafNetworkConnector *)mafNEWFromString(connector_type);
+        m_NetworkConnectorServer = connector->clone();
     }
 }
 
-void mafEventDispatcherRemote::setNetworkConnectorClient(const mafString &connector_type) {
-    if(m_NetworkConnectorClient != NULL) {
-        mafString obj_type = m_NetworkConnectorClient->metaObject()->className();
-        if(obj_type != connector_type) {
-            mafNetworkConnector *newNC = (mafNetworkConnector *)mafNEWFromString(connector_type);
-            if(newNC != NULL) {
-                mafDEL(m_NetworkConnectorClient);
-                m_NetworkConnectorClient = newNC;
-            }
+void mafEventDispatcherRemote::setNetworkConnectorClient(mafNetworkConnector *connector) {
+    if(m_NetworkConnectorClient != connector) {
+        if(m_NetworkConnectorClient != NULL) {
+            delete m_NetworkConnectorClient;
         }
-    } else {
-        m_NetworkConnectorClient = (mafNetworkConnector *)mafNEWFromString(connector_type);
+        m_NetworkConnectorClient = connector->clone();
     }
 }
 
 void mafEventDispatcherRemote::notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
+    if(!filterEvent(event_dictionary)) {
+        return;
+    }
     //Q_UNUSED(event_dictionary);
     //Q_UNUSED(argList);
     Q_UNUSED(returnArg);
@@ -85,7 +76,7 @@ void mafEventDispatcherRemote::notifyEvent(const mafEvent &event_dictionary, maf
             typeArgument = argList->at(i).name();
             if(typeArgument != "mafList<mafVariant>") {
                 mafMsgWarning("%s", mafTr("Remote Dispatcher need to have arguments that are mafList<mafVariant>").toAscii().data());
-                mafDEL(vl);
+                delete vl;
                 return;
             }
 
@@ -104,13 +95,13 @@ void mafEventDispatcherRemote::notifyEvent(const mafEvent &event_dictionary, maf
     }
 
     this->notifyEventRemote(event_dictionary, vl);
-    mafDEL(vl);
+    delete vl;
 }
 
 void mafEventDispatcherRemote::notifyEventRemote(const mafEvent &event_dictionary, mafList<mafVariant> *argList) const {
-    REQUIRE(m_NetworkConnectorClient != NULL);
-    mafId id_val = event_dictionary["EventId"].toInt();
-    mafString id = mafIdProvider::instance()->idName(id_val);
-    m_NetworkConnectorClient->send(id, argList);
+    //REQUIRE(m_NetworkConnectorClient != NULL);
+    //mafId id_val = event_dictionary[TOPIC].toInt();
+    //mafString id = mafIdProvider::instance()->idName(id_val);
+    m_NetworkConnectorClient->send(event_dictionary[TOPIC].toString(), argList);
 }
 

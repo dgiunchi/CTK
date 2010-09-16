@@ -12,9 +12,7 @@
 #include "mafNetworkConnector.h"
 
 using namespace mafEventBus;
-using namespace mafCore;
 
-mafNetworkConnector::mafNetworkConnector(const mafString code_location) : mafObjectBase(code_location) {
+mafNetworkConnector::mafNetworkConnector() {
 
 }
-
