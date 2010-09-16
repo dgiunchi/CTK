@@ -2,8 +2,8 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
-    Division of Medical and Biological Informatics
+  Copyright (c) 2010 BioComputing Competence Centre - Super Computing Solutions,
+
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -19,40 +19,26 @@
 
 =============================================================================*/
 
-#ifndef CTKLDAPSEARCHFILTER_H
-#define CTKLDAPSEARCHFILTER_H
-
-#include "CTKPluginFrameworkExport.h"
-#include "ctkSearchFilter.h"
+#ifndef CTKSEARCHFILTER_H
+#define CTKSEARCHFILTER_H
 
 #include <QMap>
 #include <QString>
 #include <QVariant>
 
-class ctkLDAPSearchFilterPrivate;
+class ctkSearchFilter {
 
-class CTK_PLUGINFW_EXPORT ctkLDAPSearchFilter : public ctkSearchFilter {
-
-    Q_INTERFACES(ctkSearchFilter)
 public:
 
   typedef QMap<QString, QVariant> Dictionary;
 
-  ctkLDAPSearchFilter(const QString& filter = "");
-  ctkLDAPSearchFilter(const ctkLDAPSearchFilter& filter);
+  virtual ~ctkSearchFilter() {}
 
-  ~ctkLDAPSearchFilter();
-
-  bool match(const Dictionary& dictionary) const;
-  bool matchCase(const Dictionary& dictionary) const;
-
-  bool operator==(const ctkLDAPSearchFilter& other) const;
-  ctkLDAPSearchFilter& operator=(const ctkLDAPSearchFilter& filter);
-
-protected:
-
-  ctkLDAPSearchFilterPrivate * d;
+  virtual bool match(const Dictionary& dictionary) const = 0;
+  virtual bool matchCase(const Dictionary& dictionary) const = 0;
 
 };
 
-#endif // CTKLDAPSEARCHFILTER_H
+Q_DECLARE_INTERFACE(ctkSearchFilter, "org.commontk.core.ctkSearchFilter")
+
+#endif // CTKSEARCHFILTER_H

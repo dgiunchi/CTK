@@ -15,7 +15,7 @@ public:
   virtual void postEvent(const ctkEvent& event) = 0;
   virtual void sendEvent(const ctkEvent& event) = 0;
 
-  virtual void publishSignal(const QObject* publisher, const char* signal) = 0;
+  virtual void publishSignal(const QObject* publisher, const char* signal, const char* signal_topic) = 0;
 
   virtual void subscribeSlot(const QObject* subscriber, const char* member, const Properties& properties) = 0;
 
