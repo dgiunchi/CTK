@@ -32,6 +32,8 @@
 #include <QWidget>
 #include <QFileInfo>
 
+#include "MainWindow.h"
+
 int main(int argv, char** argc) {
   QApplication app(argv, argc);
   qDebug() << "################################################################";
@@ -102,13 +104,10 @@ int main(int argv, char** argc) {
   ctkServiceReference *ebr = framework->getPluginContext()->getServiceReference("ctkEventBus");
   ctkEventBus * eb = (ctkEventBus *)framework->getPluginContext()->getService(ebr);
 
-  // setup the communication infrastructure: DicomAppServer and DicomHostService
-//  ctkDicomAppServer * appServer = new ctkDicomAppServer(QUrl(appURL).port()); // accesses the app-plugin via getService("ctkDicomAppInterface");
-//  ctkDicomHostInterface * hostInterface = new ctkDicomHostService(QUrl(hostURL).port());
-//  framework->getPluginContext()->registerService(QStringList("ctkDicomHostInterface"), hostInterface);
-
-
   framework->start();
+
+  MainWindow win;
+  win.show();
 
   return app.exec();
 }
