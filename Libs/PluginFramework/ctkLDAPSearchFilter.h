@@ -25,6 +25,8 @@
 #include "CTKPluginFrameworkExport.h"
 #include "ctkSearchFilter.h"
 
+#include "ctkPluginFramework_global.h"
+
 #include <QMap>
 #include <QString>
 #include <QVariant>
@@ -36,15 +38,13 @@ class CTK_PLUGINFW_EXPORT ctkLDAPSearchFilter : public ctkSearchFilter {
     Q_INTERFACES(ctkSearchFilter)
 public:
 
-  typedef QMap<QString, QVariant> Dictionary;
-
   ctkLDAPSearchFilter(const QString& filter = "");
   ctkLDAPSearchFilter(const ctkLDAPSearchFilter& filter);
 
   ~ctkLDAPSearchFilter();
 
-  bool match(const Dictionary& dictionary) const;
-  bool matchCase(const Dictionary& dictionary) const;
+  bool match(const ctkDictionary& dictionary) const;
+  bool matchCase(const ctkDictionary& dictionary) const;
 
   bool operator==(const ctkLDAPSearchFilter& other) const;
   ctkLDAPSearchFilter& operator=(const ctkLDAPSearchFilter& filter);

@@ -25,17 +25,16 @@
 #include <QMap>
 #include <QString>
 #include <QVariant>
+#include "ctkPluginFramework_global.h"
 
 class ctkSearchFilter {
 
 public:
 
-  typedef QMap<QString, QVariant> Dictionary;
-
   virtual ~ctkSearchFilter() {}
 
-  virtual bool match(const Dictionary& dictionary) const = 0;
-  virtual bool matchCase(const Dictionary& dictionary) const = 0;
+  virtual bool match(const ctkDictionary& dictionary) const = 0;
+  virtual bool matchCase(const ctkDictionary& dictionary) const = 0;
 
 };
 

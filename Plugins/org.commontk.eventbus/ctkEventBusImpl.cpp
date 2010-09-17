@@ -28,16 +28,14 @@ void ctkEventBusImpl::sendEvent(const ctkEvent& event)
   dispatchEvent(event, false);
 }
 
-void ctkEventBusImpl::publishSignal(const QObject* publisher, const char* signal, const char *signal_topic)
-{
+void ctkEventBusImpl::publishSignal(const QObject* publisher, const char* signal, const QString& signal_topic, Qt::ConnectionType type) {
     // event bus addproperty Event
     //need a TOPIC
     mafEvent *event = new mafEvent(signal_topic, mafEventTypeLocal, mafSignatureTypeSignal, const_cast<QObject *>(publisher), signal);
     m_MafEventBusManager->addEventProperty(*event);
 }
 
-void ctkEventBusImpl::subscribeSlot(const QObject* subscriber, const char* member, const Properties& properties)
-{
+QString ctkEventBusImpl::subscribeSlot(const QObject* subscriber, const char* member, const ctkProperties& properties) {
     QStringList topicList;
     QVariant v = properties[EventConstants::EVENT_TOPIC];
     topicList = v.toStringList();
@@ -48,6 +46,8 @@ void ctkEventBusImpl::subscribeSlot(const QObject* subscriber, const char* membe
         m_MafEventBusManager->addEventProperty(*mesbEvent);
     }
 
+	// to be changed!!!!!!
+	return QString("");
   // TODO check for duplicates
 
   /*ctkEventHandlerWrapper* wrapper = new ctkEventHandlerWrapper(subscriber, member, properties);
@@ -55,6 +55,10 @@ void ctkEventBusImpl::subscribeSlot(const QObject* subscriber, const char* membe
   {
     bucket(wrapper);
   }*/
+}
+
+void ctkEventBusImpl::updateProperties(const QString& subsriptionId, const ctkProperties& properties) {
+	
 }
 
 void ctkEventBusImpl::dispatchEvent(const ctkEvent& event, bool isAsync)

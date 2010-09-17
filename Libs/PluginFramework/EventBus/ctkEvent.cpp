@@ -6,7 +6,7 @@ class ctkEventPrivate {
 
 public:
 
-  ctkEventPrivate(const QString& topic, const ctkLDAPSearchFilter::Dictionary& properties)
+  ctkEventPrivate(const QString& topic, const ctkDictionary& properties)
     : ref(1), topic(topic), properties(properties)
   {
 
@@ -14,12 +14,12 @@ public:
 
   QAtomicInt ref;
   const QString topic;
-  const ctkLDAPSearchFilter::Dictionary properties;
+  const ctkDictionary properties;
 
 };
 
 
-ctkEvent::ctkEvent(const QString& topic, const ctkLDAPSearchFilter::Dictionary& properties)
+ctkEvent::ctkEvent(const QString& topic, const ctkDictionary& properties)
   : d(new ctkEventPrivate(topic, properties))
 {
 
@@ -69,7 +69,5 @@ const QString& ctkEvent::topic() const
 
 bool ctkEvent::matches(const ctkLDAPSearchFilter& filter) const
 {
-  Q_UNUSED(filter)
-  // TODO
-  return true;
+  return filter.matchCase(d->properties);
 }
