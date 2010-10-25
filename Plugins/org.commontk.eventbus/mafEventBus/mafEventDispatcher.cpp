@@ -38,7 +38,7 @@ mafEventDispatcher::~mafEventDispatcher() {
 
 void mafEventDispatcher::initializeGlobalEvents() {
     mafEvent *remote_done = new mafEvent();
-    mafString eventId = "local.app.REMOTE_COMMUNICATION_DONE";
+    mafString eventId = "maf.remote.eventBus.comunicationDone";
 
     (*remote_done)[TOPIC] = eventId;
     (*remote_done)[TYPE] = mafEventTypeLocal;
@@ -50,7 +50,7 @@ void mafEventDispatcher::initializeGlobalEvents() {
     this->registerSignal(*remote_done);
 
     mafEvent *remote_failed = new mafEvent();
-    (*remote_failed)[TOPIC] = "local.app.REMOTE_COMMUNICATION_FAILED";
+    (*remote_failed)[TOPIC] = "maf.remote.eventBus.comunicationFalied";
     (*remote_failed)[TYPE] = mafEventTypeLocal;
     (*remote_failed)[SIGTYPE] = mafSignatureTypeSignal;
     var.setValue((QObject*)this);
@@ -157,6 +157,10 @@ bool mafEventDispatcher::addObserver(const mafEvent &props) {
 
     mafEvent *itemEventProp;
     itemEventProp = m_SignalsHash.value(topic);
+    if(itemEventProp == NULL) {
+        mafMsgDebug() << mafTr("Signal not present for topic %1").arg(topic);
+        return false;
+    }
     mafVariant sigVariant = (*itemEventProp)[SIGNATURE];
     mafString sig = sigVariant.toString();
     if(sig.length() > 0) {
@@ -203,7 +207,11 @@ bool mafEventDispatcher::registerSignal(const mafEvent &props) {
     if(m_SignalsHash.contains(topic)) {// && (this->isSignaturePresent(signal_props) == true)) {
         // Only one signal for a given id can be registered!!
         QObject *obj = props[OBJECT].value<QObject *>();
-        mafMsgWarning("%s", mafTr("Object %1 is trying to register a signal with ID '%2' that has been already registered!!").arg(obj->metaObject()->className(), topic).toAscii().data());
+        if(obj != NULL) {
+            mafMsgWarning("%s", mafTr("Object %1 is trying to register a signal with ID '%2' that has been already registered!!").arg(obj->metaObject()->className(), topic).toAscii().data());
+        } else {
+            mafMsgWarning("%s", mafTr("NULL is trying to register a signal with ID '%2' that has been already registered!!").arg(topic).toAscii().data());
+        }
         return false;
     }
 
