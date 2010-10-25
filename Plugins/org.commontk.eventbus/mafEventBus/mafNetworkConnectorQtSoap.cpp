@@ -17,15 +17,16 @@
 using namespace mafEventBus;
 
 mafNetworkConnectorQtSoap::mafNetworkConnectorQtSoap() : mafNetworkConnector(), m_Http(NULL), m_WSDLUrl(""),m_Response(NULL) {
+    m_Protocol = "SOAP";
 }
 
 mafNetworkConnectorQtSoap::~mafNetworkConnectorQtSoap() {
     if(m_Http) delete m_Http;
 }
 
-//retrieve an instance of the object
 mafNetworkConnector *mafNetworkConnectorQtSoap::clone() {
-    return new mafNetworkConnectorQtSoap();
+    mafNetworkConnectorQtSoap *copy = new mafNetworkConnectorQtSoap();
+    return copy;
 }
 
 void mafNetworkConnectorQtSoap::registerServerMethod(mafString methodName, mafList<mafVariant::Type> types) {
@@ -246,13 +247,13 @@ void mafNetworkConnectorQtSoap::processReturnValue( int requestId, QVariant valu
     Q_UNUSED( requestId );
     Q_ASSERT( value.canConvert( QVariant::String ) );
     mafMsgDebug("%s", value.toString().toAscii().data());
-    mafEventBusManager::instance()->notifyEvent("REMOTE_COMMUNICATION_DONE", mafEventTypeLocal);
+    mafEventBusManager::instance()->notifyEvent("maf.remote.eventBus.comunicationDone", mafEventTypeLocal);
 }
 
 void mafNetworkConnectorQtSoap::processFault( int requestId, int errorCode, QString errorString ) {
     // Log the error.
     mafMsgDebug("%s", mafTr("Process Fault for requestID %1 with error %2 - %3").arg(mafString::number(requestId), mafString::number(errorCode), errorString).toAscii().data());
-    mafEventBusManager::instance()->notifyEvent("REMOTE_COMMUNICATION_FAILED", mafEventTypeLocal);
+    mafEventBusManager::instance()->notifyEvent("maf.remote.eventBus.comunicationFailed", mafEventTypeLocal);
 }
 
 void mafNetworkConnectorQtSoap::processRequest( int requestId, QString methodName, QList<xmlrpc::Variant> parameters ) {
