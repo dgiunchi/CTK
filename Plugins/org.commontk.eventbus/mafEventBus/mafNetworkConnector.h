@@ -24,6 +24,8 @@ namespace mafEventBus {
 class MAFEVENTBUSSHARED_EXPORT mafNetworkConnector : public QObject {
     Q_OBJECT
 
+    Q_PROPERTY(QString protocol READ protocol);
+
 public:
     /// object constructor.
     mafNetworkConnector();
@@ -42,7 +44,21 @@ public:
 
     //retrieve an instance of the object
     virtual mafNetworkConnector *clone() = 0;
+
+    ///retrieve the protocol type of the connector
+    mafString protocol();
+
+protected:
+    mafString m_Protocol; ///< define the protocol of the connector (xmlrpc, soap, etc...)
 };
+
+/////////////////////////////////////////////////////////////
+// Inline methods
+/////////////////////////////////////////////////////////////
+
+inline mafString mafNetworkConnector::protocol() {
+    return m_Protocol;
+}
 
 } //namespace mafEventBus
 
