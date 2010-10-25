@@ -12,8 +12,6 @@
 #include "mafEventDispatcherLocal.h"
 #include "mafEvent.h"
 
-//#include <mafIdProvider.h>
-
 using namespace mafEventBus;
 
 mafEventDispatcherLocal::mafEventDispatcherLocal() : mafEventDispatcher() {
@@ -26,7 +24,7 @@ mafEventDispatcherLocal::~mafEventDispatcherLocal() {
 
 void mafEventDispatcherLocal::initializeGlobalEvents() {
     mafEvent *properties = new mafEvent();
-    mafString topic = "local.app.GLOBAL_UPDATE_EVENT";
+    mafString topic = "maf.local.eventBus.globalUpdate";
     (*properties)[TOPIC] =  topic;
     (*properties)[TYPE] = mafEventTypeLocal;
     (*properties)[SIGTYPE] = mafSignatureTypeSignal;
@@ -53,6 +51,9 @@ void mafEventDispatcherLocal::notifyEvent(const mafEvent &event_dictionary, mafE
             if(argList != NULL) {
                 if (returnArg == NULL || returnArg->data() == NULL) { //don't use return value
                     switch (argList->count()) {
+                        case 0:
+                            this->metaObject()->invokeMethod(obj, signal_to_emit.toAscii());
+                            break;
                         case 1:
                             this->metaObject()->invokeMethod(obj, signal_to_emit.toAscii(), \
                             argList->at(0));
@@ -102,6 +103,9 @@ void mafEventDispatcherLocal::notifyEvent(const mafEvent &event_dictionary, mafE
                     } //switch
                  } else { //use return value
                     switch (argList->count()) {
+                        case 0:
+                            this->metaObject()->invokeMethod(obj, signal_to_emit.toAscii(), *returnArg);
+                            break;
                         case 1:
                             this->metaObject()->invokeMethod(obj, signal_to_emit.toAscii(), *returnArg,\
                             argList->at(0));
