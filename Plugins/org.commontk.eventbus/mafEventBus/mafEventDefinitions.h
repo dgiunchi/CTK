@@ -23,7 +23,7 @@
 #include <QThread>
 #include <QThreadPool>
 #include <QObject>
-
+#include <QDebug>
 
 #include "mafEventBus_global.h"
 
@@ -69,7 +69,7 @@
         bool ok =  mafEventBus::mafEventBusManager::instance()->addEventProperty(*properties);\
         if(!ok) {\
             mafMsgWarning("%s", mafTr("Some problem occourred during the signal registration with ID '%1'.").arg(topic).toAscii().data());\
-            mafDEL(properties); \
+            if(properties) {delete properties; properties = NULL;} \
         }\
     }
 
@@ -79,7 +79,7 @@
         bool ok =  mafEventBus::mafEventBusManager::instance()->addEventProperty(*properties);\
         if(!ok) {\
             mafMsgWarning("%s", mafTr("Some problem occourred during the signal registration with ID '%1'.").arg(topic).toAscii().data());\
-            mafDEL(properties); \
+            if(properties) {delete properties; properties = NULL;} \
         }\
     }
 
@@ -89,7 +89,7 @@
         bool ok =  mafEventBus::mafEventBusManager::instance()->addEventProperty(*properties);\
         if(!ok) {\
             mafMsgWarning("%s", mafTr("Some problem occourred during the callback registration with ID '%1'.").arg(topic).toAscii().data());\
-            mafDEL(properties); \
+            if(properties) {delete properties; properties = NULL;} \
         }\
     }
 
