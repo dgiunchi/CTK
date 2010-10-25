@@ -28,7 +28,7 @@ mafEventDispatcherRemote::~mafEventDispatcherRemote() {
 
 void mafEventDispatcherRemote::initializeGlobalEvents() {
     mafEvent *properties = new mafEvent();
-    mafString topic = "remote.app.GLOBAL_UPDATE_EVENT";
+    mafString topic = "maf.local.eventBus.globalUpdate";
     (*properties)[TOPIC] = topic;
     (*properties)[TYPE] = mafEventTypeRemote;
     (*properties)[SIGTYPE] = mafSignatureTypeSignal;
@@ -39,20 +39,24 @@ void mafEventDispatcherRemote::initializeGlobalEvents() {
 }
 
 void mafEventDispatcherRemote::setNetworkConnectorServer(mafNetworkConnector *connector) {
-    if(m_NetworkConnectorServer != connector) {
-        if(m_NetworkConnectorServer != NULL) {
-            delete m_NetworkConnectorServer;
-        }
+    if(m_NetworkConnectorServer == NULL) {
         m_NetworkConnectorServer = connector->clone();
-    }
+    } else {
+        if(m_NetworkConnectorServer->protocol() != connector->protocol()) {
+            delete m_NetworkConnectorServer; //if there will be multiprotocol , here there will be a problem for thread app
+            m_NetworkConnectorServer = connector->clone();
+       }
+   }
 }
 
 void mafEventDispatcherRemote::setNetworkConnectorClient(mafNetworkConnector *connector) {
-    if(m_NetworkConnectorClient != connector) {
-        if(m_NetworkConnectorClient != NULL) {
-            delete m_NetworkConnectorClient;
+     if(m_NetworkConnectorClient == NULL) {
+         m_NetworkConnectorClient = connector->clone();
+     } else {
+         if(m_NetworkConnectorClient->protocol() != connector->protocol()) {
+             delete m_NetworkConnectorClient; //if there will be multiprotocol , here there will be a problem for thread app
+             m_NetworkConnectorClient = connector->clone();
         }
-        m_NetworkConnectorClient = connector->clone();
     }
 }
 
