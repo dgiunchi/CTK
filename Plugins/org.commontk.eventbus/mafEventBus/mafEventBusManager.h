@@ -25,7 +25,7 @@ namespace mafEventBus {
 /**
  Class name: mafEventBusManager
  This singletone provides the access point of the Communication Bus for MAF3 framework.
- mafEventBusManager defines also the mafId GLOBAL_UPDATE_EVENT to be used as generic update notification mechanism that the event bus can send to all the observers.
+ mafEventBusManager defines also the mafId maf.local.eventBus.globalUpdate to be used as generic update notification mechanism that the event bus can send to all the observers.
  */
 class MAFEVENTBUSSHARED_EXPORT mafEventBusManager {
 public:
@@ -63,6 +63,9 @@ public:
 
     /// Destroy the singleton instance. To be called at the end of the application.
     void shutdown();
+
+    /// initialize NetworkConnectors
+    void initializeNetworkConnectors();
 
     /// Retrieve if the signal has been registered previously.
     bool isSignalPresent(const mafString topic) const;
