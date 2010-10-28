@@ -12,8 +12,13 @@ IF(NOT QtSOAP_FOUND)
   MESSAGE(FATAL_ERROR "error: QtSOAP package is required to build ${PROJECT_NAME}" )
 ENDIF()
 
+FIND_PACKAGE(qxmlrpc)
+IF(NOT qxmlrpc_FOUND)
+  MESSAGE(FATAL_ERROR "error: qxmlrpc package is required to build ${PROJECT_NAME}" )
+ENDIF()
+
 # TODO: Fix this after discussing include dependencies with Jc
-SET(CTK_BASE_INCLUDE_DIRS ${CTK_BASE_INCLUDE_DIRS} ${QTSOAP_INCLUDE_DIR} CACHE INTERNAL "CTK includes" FORCE)
+SET(CTK_BASE_INCLUDE_DIRS ${CTK_BASE_INCLUDE_DIRS} ${QTSOAP_INCLUDE_DIR}  ${qxmlrpc_INCLUDE_DIR} CACHE INTERNAL "CTK includes" FORCE)
 
 # Additional directories to include
 SET(PLUGIN_include_directories
