@@ -41,14 +41,15 @@ namespace
 class RenderWindowItem
 {
 public:
-  RenderWindowItem(const double rendererBackgroundColor[3], double colorWindow, double colorLevel);
+  RenderWindowItem(const double rendererBackgroundColor[3], const double highlightedBoxColor[3],
+                   double colorWindow, double colorLevel);
   void SetViewport(double xMin, double yMin, double viewportWidth, double viewportHeight);
 
   /// Create the actor supporing the image mapper
   void SetupImageMapperActor(double colorWindow, double colorLevel);
 
   /// Create a box around the renderer.
-  void SetupHighlightedBoxActor(bool visible = false);
+  void SetupHighlightedBoxActor(const double highlightedBoxColor[3], bool visible = false);
 
   /// Set HighlightedBox color
   void SetHighlightedBoxColor(double* newHighlightedBoxColor);
@@ -64,16 +65,17 @@ public:
 
 //-----------------------------------------------------------------------------
 RenderWindowItem::RenderWindowItem(const double rendererBackgroundColor[3],
+                                   const double highlightedBoxColor[3],
                                    double colorWindow, double colorLevel)
 {
-  // Instanciate a renderer
+  // Instantiate a renderer
   this->Renderer = vtkSmartPointer<vtkRenderer>::New();
   this->Renderer->SetBackground(rendererBackgroundColor[0],
                                 rendererBackgroundColor[1],
                                 rendererBackgroundColor[2]);
 
   this->SetupImageMapperActor(colorWindow, colorLevel);
-  this->SetupHighlightedBoxActor();
+  this->SetupHighlightedBoxActor(highlightedBoxColor);
 }
 
 //-----------------------------------------------------------------------------
@@ -90,7 +92,7 @@ void RenderWindowItem::SetupImageMapperActor(double colorWindow, double colorLev
   assert(this->Renderer);
   assert(!this->ImageMapper);
 
-  // Instanciate an image mapper
+  // Instantiate an image mapper
   this->ImageMapper = vtkSmartPointer<vtkImageMapper>::New();
   this->ImageMapper->SetColorWindow(colorWindow);
   this->ImageMapper->SetColorLevel(colorLevel);
@@ -105,7 +107,7 @@ void RenderWindowItem::SetupImageMapperActor(double colorWindow, double colorLev
 }
 
 //---------------------------------------------------------------------------
-void RenderWindowItem::SetupHighlightedBoxActor(bool visible)
+void RenderWindowItem::SetupHighlightedBoxActor(const double highlightedBoxColor[3], bool visible)
 {
   assert(this->Renderer);
   assert(!this->HighlightedBoxActor);
@@ -113,11 +115,11 @@ void RenderWindowItem::SetupHighlightedBoxActor(bool visible)
   // Create a highlight actor (2D box around viewport)
   VTK_CREATE(vtkPolyData, poly);
   VTK_CREATE(vtkPoints, points);
-  double eps = 0.0;
-  points->InsertNextPoint(eps, eps, 0);
-  points->InsertNextPoint(1, eps, 0);
-  points->InsertNextPoint(1, 1, 0);
-  points->InsertNextPoint(eps, 1, 0);
+  double eps = 0.00;
+  points->InsertNextPoint(eps, eps, 0); // bottom-left
+  points->InsertNextPoint(1 + eps, eps, 0); // bottom-right
+  points->InsertNextPoint(1 + eps, 1 + eps, 0); // top-right
+  points->InsertNextPoint(eps, 1 + eps, 0); // top-left
 
   VTK_CREATE(vtkCellArray, cells);
   cells->InsertNextCell(5);
@@ -139,7 +141,8 @@ void RenderWindowItem::SetupHighlightedBoxActor(bool visible)
 
   this->HighlightedBoxActor = vtkSmartPointer<vtkActor2D>::New();
   this->HighlightedBoxActor->SetMapper(polyDataMapper);
-  this->HighlightedBoxActor->GetProperty()->SetColor(0, 1, 0); // Default to green
+  this->HighlightedBoxActor->GetProperty()->SetColor(
+      highlightedBoxColor[0], highlightedBoxColor[1], highlightedBoxColor[2]); // Default to green
   this->HighlightedBoxActor->GetProperty()->SetDisplayLocationToForeground();
   this->HighlightedBoxActor->GetProperty()->SetLineWidth(3); // wide enough so not clipped
   this->HighlightedBoxActor->SetVisibility(visible);
@@ -174,8 +177,10 @@ public:
   int                                           RenderWindowColumnCount;
   int                                           RenderWindowLayoutType;
   double                                        HighlightedBoxColor[3];
+  int                                           RendererLayer;
   vtkWeakPointer<vtkRenderWindowInteractor>     CurrentInteractor;
   vtkSmartPointer<vtkCornerAnnotation>          CornerAnnotation;
+  std::string                                   CornerAnnotationText;
 
   vtkWeakPointer<vtkImageData>                  ImageData;
   double                                        ColorWindow;
@@ -205,6 +210,7 @@ vtkLightBoxRendererManager::vtkInternal::vtkInternal(vtkLightBoxRendererManager*
   this->RenderWindowLayoutType = vtkLightBoxRendererManager::LeftRightTopBottom;
   this->ColorWindow = 255;
   this->ColorLevel = 127.5;
+  this->RendererLayer = 0;
   // Default background color: black
   this->RendererBackgroundColor[0] = 0.0;
   this->RendererBackgroundColor[1] = 0.0;
@@ -237,12 +243,15 @@ void vtkLightBoxRendererManager::vtkInternal::SetupCornerAnnotation()
     if (!(*it)->Renderer->HasViewProp(this->CornerAnnotation))
       {
       (*it)->Renderer->AddViewProp(this->CornerAnnotation);
-      this->CornerAnnotation->SetMaximumLineHeight(0.07);
-      vtkTextProperty *tprop = this->CornerAnnotation->GetTextProperty();
-      tprop->ShadowOn();
       }
-    this->CornerAnnotation->ClearAllTexts();
     }
+
+  this->CornerAnnotation->SetMaximumLineHeight(0.07);
+  vtkTextProperty *tprop = this->CornerAnnotation->GetTextProperty();
+  tprop->ShadowOn();
+
+  this->CornerAnnotation->ClearAllTexts();
+  this->CornerAnnotation->SetText(2, this->CornerAnnotationText.c_str());
 }
 
 //---------------------------------------------------------------------------
@@ -250,7 +259,13 @@ void vtkLightBoxRendererManager::vtkInternal::setupRendering()
 {
   assert(this->RenderWindow);
   
-  this->RenderWindow->GetRenderers()->RemoveAllItems();
+  // Remove only renderers managed by this light box
+  for(RenderWindowItemListIt it = this->RenderWindowItemList.begin();
+      it != this->RenderWindowItemList.end();
+      ++it)
+    {
+    this->RenderWindow->GetRenderers()->RemoveItem((*it)->Renderer);
+    }
 
   // Compute the width and height of each RenderWindowItem
   double viewportWidth  = 1.0 / static_cast<double>(this->RenderWindowColumnCount);
@@ -329,6 +344,25 @@ vtkLightBoxRendererManager::~vtkLightBoxRendererManager()
 void vtkLightBoxRendererManager::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
+}
+
+//----------------------------------------------------------------------------
+void vtkLightBoxRendererManager::SetRendererLayer(int newLayer)
+{
+  if (this->IsInitialized())
+    {
+    vtkErrorMacro(<< "SetRendererLayer failed - vtkLightBoxRendererManager is initialized");
+    return;
+    }
+
+  if (newLayer == this->Internal->RendererLayer)
+    {
+    return;
+    }
+
+  this->Internal->RendererLayer = newLayer;
+
+  this->Modified();
 }
 
 //----------------------------------------------------------------------------
@@ -456,7 +490,7 @@ void vtkLightBoxRendererManager::ResetCamera()
 //----------------------------------------------------------------------------
 int vtkLightBoxRendererManager::GetRenderWindowItemCount()
 {
-  return this->Internal->RenderWindowItemList.size();
+  return static_cast<int>(this->Internal->RenderWindowItemList.size());
 }
 
 //----------------------------------------------------------------------------
@@ -522,7 +556,8 @@ void vtkLightBoxRendererManager::SetRenderWindowLayout(int rowCount, int columnC
     return;
     }
 
-  int extraItem = (rowCount * columnCount) - this->Internal->RenderWindowItemList.size();
+  int extraItem = (rowCount * columnCount)
+    - static_cast<int>(this->Internal->RenderWindowItemList.size());
   if (extraItem > 0)
     {
     //std::cout << "Creating " << extraItem << " RenderWindowItem";
@@ -531,8 +566,10 @@ void vtkLightBoxRendererManager::SetRenderWindowLayout(int rowCount, int columnC
     while(extraItem > 0)
       {
       RenderWindowItem * item =
-          new RenderWindowItem(this->Internal->RendererBackgroundColor, 
+          new RenderWindowItem(this->Internal->RendererBackgroundColor,
+                               this->Internal->HighlightedBoxColor,
                                this->Internal->ColorWindow, this->Internal->ColorLevel);
+      item->Renderer->SetLayer(this->Internal->RendererLayer);
       item->ImageMapper->SetInput(this->Internal->ImageData);
       this->Internal->RenderWindowItemList.push_back(item);
       --extraItem;
@@ -587,6 +624,27 @@ int vtkLightBoxRendererManager::GetRenderWindowColumnCount()
 void vtkLightBoxRendererManager::SetRenderWindowColumnCount(int newColumnCount)
 {
   this->SetRenderWindowLayout(this->GetRenderWindowRowCount(), newColumnCount);
+}
+
+//----------------------------------------------------------------------------
+bool vtkLightBoxRendererManager::GetHighlightedById(int id)
+{
+  if (!this->IsInitialized())
+    {
+    vtkErrorMacro(<< "SetHighlightedById failed - vtkLightBoxRendererManager is NOT initialized");
+    return false;
+    }
+  if (id < 0 || id >= static_cast<int>(this->Internal->RenderWindowItemList.size()))
+    {
+    return false;
+    }
+  return this->Internal->RenderWindowItemList.at(id)->HighlightedBoxActor->GetVisibility();
+}
+
+//----------------------------------------------------------------------------
+bool vtkLightBoxRendererManager::GetHighlighted(int rowId, int columnId)
+{
+  return this->GetHighlightedById(this->ComputeRenderWindowItemId(rowId, columnId));
 }
 
 //----------------------------------------------------------------------------
@@ -664,13 +722,15 @@ void vtkLightBoxRendererManager::SetCornerAnnotationText(const std::string& text
                   "vtkLightBoxRendererManager is NOT initialized");
     return;
     }
-  if (text.compare(this->Internal->CornerAnnotation->GetText(2)) == 0)
+  if (text.compare(this->Internal->CornerAnnotationText) == 0)
     {
     return;
     }
 
   this->Internal->CornerAnnotation->ClearAllTexts();
   this->Internal->CornerAnnotation->SetText(2, text.c_str());
+
+  this->Internal->CornerAnnotationText = text;
 
   this->Modified();
 }
@@ -680,6 +740,12 @@ const std::string vtkLightBoxRendererManager::GetCornerAnnotationText() const
 {
   const char * text = this->Internal->CornerAnnotation->GetText(2);
   return text ? text : "";
+}
+
+// --------------------------------------------------------------------------
+vtkCornerAnnotation * vtkLightBoxRendererManager::GetCornerAnnotation() const
+{
+  return this->Internal->CornerAnnotation;
 }
 
 // --------------------------------------------------------------------------

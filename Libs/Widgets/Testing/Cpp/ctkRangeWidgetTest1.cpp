@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
 #include <QApplication>
+#include <QTimer>
 
 // CTK includes
 #include "ctkRangeWidget.h"
@@ -129,6 +130,7 @@ int ctkRangeWidgetTest1(int argc, char * argv [] )
               << sliderSpinBox.maximum() << std::endl;
     return EXIT_FAILURE;
     }
+
   std::cout << "3" << std::endl;
   sliderSpinBox.setMaximumValue(77.777);
 
@@ -167,6 +169,7 @@ int ctkRangeWidgetTest1(int argc, char * argv [] )
               << sliderSpinBox.maximum() << std::endl;
     return EXIT_FAILURE;
     }
+
   std::cout << "6" << std::endl;
   //sliderSpinBox.reset();
   sliderSpinBox.setSpinBoxAlignment(Qt::AlignRight);
@@ -181,6 +184,7 @@ int ctkRangeWidgetTest1(int argc, char * argv [] )
               << sliderSpinBox.maximum() << std::endl;
     return EXIT_FAILURE;
     }
+
   std::cout << "7" << std::endl;
   sliderSpinBox.setAutoSpinBoxWidth(false);
 
@@ -194,6 +198,7 @@ int ctkRangeWidgetTest1(int argc, char * argv [] )
               << sliderSpinBox.maximum() << std::endl;
     return EXIT_FAILURE;
     }
+
   std::cout << "8" << std::endl;
   sliderSpinBox.setPrefix("$");
 
@@ -233,7 +238,23 @@ int ctkRangeWidgetTest1(int argc, char * argv [] )
     return EXIT_FAILURE;
     }
 
+  sliderSpinBox.setSymmetricMoves(true);
+  
+  if (sliderSpinBox.symmetricMoves() != true)
+    {
+    std::cerr << "ctkRangeWidget::setSymmetricMoves failed" << std::endl;
+    return EXIT_FAILURE;
+    }
   // FIXME check that the correct signals are sent.
-  return EXIT_SUCCESS;
+
+  sliderSpinBox.show();
+
+  if (argc < 2 || QString(argv[1]) != "-I" )
+    {
+    QTimer::singleShot(200, &app, SLOT(quit()));
+    }
+
+  return app.exec();
+
 }
 

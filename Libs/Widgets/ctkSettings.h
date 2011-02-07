@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 /*=========================================================================
 
@@ -60,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QSettings>
 
 // CTK includes
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class QDialog;
 class QMainWindow;
@@ -72,15 +72,41 @@ class CTK_WIDGETS_EXPORT ctkSettings : public QSettings
   Q_OBJECT
 
 public:
+  /// See \QSettings::QSettings(const QString& ,const QString& , QObject* )
   ctkSettings(
     const QString& organization,
     const QString& application,
-    QObject* p);
-    
+    QObject* parent = 0);
+  /// See \QSettings::QSettings(QSettings::Scope ,const QString& ,const QString& , QObject* )
+  ctkSettings(
+    QSettings::Scope scope,
+    const QString& organization,
+    const QString& application = QString(),
+    QObject* parent = 0);
+  /// See \QSettings::QSettings(QSettings::Format ,QSettings::Scope ,const QString& ,const QString& , QObject* )
+  ctkSettings(
+    QSettings::Format format,
+    QSettings::Scope scope,
+    const QString& organization,
+    const QString& application = QString(),
+    QObject* parent = 0);
+  /// See \QSettings::QSettings(const QString& , QSettings::Format , QObject* )
+  ctkSettings(const QString& fileName, QSettings::Format format, QObject* parent = 0);
+  /// See \QSettings::QSettings(QObject*)
+  ctkSettings(QObject* parent = 0);
+
+  /// Saves the position, size and layout of the QMainWindow
   void saveState(const QMainWindow& window, const QString& key);
+
+  /// Saves the position and size of the QDialog
   void saveState(const QDialog& dialog, const QString& key);
-  
+
+  /// Restore the position, size and layout of the QMainWindow
+  /// for a given key
   void restoreState(const QString& key, QMainWindow& window);
+  
+  /// Saves the position, size and layout of the QMainWindow
+  /// for a given key
   void restoreState(const QString& key, QDialog& dialog);
 
   /// Calling this method will cause the modified signal to be emited.

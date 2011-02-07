@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -59,22 +59,24 @@ MACRO(ctkMacroBuildQtDesignerPlugin)
  
   SET(MY_LIBRARY_EXPORT_DIRECTIVE ${MY_EXPORT_DIRECTIVE})
   SET(MY_EXPORT_HEADER_PREFIX ${MY_NAME})
+  STRING(REGEX REPLACE "^CTK" "ctk" MY_EXPORT_HEADER_PREFIX ${MY_EXPORT_HEADER_PREFIX})
   SET(MY_LIBNAME ${lib_name})
   
   CONFIGURE_FILE(
-    ${CTK_SOURCE_DIR}/Libs/CTKExport.h.in
+    ${CTK_SOURCE_DIR}/Libs/ctkExport.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/${MY_EXPORT_HEADER_PREFIX}Export.h
     )
   SET(dynamicHeaders
     "${dynamicHeaders};${CMAKE_CURRENT_BINARY_DIR}/${MY_EXPORT_HEADER_PREFIX}Export.h")
 
   # Make sure variable are cleared
-  SET(MY_UI_CXX)
+  SET(MY_MOC_CPP)
+  SET(MY_UI_CPP)
   SET(MY_QRC_SRCS)
 
   # Wrap
-  QT4_WRAP_CPP(MY_SRCS ${MY_MOC_SRCS})
-  QT4_WRAP_UI(MY_UI_CXX ${MY_UI_FORMS})
+  QT4_WRAP_CPP(MY_MOC_CPP ${MY_MOC_SRCS})
+  QT4_WRAP_UI(MY_UI_CPP ${MY_UI_FORMS})
   SET(MY_QRC_SRCS "")
   IF(DEFINED MY_RESOURCES)
     QT4_ADD_RESOURCES(MY_QRC_SRCS ${MY_RESOURCES})
@@ -86,14 +88,15 @@ MACRO(ctkMacroBuildQtDesignerPlugin)
     )
 
   SOURCE_GROUP("Generated" FILES
-    ${MY_MOC_SRCS}
+    ${MY_MOC_CPP}
     ${MY_QRC_SRCS}
-    ${MY_UI_CXX}
+    ${MY_UI_CPP}
     )
-  
+
   ADD_LIBRARY(${lib_name} ${MY_LIBRARY_TYPE}
     ${MY_SRCS}
-    ${MY_UI_CXX}
+    ${MY_MOC_CPP}
+    ${MY_UI_CPP}
     ${MY_QRC_SRCS}
     )
 

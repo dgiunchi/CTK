@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
   =========================================================================*/
 
 // Qt includes
@@ -115,20 +115,31 @@ void ctkWorkflowStepPrivate::invokeOnExitCommandInternal(const ctkWorkflowStep* 
 // ctkWorkflowStep methods
 
 // --------------------------------------------------------------------------
+ctkWorkflowStep::ctkWorkflowStep(): d_ptr(new ctkWorkflowStepPrivate(*this))
+{
+}
+
+// --------------------------------------------------------------------------
 ctkWorkflowStep::ctkWorkflowStep(ctkWorkflow* newWorkflow, const QString& newId)
   : d_ptr(new ctkWorkflowStepPrivate(*this))
 {
   Q_D(ctkWorkflowStep);
 
-  if (newId.isEmpty())
-    {
-     d->Id = d->metaObject()->className();
-    }
-  else
-    {
-    d->Id = newId;
-    }
+  d->Id = newId;
+  d->Workflow = newWorkflow;
+}
 
+// --------------------------------------------------------------------------
+ctkWorkflowStep::ctkWorkflowStep(ctkWorkflowStepPrivate * pimpl):d_ptr(pimpl)
+{
+}
+
+// --------------------------------------------------------------------------
+ctkWorkflowStep::ctkWorkflowStep(ctkWorkflowStepPrivate * pimpl,
+                                 ctkWorkflow* newWorkflow, const QString& newId):d_ptr(pimpl)
+{
+  Q_D(ctkWorkflowStep);
+  d->Id = newId;
   d->Workflow = newWorkflow;
 }
 
@@ -138,44 +149,56 @@ ctkWorkflowStep::~ctkWorkflowStep()
 }
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, ctkWorkflow*, workflow, Workflow);
-CTK_SET_CXX(ctkWorkflowStep, ctkWorkflow*, setWorkflow, Workflow);
+CTK_GET_CPP(ctkWorkflowStep, ctkWorkflow*, workflow, Workflow);
+CTK_SET_CPP(ctkWorkflowStep, ctkWorkflow*, setWorkflow, Workflow);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, QString, id, Id);
-CTK_SET_CXX(ctkWorkflowStep, const QString&, setId, Id);
+CTK_GET_CPP(ctkWorkflowStep, QString, id, Id);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, QString, name, Name);
-CTK_SET_CXX(ctkWorkflowStep, const QString&, setName, Name);
+void ctkWorkflowStep::setId(const QString& newId)
+{
+  Q_D(ctkWorkflowStep);
+  if (d->Workflow && d->Workflow->hasStep(newId) && !this->id().isEmpty())
+    {
+    logger.error(QString("ctkWorkflowStep - Failed to change id from '%1' to '%2' - "
+                         "Step already added to a workflow !").arg(this->id()).arg(newId));
+    return;
+    }
+  d->Id = newId;
+}
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, QString, description, Description);
-CTK_SET_CXX(ctkWorkflowStep, const QString&, setDescription, Description);
+CTK_GET_CPP(ctkWorkflowStep, QString, name, Name);
+CTK_SET_CPP(ctkWorkflowStep, const QString&, setName, Name);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, QString, statusText, StatusText);
-CTK_SET_CXX(ctkWorkflowStep, const QString&, setStatusText, StatusText);
+CTK_GET_CPP(ctkWorkflowStep, QString, description, Description);
+CTK_SET_CPP(ctkWorkflowStep, const QString&, setDescription, Description);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, bool, hasValidateCommand, HasValidateCommand);
-CTK_SET_CXX(ctkWorkflowStep, bool, setHasValidateCommand, HasValidateCommand);
+CTK_GET_CPP(ctkWorkflowStep, QString, statusText, StatusText);
+CTK_SET_CPP(ctkWorkflowStep, const QString&, setStatusText, StatusText);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, bool, hasOnEntryCommand, HasOnEntryCommand);
-CTK_SET_CXX(ctkWorkflowStep, bool, setHasOnEntryCommand, HasOnEntryCommand);
+CTK_GET_CPP(ctkWorkflowStep, bool, hasValidateCommand, HasValidateCommand);
+CTK_SET_CPP(ctkWorkflowStep, bool, setHasValidateCommand, HasValidateCommand);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, bool, hasOnExitCommand, HasOnExitCommand);
-CTK_SET_CXX(ctkWorkflowStep, bool, setHasOnExitCommand, HasOnExitCommand);
+CTK_GET_CPP(ctkWorkflowStep, bool, hasOnEntryCommand, HasOnEntryCommand);
+CTK_SET_CPP(ctkWorkflowStep, bool, setHasOnEntryCommand, HasOnEntryCommand);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, QState*, processingState, ProcessingState);
-CTK_GET_CXX(ctkWorkflowStep, QState*, validationState, ValidationState);
+CTK_GET_CPP(ctkWorkflowStep, bool, hasOnExitCommand, HasOnExitCommand);
+CTK_SET_CPP(ctkWorkflowStep, bool, setHasOnExitCommand, HasOnExitCommand);
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowStep, ctkWorkflowIntrastepTransition*, validationTransition, ValidationTransition);
-CTK_GET_CXX(ctkWorkflowStep, ctkWorkflowIntrastepTransition*,
+CTK_GET_CPP(ctkWorkflowStep, QState*, processingState, ProcessingState);
+CTK_GET_CPP(ctkWorkflowStep, QState*, validationState, ValidationState);
+
+// --------------------------------------------------------------------------
+CTK_GET_CPP(ctkWorkflowStep, ctkWorkflowIntrastepTransition*, validationTransition, ValidationTransition);
+CTK_GET_CPP(ctkWorkflowStep, ctkWorkflowIntrastepTransition*,
             validationFailedTransition, ValidationFailedTransition);
 
 // --------------------------------------------------------------------------

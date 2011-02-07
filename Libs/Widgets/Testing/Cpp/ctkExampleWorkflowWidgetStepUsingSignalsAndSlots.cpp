@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
   =========================================================================*/
 
 // Qt includes
@@ -50,6 +50,8 @@ public:
   int numberOfTimesRanOnEntry;
   int numberOfTimesRanOnExit;
 
+  ctkWorkflowStep * Step;
+
 };
 
 //-----------------------------------------------------------------------------
@@ -66,15 +68,21 @@ ctkExampleWorkflowWidgetStepUsingSignalsAndSlotsPrivate::ctkExampleWorkflowWidge
 
   this->numberOfTimesRanOnEntry = 0;
   this->numberOfTimesRanOnExit = 0;
+
+  this->Step = 0;
 }
 
 //-----------------------------------------------------------------------------
 // ctkExampleWorkflowWidgetStepUsingSignalsAndSlots methods
 
 //-----------------------------------------------------------------------------
-ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::ctkExampleWorkflowWidgetStepUsingSignalsAndSlots(QObject* _parent) : Superclass(_parent)
+ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::
+    ctkExampleWorkflowWidgetStepUsingSignalsAndSlots(ctkWorkflowStep* newStep, QObject* newParent) :
+    Superclass(newParent)
   , d_ptr(new ctkExampleWorkflowWidgetStepUsingSignalsAndSlotsPrivate)
 {
+  Q_D(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots);
+  d->Step = newStep;
 }
 
 //-----------------------------------------------------------------------------
@@ -83,14 +91,14 @@ ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::~ctkExampleWorkflowWidgetStepU
 }
 
 //-----------------------------------------------------------------------------
-CTK_GET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QWidget*, widget, widget);
-CTK_SET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QWidget*, setWidget, widget);
-CTK_GET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLabel*, label, label);
-CTK_SET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLabel*, setLabel, label);
-CTK_GET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLineEdit*, lineEdit, lineEdit);
-CTK_SET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLineEdit*, setLineEdit, lineEdit);
-CTK_GET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, int, numberOfTimesRanOnEntry, numberOfTimesRanOnEntry);
-CTK_GET_CXX(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, int, numberOfTimesRanOnExit, numberOfTimesRanOnExit);
+CTK_GET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QWidget*, widget, widget);
+CTK_SET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QWidget*, setWidget, widget);
+CTK_GET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLabel*, label, label);
+CTK_SET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLabel*, setLabel, label);
+CTK_GET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLineEdit*, lineEdit, lineEdit);
+CTK_SET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, QLineEdit*, setLineEdit, lineEdit);
+CTK_GET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, int, numberOfTimesRanOnEntry, numberOfTimesRanOnEntry);
+CTK_GET_CPP(ctkExampleWorkflowWidgetStepUsingSignalsAndSlots, int, numberOfTimesRanOnExit, numberOfTimesRanOnExit);
 
 //-----------------------------------------------------------------------------
 void ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::onEntry(
@@ -106,7 +114,8 @@ void ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::onEntry(
   d->numberOfTimesRanOnEntry++;
 
   // signals that we are finished
-  emit onEntryComplete();
+  QObject::staticMetaObject.invokeMethod(
+      d->Step->ctkWorkflowStepQObject(), "onEntryComplete");
 }
 
 //-----------------------------------------------------------------------------
@@ -123,7 +132,8 @@ void ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::onExit(
   d->numberOfTimesRanOnExit++;
 
   // signals that we are finished
-  emit onExitComplete();
+  QObject::staticMetaObject.invokeMethod(
+      d->Step->ctkWorkflowStepQObject(), "onExitComplete");
 }
 
 //-----------------------------------------------------------------------------
@@ -197,6 +207,8 @@ void ctkExampleWorkflowWidgetStepUsingSignalsAndSlots::validate(const QString& d
     }
 
   // return the validation results
-  emit validationComplete(retVal, desiredBranchId);
+  QObject::staticMetaObject.invokeMethod(
+      d->Step->ctkWorkflowStepQObject(), "validationComplete",
+      Q_ARG(bool, retVal), Q_ARG(QString, desiredBranchId));
 }
 

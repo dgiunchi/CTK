@@ -24,6 +24,8 @@ namespace mafEventBus {
 class MAFEVENTBUSSHARED_EXPORT mafNetworkConnector : public QObject {
     Q_OBJECT
 
+    Q_PROPERTY(QString protocol READ protocol);
+
 public:
     /// object constructor.
     mafNetworkConnector();
@@ -38,10 +40,23 @@ public:
     virtual void startListen() = 0;
 
     /// Allow to send a network request.
-    virtual void send(const mafString &event_id, mafList<mafVariant> *params) = 0;
+    virtual void send(const mafString event_id, mafEventArgumentsList *argList) = 0;
 
-    //retrieve an instance of the object
+    /// retrieve an instance of the object
     virtual mafNetworkConnector *clone() = 0;
+
+    /// retrieve the protocol type of the connector
+    mafString protocol();
+
+    /// register all the signals and slots
+    virtual void initializeForEventBus() = 0;
+
+signals:
+    /// signal for send a message to through network
+    void remoteCommunication(const mafString event_id, mafEventArgumentsList *argList);
+
+protected:
+    mafString m_Protocol; ///< define the protocol of the connector (xmlrpc, soap, etc...)
 };
 
 } //namespace mafEventBus

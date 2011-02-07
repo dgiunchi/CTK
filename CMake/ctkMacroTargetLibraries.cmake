@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -183,9 +183,9 @@ MACRO(ctkMacroGetAllCTKTargetLibraries all_target_libraries varname)
   SET(re_ctkplugin "^org_commontk_[a-zA-Z0-9_]+$")
   SET(_tmp_list)
   LIST(APPEND _tmp_list ${all_target_libraries})
-  ctkMacroListFilter(_tmp_list re_ctklib OUTPUT_VARIABLE ${varname})
-  ctkMacroListFilter(_tmp_list re_ctkplugin)
-  LIST(APPEND ${varname} ${_tmp_list})
+  #MESSAGE("calling ctkMacroListFilter with varname:${varname}")
+  ctkMacroListFilter(_tmp_list re_ctklib re_ctkplugin OUTPUT_VARIABLE ${varname})
+  #MESSAGE(STATUS "getallctklibs from ${all_target_libraries}")
   #MESSAGE(STATUS varname:${varname}:${${varname}})
 ENDMACRO()
 
@@ -195,7 +195,7 @@ ENDMACRO()
 MACRO(ctkMacroGetAllNonCTKTargetLibraries all_target_libraries varname)
   ctkMacroGetAllCTKTargetLibraries("${all_target_libraries}" all_ctk_libraries)
   SET(_tmp_list ${all_target_libraries})
-  IF("${all_ctk_libraries}")
+  IF(all_ctk_libraries)
     LIST(REMOVE_ITEM _tmp_list ${all_ctk_libraries})
   ENDIF()
   SET(${varname} ${_tmp_list})

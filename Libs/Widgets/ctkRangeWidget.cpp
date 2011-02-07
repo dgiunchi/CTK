@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -44,7 +44,7 @@ public:
 
   bool          Tracking;
   bool          Changing;
-  bool          SettingRange;
+  bool          SettingSliderRange;
   double        MinimumValueBeforeChange;
   double        MaximumValueBeforeChange;
   bool          AutoSpinBoxWidth;
@@ -63,7 +63,7 @@ ctkRangeWidgetPrivate::ctkRangeWidgetPrivate(ctkRangeWidget& object)
 {
   this->Tracking = true;
   this->Changing = false;
-  this->SettingRange = false;
+  this->SettingSliderRange = false;
   this->MinimumValueBeforeChange = 0.;
   this->MaximumValueBeforeChange = 0.;
   this->AutoSpinBoxWidth = true;
@@ -164,17 +164,29 @@ void ctkRangeWidgetPrivate::relayout()
     this->GridLayout->addWidget(this->MaximumSpinBox,0,2);
     this->GridLayout->addWidget(this->Slider,1,0,1,3);
     }
-  else if (this->SpinBoxAlignment & Qt::AlignVCenter)
-    {
-    this->GridLayout->addWidget(this->MinimumSpinBox,0,0);
-    this->GridLayout->addWidget(this->Slider,0,1);
-    this->GridLayout->addWidget(this->MaximumSpinBox,0,2);
-    }
   else if (this->SpinBoxAlignment & Qt::AlignBottom)
     {
     this->GridLayout->addWidget(this->MinimumSpinBox,1,0);
     this->GridLayout->addWidget(this->MaximumSpinBox,1,2);
     this->GridLayout->addWidget(this->Slider,0, 0, 1, 3);
+    }
+  else if (this->SpinBoxAlignment & Qt::AlignRight)
+    {
+    this->GridLayout->addWidget(this->Slider, 0, 0);
+    this->GridLayout->addWidget(this->MinimumSpinBox,0,1);
+    this->GridLayout->addWidget(this->MaximumSpinBox,0,2);
+    }
+  else if (this->SpinBoxAlignment & Qt::AlignLeft)
+    {
+    this->GridLayout->addWidget(this->MinimumSpinBox,0,0);
+    this->GridLayout->addWidget(this->MaximumSpinBox,0,1);
+    this->GridLayout->addWidget(this->Slider, 0, 2);
+    }
+  else // Qt::AlignVCenter (or any other bad alignment)
+    {
+    this->GridLayout->addWidget(this->MinimumSpinBox,0,0);
+    this->GridLayout->addWidget(this->Slider,0,1);
+    this->GridLayout->addWidget(this->MaximumSpinBox,0,2);
     }
 }
 
@@ -224,12 +236,17 @@ double ctkRangeWidget::maximum()const
 void ctkRangeWidget::setMinimum(double min)
 {
   Q_D(ctkRangeWidget);
+  bool blocked = d->MinimumSpinBox->blockSignals(true);
+  blocked = d->MaximumSpinBox->blockSignals(true);
   d->MinimumSpinBox->setMinimum(min);
+  d->MaximumSpinBox->setMinimum(min);
+  d->MinimumSpinBox->blockSignals(blocked);
+  d->MaximumSpinBox->blockSignals(blocked);
   // SpinBox can truncate min (depending on decimals).
   // use Spinbox's min to set Slider's min
-  d->SettingRange = true;
+  d->SettingSliderRange = true;
   d->Slider->setMinimum(d->MinimumSpinBox->minimum());
-  d->SettingRange = false;
+  d->SettingSliderRange = false;
   Q_ASSERT(d->equal(d->MinimumSpinBox->minimum(),d->Slider->minimum()));
   d->updateSpinBoxWidth();
 }
@@ -238,12 +255,17 @@ void ctkRangeWidget::setMinimum(double min)
 void ctkRangeWidget::setMaximum(double max)
 {
   Q_D(ctkRangeWidget);
+  bool blocked = d->MinimumSpinBox->blockSignals(true);
+  blocked = d->MaximumSpinBox->blockSignals(true);
+  d->MinimumSpinBox->setMaximum(max);
   d->MaximumSpinBox->setMaximum(max);
+  d->MinimumSpinBox->blockSignals(blocked);
+  d->MaximumSpinBox->blockSignals(blocked);
   // SpinBox can truncate max (depending on decimals).
   // use Spinbox's max to set Slider's max
-  d->SettingRange = true;
+  d->SettingSliderRange = true;
   d->Slider->setMaximum(d->MaximumSpinBox->maximum());
-  d->SettingRange = false;
+  d->SettingSliderRange = false;
   Q_ASSERT(d->equal(d->MaximumSpinBox->maximum(), d->Slider->maximum()));
   d->updateSpinBoxWidth();
 }
@@ -253,23 +275,34 @@ void ctkRangeWidget::setRange(double min, double max)
 {
   Q_D(ctkRangeWidget);
   
-  d->MinimumSpinBox->setMinimum(qMin(min,max));
-  d->MaximumSpinBox->setMaximum(qMax(min,max));
+  double oldMin = d->MinimumSpinBox->minimum();
+  double oldMax = d->MaximumSpinBox->maximum();
+  bool blocked = d->MinimumSpinBox->blockSignals(true);
+  d->MinimumSpinBox->setRange(qMin(min,max), qMax(min,max));
+  d->MinimumSpinBox->blockSignals(blocked);
+  blocked = d->MaximumSpinBox->blockSignals(true);
+  d->MaximumSpinBox->setRange(qMin(min,max), qMax(min,max));
+  d->MaximumSpinBox->blockSignals(blocked);
   // SpinBox can truncate the range (depending on decimals).
   // use Spinbox's range to set Slider's range
-  d->SettingRange = true;
+  d->SettingSliderRange = true;
   d->Slider->setRange(d->MinimumSpinBox->minimum(), d->MaximumSpinBox->maximum());
-  d->SettingRange = false;
+  d->SettingSliderRange = false;
   Q_ASSERT(d->equal(d->MinimumSpinBox->minimum(), d->Slider->minimum()));
   Q_ASSERT(d->equal(d->MaximumSpinBox->maximum(), d->Slider->maximum()));
   d->updateSpinBoxWidth();
+  if (oldMin != d->MinimumSpinBox->minimum() ||
+      oldMax != d->MaximumSpinBox->maximum())
+    {
+    emit rangeChanged(d->MinimumSpinBox->minimum(), d->MaximumSpinBox->maximum());
+    }
 }
 
 // --------------------------------------------------------------------------
 void ctkRangeWidget::onSliderRangeChanged(double min, double max)
 {
   Q_D(ctkRangeWidget);
-  if (!d->SettingRange)
+  if (!d->SettingSliderRange)
     {
     this->setRange(min, max);
     }
@@ -645,6 +678,20 @@ void ctkRangeWidget::setAutoSpinBoxWidth(bool autoWidth)
   Q_D(ctkRangeWidget);
   d->AutoSpinBoxWidth = autoWidth;
   d->updateSpinBoxWidth();
+}
+
+// --------------------------------------------------------------------------
+bool ctkRangeWidget::symmetricMoves()const
+{
+  Q_D(const ctkRangeWidget);
+  return d->Slider->symmetricMoves();
+}
+
+// --------------------------------------------------------------------------
+void ctkRangeWidget::setSymmetricMoves(bool symmetry)
+{
+  Q_D(ctkRangeWidget);
+  d->Slider->setSymmetricMoves(symmetry);
 }
 
 // -------------------------------------------------------------------------

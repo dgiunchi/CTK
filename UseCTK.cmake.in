@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -31,6 +31,6 @@ IF(NOT CTK_USE_FILE_INCLUDED)
   INCLUDE_DIRECTORIES(${CTK_INCLUDE_DIRS})
  
   # Add link directories needed to use CTK.
-  LINK_DIRECTORIES(${CTK_LIBRARY_DIRS} ${CTK_EXTERNAL_LIBRARY_DIRS})
+  # LINK_DIRECTORIES(${CTK_LIBRARY_DIRS} ${CTK_EXTERNAL_LIBRARY_DIRS})
  
 ENDIF()

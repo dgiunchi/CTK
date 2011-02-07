@@ -3,12 +3,13 @@
 
 #include <vtkObject.h>
 
-#include "CTKVisualizationVTKCoreExport.h"
+#include "ctkVisualizationVTKCoreExport.h"
 
 class vtkRenderWindow;
 class vtkRenderer;
 class vtkImageData;
 class vtkCamera;
+class vtkCornerAnnotation;
 
 class CTK_VISUALIZATION_VTK_CORE_EXPORT vtkLightBoxRendererManager : public vtkObject
 {
@@ -19,6 +20,11 @@ class CTK_VISUALIZATION_VTK_CORE_EXPORT vtkLightBoxRendererManager : public vtkO
   void Initialize(vtkRenderWindow* renderWindow);
 
   bool IsInitialized();
+
+  /// Set the layer associated with the renderers
+  /// \note By default, the value is 0
+  /// \sa vtkRenderer::SetLayer
+  void SetRendererLayer(int newLayer);
 
   /// Get associated RenderWindow
   vtkRenderWindow* GetRenderWindow();
@@ -77,6 +83,14 @@ class CTK_VISUALIZATION_VTK_CORE_EXPORT vtkLightBoxRendererManager : public vtkO
   /// \sa SetRenderWindowLayout
   int GetRenderWindowColumnCount();
 
+  /// Return True if the render view item identified by \a id is highlighted
+  bool GetHighlightedById(int id);
+
+  /// \brief Return True if the render view item identified by its position in the grid
+  /// is highlighted
+  /// \sa GetHighlightedById(int)
+  bool GetHighlighted(int rowId, int columnId);
+
   /// Highlight / Unhighlight a render view item given its \a id
   void SetHighlightedById(int id, bool highlighted);
 
@@ -105,6 +119,10 @@ class CTK_VISUALIZATION_VTK_CORE_EXPORT vtkLightBoxRendererManager : public vtkO
 
   /// Get current corner annotation
   const std::string GetCornerAnnotationText()const;
+
+  /// Get corner annotation actor
+  /// The same annotation is associated with all renderers managed by the light box
+  vtkCornerAnnotation * GetCornerAnnotation()const;
 
   /// Set background color
   void SetBackgroundColor(const double newBackgroundColor[3]);

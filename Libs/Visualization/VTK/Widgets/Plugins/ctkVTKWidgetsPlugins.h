@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkVTKWidgetsPlugins_h
@@ -25,13 +25,15 @@
 #include <QDesignerCustomWidgetCollectionInterface>
 
 // CTK includes
-#include "CTKVisualizationVTKWidgetsPluginsExport.h"
+#include "ctkVisualizationVTKWidgetsPluginsExport.h"
+#include "ctkVTKDataSetArrayComboBoxPlugin.h"
 #include "ctkVTKRenderViewPlugin.h"
 #include "ctkVTKScalarBarWidgetPlugin.h"
 #ifdef CTK_USE_CHARTS
 #include "ctkVTKScalarsToColorsViewPlugin.h"
 #endif
 #include "ctkVTKSliceViewPlugin.h"
+#include "ctkVTKSurfaceMaterialPropertyWidgetPlugin.h"
 #include "ctkVTKTextPropertyWidgetPlugin.h"
 
 /// \class Group the plugins in one library
@@ -46,12 +48,14 @@ public:
   QList<QDesignerCustomWidgetInterface*> customWidgets() const
     {
     QList<QDesignerCustomWidgetInterface *> plugins;
+    plugins << new ctkVTKDataSetArrayComboBoxPlugin;
     plugins << new ctkVTKRenderViewPlugin;
     plugins << new ctkVTKScalarBarWidgetPlugin;
 #ifdef CTK_USE_CHARTS
     plugins << new ctkVTKScalarsToColorsViewPlugin;
 #endif
     plugins << new ctkVTKSliceViewPlugin;
+    plugins << new ctkVTKSurfaceMaterialPropertyWidgetPlugin;
     plugins << new ctkVTKTextPropertyWidgetPlugin;
     return plugins;
     }

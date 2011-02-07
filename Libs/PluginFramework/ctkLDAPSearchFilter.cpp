@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,35 +21,63 @@
 
 #include "ctkLDAPSearchFilter.h"
 
-#include "ctkLDAPExpr.h"
+#include "ctkLDAPExpr_p.h"
+#include "ctkServiceReferencePrivate.h"
 
 
-class ctkLDAPSearchFilterPrivate {
+class ctkLDAPSearchFilterData : public QSharedData
+{
 public:
 
-  ctkLDAPSearchFilterPrivate(const QString& filter)
-    : ref(1), ldapExpr(filter)
+  ctkLDAPSearchFilterData()
   {}
 
-  QAtomicInt ref;
+  ctkLDAPSearchFilterData(const QString& filter)
+    : ldapExpr(filter)
+  {}
+
+  ctkLDAPSearchFilterData(const ctkLDAPSearchFilterData& other)
+    : QSharedData(other), ldapExpr(other.ldapExpr)
+  {}
+
   ctkLDAPExpr ldapExpr;
 };
 
-ctkLDAPSearchFilter::ctkLDAPSearchFilter(const QString& filter)
-  : d(new ctkLDAPSearchFilterPrivate(filter))
+ctkLDAPSearchFilter::ctkLDAPSearchFilter()
+  : d(0)
 {
 }
 
-ctkLDAPSearchFilter::ctkLDAPSearchFilter(const ctkLDAPSearchFilter& filter)
-  : d(filter.d)
+ctkLDAPSearchFilter::ctkLDAPSearchFilter(const QString& filter)
+  : d(0)
 {
-  d->ref.ref();
+  try
+  {
+    d = new ctkLDAPSearchFilterData(filter);
+  }
+  catch (const std::exception& e)
+  {
+    throw std::invalid_argument(e.what());
+  }
+}
+
+ctkLDAPSearchFilter::ctkLDAPSearchFilter(const ctkLDAPSearchFilter& other)
+  : d(other.d)
+{
 }
 
 ctkLDAPSearchFilter::~ctkLDAPSearchFilter()
 {
-  if (!d->ref.deref())
-    delete d;
+}
+
+ctkLDAPSearchFilter::operator bool() const
+{
+  return d;
+}
+
+bool ctkLDAPSearchFilter::match(const ctkServiceReference& reference) const
+{
+  return d->ldapExpr.evaluate(reference.d_func()->getProperties(), true);
 }
 
 bool ctkLDAPSearchFilter::match(const ctkDictionary& dictionary) const
@@ -62,6 +90,11 @@ bool ctkLDAPSearchFilter::matchCase(const ctkDictionary& dictionary) const
   return d->ldapExpr.evaluate(dictionary, true);
 }
 
+QString ctkLDAPSearchFilter::toString() const
+{
+  return d->ldapExpr.toString();
+}
+
 bool ctkLDAPSearchFilter::operator==(const ctkLDAPSearchFilter& other) const
 {
   return d->ldapExpr.toString() == other.d->ldapExpr.toString();
@@ -69,14 +102,13 @@ bool ctkLDAPSearchFilter::operator==(const ctkLDAPSearchFilter& other) const
 
 ctkLDAPSearchFilter& ctkLDAPSearchFilter::operator=(const ctkLDAPSearchFilter& filter)
 {
-  if (d != filter.d)
-  {
-    if (!d->ref.deref())
-      delete d;
-
-    d = filter.d;
-    d->ref.ref();
-  }
+  d = filter.d;
 
   return *this;
+}
+
+QDebug operator<<(QDebug dbg, const ctkLDAPSearchFilter& filter)
+{
+  dbg << filter.toString();
+  return dbg.maybeSpace();
 }

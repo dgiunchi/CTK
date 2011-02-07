@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -105,14 +105,14 @@ void ctkDynamicSpacer::setInactiveSizePolicy(QSizePolicy newInactiveSizePolicy)
 }
 
 // -----------------------------------------------------------------------------
-bool ctkDynamicSpacer::isActivated()const
+bool ctkDynamicSpacer::isActive()const
 {
   Q_D(const ctkDynamicSpacer);
   return d->Enable;
 }
 
 // -----------------------------------------------------------------------------
-void ctkDynamicSpacer::activate(bool enableSizePolicy)
+void ctkDynamicSpacer::setActive(bool enableSizePolicy)
 {
   Q_D(ctkDynamicSpacer);
   d->Enable = enableSizePolicy;

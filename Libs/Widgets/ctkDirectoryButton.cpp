@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -42,7 +42,7 @@ public:
   QDir         Directory;
   QPushButton* PushButton;
   QString      DialogCaption;
-#if QT_VERSION >= 0x040700
+#ifdef USE_QFILEDIALOG_OPTIONS
   QFileDialog::Options DialogOptions;
 #else
   ctkDirectoryButton::Options DialogOptions;
@@ -55,7 +55,7 @@ public:
 ctkDirectoryButtonPrivate::ctkDirectoryButtonPrivate(ctkDirectoryButton& object)
   :q_ptr(&object)
 {
-#if QT_VERSION >= 0x040700
+#if USE_QFILEDIALOG_OPTIONS
   this->DialogOptions = QFileDialog::ShowDirsOnly;
 #else
   this->DialogOptions = ctkDirectoryButton::ShowDirsOnly;
@@ -165,7 +165,22 @@ const QString& ctkDirectoryButton::caption()const
 }
 
 //-----------------------------------------------------------------------------
-#if QT_VERSION >= 0x040700
+void ctkDirectoryButton::setIcon(const QIcon& newIcon)
+{
+  Q_D(const ctkDirectoryButton);
+  return d->PushButton->setIcon(newIcon);
+}
+
+
+//-----------------------------------------------------------------------------
+QIcon ctkDirectoryButton::icon()const
+{
+  Q_D(const ctkDirectoryButton);
+  return d->PushButton->icon();
+}
+
+//-----------------------------------------------------------------------------
+#ifdef USE_QFILEDIALOG_OPTIONS
 void ctkDirectoryButton::setOptions(const QFileDialog::Options& dialogOptions)
 #else
 void ctkDirectoryButton::setOptions(const Options& dialogOptions)
@@ -176,7 +191,7 @@ void ctkDirectoryButton::setOptions(const Options& dialogOptions)
 }
 
 //-----------------------------------------------------------------------------
-#if QT_VERSION >= 0x040700
+#ifdef USE_QFILEDIALOG_OPTIONS
 const QFileDialog::Options& ctkDirectoryButton::options()const
 #else
 const ctkDirectoryButton::Options& ctkDirectoryButton::options()const
@@ -195,7 +210,7 @@ void ctkDirectoryButton::browse()
       this,
       d->DialogCaption.isEmpty() ? this->toolTip() : d->DialogCaption,
       d->Directory.path(),
-#if QT_VERSION >= 0x040700
+#ifdef USE_QFILEDIALOG_OPTIONS
       d->DialogOptions);
 #else
       QFlags<QFileDialog::Option>(int(d->DialogOptions)));

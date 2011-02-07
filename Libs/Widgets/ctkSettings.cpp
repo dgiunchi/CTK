@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 /*=========================================================================
 
@@ -56,11 +56,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QDesktopWidget>
 
 //-----------------------------------------------------------------------------
-ctkSettings::ctkSettings(
-    const QString& organization, 
-    const QString& application,
-    QObject* p) :
-  QSettings(QSettings::IniFormat, QSettings::UserScope, organization, application, p)
+ctkSettings::ctkSettings(const QString& organization,
+                         const QString& application,
+                         QObject* parentObject)
+  : QSettings(organization, application, parentObject)
+{
+}
+
+//-----------------------------------------------------------------------------
+ctkSettings::ctkSettings(QSettings::Scope scope,
+                         const QString& organization,
+                         const QString& application,
+                         QObject* parentObject)
+  : QSettings(scope, organization,application, parentObject)
+{
+}
+
+//-----------------------------------------------------------------------------
+ctkSettings::ctkSettings(QSettings::Format format,
+                         QSettings::Scope scope,
+                         const QString& organization,
+                         const QString& application,
+                         QObject* parentObject)
+  : QSettings(format, scope, organization, application, parentObject)
+{
+}
+
+//-----------------------------------------------------------------------------
+ctkSettings::ctkSettings(const QString& fileName, QSettings::Format format, QObject* parentObject)
+  : QSettings(fileName, format, parentObject)
+{
+}
+
+//-----------------------------------------------------------------------------
+ctkSettings::ctkSettings(QObject* parentObject)
+  : QSettings(parentObject)
 {
 }
 

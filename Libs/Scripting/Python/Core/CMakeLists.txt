@@ -3,10 +3,8 @@ PROJECT(CTKScriptingPythonCore)
 #
 # 3rd party dependencies
 #
-
-FIND_PACKAGE(PythonQt)
-IF(NOT PYTHONQT_FOUND)
-  MESSAGE(FATAL_ERROR "error: PythonQt package is required to build ${PROJECT_NAME}")
+IF(CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK)
+  INCLUDE(${VTK_USE_FILE})
 ENDIF()
 
 #
@@ -15,11 +13,6 @@ ENDIF()
 
 SET(KIT_export_directive "CTK_SCRIPTING_PYTHON_CORE_EXPORT")
 
-# Additional directories to include
-SET(KIT_include_directories
-  ${PYTHON_INCLUDE_DIRS}
-  ${PYTHONQT_INCLUDE_DIR}
-  )
   
 # Source files
 SET(KIT_SRCS
@@ -43,13 +36,10 @@ SET(KIT_resources
 #
 # Configure file describing which Qt modules are wrapped
 #
-FOREACH(qtlib GUI NETWORK OPENGL SQL SVG UITOOLS WEBKIT XML XMLPATTERNS)
+FOREACH(qtlib CORE GUI NETWORK OPENGL SQL SVG UITOOLS WEBKIT XML XMLPATTERNS)
   SET(CTK_PYTHONQT_WRAP_QT${qtlib} ${CTK_LIB_Scripting/Python/Core_PYTHONQT_WRAP_QT${qtlib}})
   #message(CTK_LIB_Scripting/Python/Core_PYTHONQT_WRAP_QT${qtlib}:${CTK_LIB_Scripting/Python/Core_PYTHONQT_WRAP_QT${qtlib}})
 ENDFOREACH()
-
-# TODO Ideally a file named ctkScripingPythonWidgetsConfigure.h should
-# also be configured, this file should deal with Qt Module depending only on QtGui
 
 CONFIGURE_FILE(
   ctkScriptingPythonCoreConfigure.h.in
@@ -60,20 +50,27 @@ CONFIGURE_FILE(
 # The following macro will read the target libraries from the file 'target_libraries.cmake'
 ctkMacroGetTargetLibraries(KIT_target_libraries)
 
+# Link against vtkPython if required
+IF(CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK)
+  LIST(APPEND KIT_target_libraries vtkPythonCore)
+ENDIF()
+
 ctkMacroBuildLib(
   NAME ${PROJECT_NAME}
   EXPORT_DIRECTIVE ${KIT_export_directive}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
   SRCS ${KIT_SRCS}
   MOC_SRCS ${KIT_MOC_SRCS}
   UI_FORMS ${KIT_UI_FORMS}
   TARGET_LIBRARIES ${KIT_target_libraries}
   RESOURCES ${KIT_resources}
   LIBRARY_TYPE ${CTK_LIBRARY_MODE}
+  DISABLE_WRAP_PYTHONQT
   )
 
 # Plugins
 #ADD_SUBDIRECTORY(Plugins)
+
+ADD_SUBDIRECTORY(Python)
 
 # Testing
 IF(BUILD_TESTING)

@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -25,8 +25,9 @@
 #include <QDesignerCustomWidgetCollectionInterface>
 
 // CTK includes
-#include "CTKWidgetsPluginsExport.h"
+#include "ctkWidgetsPluginsExport.h"
 #include "ctkActionsWidgetPlugin.h"
+#include "ctkAxesWidgetPlugin.h"
 #include "ctkCollapsibleButtonPlugin.h"
 #include "ctkCollapsibleGroupBoxPlugin.h"
 #include "ctkColorPickerButtonPlugin.h"
@@ -37,13 +38,19 @@
 #include "ctkDoubleSliderPlugin.h"
 #include "ctkDynamicSpacerPlugin.h"
 #include "ctkFittedTextBrowserPlugin.h"
+#include "ctkFontButtonPlugin.h"
+#include "ctkMaterialPropertyPreviewLabelPlugin.h"
+#include "ctkMaterialPropertyWidgetPlugin.h"
 #include "ctkMatrixWidgetPlugin.h"
 #include "ctkMenuButtonPlugin.h"
+#include "ctkPathLineEditPlugin.h"
 #include "ctkRangeSliderPlugin.h"
 #include "ctkRangeWidgetPlugin.h"
+#include "ctkSettingsPanelPlugin.h"
+#include "ctkSettingsDialogPlugin.h"
+#include "ctkSliderWidgetPlugin.h"
 #include "ctkTransferFunctionViewPlugin.h"
 #include "ctkTreeComboBoxPlugin.h"
-#include "ctkSliderWidgetPlugin.h"
 #include "ctkWorkflowButtonBoxWidgetPlugin.h"
 #include "ctkWorkflowWidgetStepPlugin.h"
 
@@ -59,6 +66,7 @@ public:
     {
     QList<QDesignerCustomWidgetInterface *> plugins;
     plugins << new ctkActionsWidgetPlugin
+            << new ctkAxesWidgetPlugin
             << new ctkCollapsibleButtonPlugin
             << new ctkCollapsibleGroupBoxPlugin
             << new ctkColorPickerButtonPlugin
@@ -69,10 +77,16 @@ public:
             << new ctkDoubleSliderPlugin
             << new ctkDynamicSpacerPlugin
             << new ctkFittedTextBrowserPlugin
+            << new ctkFontButtonPlugin
+            << new ctkMaterialPropertyPreviewLabelPlugin
+            << new ctkMaterialPropertyWidgetPlugin
             << new ctkMatrixWidgetPlugin
             << new ctkMenuButtonPlugin
+            << new ctkPathLineEditPlugin
             << new ctkRangeSliderPlugin
             << new ctkRangeWidgetPlugin
+            << new ctkSettingsPanelPlugin
+            << new ctkSettingsDialogPlugin
             << new ctkSliderWidgetPlugin
             << new ctkTransferFunctionViewPlugin
             << new ctkTreeComboBoxPlugin

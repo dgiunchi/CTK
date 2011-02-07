@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkTransferFunctionRepresentation_h
@@ -30,7 +30,7 @@
 /// CTK includes
 #include "ctkPimpl.h"
 #include "ctkTransferFunction.h"
-#include "CTKCoreExport.h"
+#include "ctkCoreExport.h"
 
 class ctkTransferFunction;
 class ctkTransferFunctionRepresentationPrivate;
@@ -39,7 +39,7 @@ class ctkTransferFunctionRepresentationPrivate;
 class CTK_CORE_EXPORT ctkTransferFunctionRepresentation: public QObject
 {
   Q_OBJECT
-  Q_PROPERTY(QColor VerticalGradientColor READ verticalGradientColor WRITE setVerticalGradientColor)
+  Q_PROPERTY(QColor verticalGradientColor READ verticalGradientColor WRITE setVerticalGradientColor)
 
 public:
   ctkTransferFunctionRepresentation(QObject* parent = 0);

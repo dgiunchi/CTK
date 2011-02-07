@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,13 +28,14 @@ ctkPluginTableModel::ctkPluginTableModel(ctkPluginContext* pc, QObject* parent)
   : QAbstractTableModel(parent)
 {
   plugins = pc->getPlugins();
+  pc->connectPluginListener(this, SLOT(pluginChanged(ctkPluginEvent)));
 }
 
 QVariant ctkPluginTableModel::data(const QModelIndex& index, int role) const
 {
   if (!index.isValid()) return QVariant();
 
-  ctkPlugin* plugin = plugins.at(index.row());
+  QSharedPointer<ctkPlugin> plugin = plugins.at(index.row());
   if (role == Qt::DisplayRole)
   {
     int col = index.column();
@@ -113,4 +114,11 @@ QString ctkPluginTableModel::getStringForState(const ctkPlugin::State state) con
   case ctkPlugin::ACTIVE: return active;
   default: return QString("unknown");
   }
+}
+
+void ctkPluginTableModel::pluginChanged(const ctkPluginEvent& event)
+{
+  QModelIndex topLeftIndex = createIndex(plugins.indexOf(event.getPlugin()), 0, 0);
+  QModelIndex bottomRightIndex = createIndex(topLeftIndex.row(), columnCount()-1, 0);
+  emit dataChanged(topLeftIndex, bottomRightIndex);
 }

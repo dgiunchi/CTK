@@ -15,6 +15,8 @@ SET(PLUGIN_SRCS
 
   ctkActionsWidgetPlugin.cpp
   ctkActionsWidgetPlugin.h
+  ctkAxesWidgetPlugin.cpp
+  ctkAxesWidgetPlugin.h
   ctkCollapsibleButtonPlugin.cpp
   ctkCollapsibleButtonPlugin.h
   ctkCollapsibleGroupBoxPlugin.cpp
@@ -37,10 +39,18 @@ SET(PLUGIN_SRCS
   #ctkExtensionFactory.h
   ctkFittedTextBrowserPlugin.cpp
   ctkFittedTextBrowserPlugin.h
+  ctkFontButtonPlugin.cpp
+  ctkFontButtonPlugin.h
+  ctkMaterialPropertyPreviewLabelPlugin.cpp
+  ctkMaterialPropertyPreviewLabelPlugin.h
+  ctkMaterialPropertyWidgetPlugin.cpp
+  ctkMaterialPropertyWidgetPlugin.h
   ctkMatrixWidgetPlugin.cpp
   ctkMatrixWidgetPlugin.h
   ctkMenuButtonPlugin.cpp
   ctkMenuButtonPlugin.h
+  ctkPathLineEditPlugin.cpp
+  ctkPathLineEditPlugin.h
   ctkRangeSliderPlugin.cpp
   ctkRangeSliderPlugin.h
   ctkRangeWidgetPlugin.cpp
@@ -49,6 +59,10 @@ SET(PLUGIN_SRCS
   ctkTransferFunctionViewPlugin.h
   ctkTreeComboBoxPlugin.cpp
   ctkTreeComboBoxPlugin.h
+  ctkSettingsPanelPlugin.cpp
+  ctkSettingsPanelPlugin.h
+  ctkSettingsDialogPlugin.cpp
+  ctkSettingsDialogPlugin.h
   ctkSliderWidgetPlugin.cpp
   ctkSliderWidgetPlugin.h
   ctkWorkflowButtonBoxWidgetPlugin.cpp
@@ -62,6 +76,7 @@ SET(PLUGIN_MOC_SRCS
   ctkWidgetsPlugins.h
 
   ctkActionsWidgetPlugin.h
+  ctkAxesWidgetPlugin.h
   ctkCollapsibleButtonPlugin.h
   ctkCollapsibleGroupBoxPlugin.h
   ctkColorPickerButtonPlugin.h
@@ -73,12 +88,18 @@ SET(PLUGIN_MOC_SRCS
   ctkDynamicSpacerPlugin.h
   #ctkExtensionFactory.h
   ctkFittedTextBrowserPlugin.h
+  ctkFontButtonPlugin.h
+  ctkMaterialPropertyWidgetPlugin.h
+  ctkMaterialPropertyPreviewLabelPlugin.h
   ctkMatrixWidgetPlugin.h
   ctkMenuButtonPlugin.h
+  ctkPathLineEditPlugin.h
   ctkRangeSliderPlugin.h
   ctkRangeWidgetPlugin.h
   ctkTransferFunctionViewPlugin.h
   ctkTreeComboBoxPlugin.h
+  ctkSettingsPanelPlugin.h
+  ctkSettingsDialogPlugin.h
   ctkSliderWidgetPlugin.h
   ctkWorkflowButtonBoxWidgetPlugin.h
   ctkWorkflowWidgetStepPlugin.h

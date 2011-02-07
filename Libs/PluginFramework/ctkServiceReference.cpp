@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,89 +27,153 @@
 
 #include <QStringList>
 #include <QMutexLocker>
+#include <QDebug>
 
+ctkServiceReference::ctkServiceReference()
+  : d_ptr(new ctkServiceReferencePrivate(0))
+{
 
-  ctkServiceReference::ctkServiceReference(ctkServiceRegistrationPrivate* reg)
-    : d_ptr(new ctkServiceReferencePrivate(reg))
+}
+
+ctkServiceReference::ctkServiceReference(const ctkServiceReference& ref)
+  : d_ptr(ref.d_ptr)
+{
+  d_func()->ref.ref();
+}
+
+ctkServiceReference::ctkServiceReference(ctkServiceRegistrationPrivate* reg)
+  : d_ptr(new ctkServiceReferencePrivate(reg))
+{
+
+}
+
+ctkServiceReference::operator bool() const
+{
+  return getPlugin();
+}
+
+ctkServiceReference& ctkServiceReference::operator=(int null)
+{
+  if (null == 0)
   {
-
+    if (d_func() && !d_func()->ref.deref())
+      delete d_ptr;
+    d_ptr = new ctkServiceReferencePrivate(0);
   }
+  return *this;
+}
 
-  ctkServiceReference::~ctkServiceReference()
-  {
+ctkServiceReference::~ctkServiceReference()
+{
+  if (!d_func()->ref.deref())
     delete d_ptr;
+}
+
+QVariant ctkServiceReference::getProperty(const QString& key) const
+{
+  Q_D(const ctkServiceReference);
+
+  QMutexLocker lock(&d->registration->propsLock);
+
+  return d->registration->properties.value(key);
+}
+
+QStringList ctkServiceReference::getPropertyKeys() const
+{
+  Q_D(const ctkServiceReference);
+
+  QMutexLocker lock(&d->registration->propsLock);
+
+  QStringList result;
+  foreach (ctkCaseInsensitiveString key, d->registration->properties.keys())
+  {
+    result << key;
+  }
+  return result;
+}
+
+QSharedPointer<ctkPlugin> ctkServiceReference::getPlugin() const
+{
+  if (d_func()->registration == 0 || d_func()->registration->plugin == 0)
+  {
+    return QSharedPointer<ctkPlugin>();
   }
 
-  QVariant ctkServiceReference::getProperty(const QString& key) const
+  return d_func()->registration->plugin->q_func().toStrongRef();
+}
+
+QList<QSharedPointer<ctkPlugin> > ctkServiceReference::getUsingPlugins() const
+{
+  Q_D(const ctkServiceReference);
+
+  QMutexLocker lock(&d->registration->propsLock);
+
+  return d->registration->dependents.keys();
+}
+
+bool ctkServiceReference::operator<(const ctkServiceReference& reference) const
+{
+  bool sameFw = d_func()->registration->plugin->fwCtx == reference.d_func()->registration->plugin->fwCtx;
+  if (!sameFw)
   {
-    Q_D(const ctkServiceReference);
-
-    QMutexLocker lock(&d->registration->propsLock);
-
-    return d->registration->properties.value(key);
+    throw std::invalid_argument("Can not compare service references "
+                                "belonging to different framework "
+                                "instances.");
   }
 
-  QStringList ctkServiceReference::getPropertyKeys() const
+  int r1 = getProperty(ctkPluginConstants::SERVICE_RANKING).toInt();
+  int r2 = reference.getProperty(ctkPluginConstants::SERVICE_RANKING).toInt();
+
+  if (r1 != r2)
   {
-    Q_D(const ctkServiceReference);
-
-    QMutexLocker lock(&d->registration->propsLock);
-
-    return d->registration->properties.keys();
+    // use ranking if ranking differs
+    return r1 < r2 ? false : true;
   }
-
-  ctkPlugin* ctkServiceReference::getPlugin() const
+  else
   {
-    return d_func()->registration->plugin->q_func();
+    qlonglong id1 = getProperty(ctkPluginConstants::SERVICE_ID).toLongLong();
+    qlonglong id2 = reference.getProperty(ctkPluginConstants::SERVICE_ID).toLongLong();
+
+    // otherwise compare using IDs,
+    // is less than if it has a higher ID.
+    return id2< id1;
   }
+}
 
-  QList<ctkPlugin*> ctkServiceReference::getUsingPlugins() const
+bool ctkServiceReference::operator==(const ctkServiceReference& reference) const
+{
+  return d_func()->registration == reference.d_func()->registration;
+}
+
+ctkServiceReference& ctkServiceReference::operator=(const ctkServiceReference& reference)
+{
+  ctkServiceReferencePrivate* curr_d = d_func();
+  d_ptr = reference.d_ptr;
+  d_ptr->ref.ref();
+
+  if (!curr_d->ref.deref())
+    delete curr_d;
+
+  return *this;
+}
+
+uint qHash(const ctkServiceReference& serviceRef)
+{
+  return qHash(serviceRef.d_func()->registration);
+}
+
+QDebug operator<<(QDebug dbg, const ctkServiceReference& serviceRef)
+{
+  dbg.nospace() << "Reference for service object registered from "
+      << serviceRef.getPlugin()->getSymbolicName() << " " << serviceRef.getPlugin()->getVersion()
+      << " (";
+  int i = serviceRef.getPropertyKeys().size();
+  foreach(QString key, serviceRef.getPropertyKeys())
   {
-    Q_D(const ctkServiceReference);
-
-    QMutexLocker lock(&d->registration->propsLock);
-
-    if (d->registration->reference != 0)
-    {
-      return d->registration->dependents.keys();
-    }
-    else
-    {
-      return QList<ctkPlugin*>();
-    }
+    dbg.nospace() << key << "=" << serviceRef.getProperty(key).toString();
+    if (--i > 0) dbg.nospace() << ",";
   }
+  dbg.nospace() << ")";
 
-  bool ctkServiceReference::operator<(const ctkServiceReference& reference) const
-  {
-    bool sameFw = d_func()->registration->plugin->fwCtx == reference.d_func()->registration->plugin->fwCtx;
-    if (!sameFw)
-    {
-      throw std::invalid_argument("Can not compare service references "
-                                  "belonging to different framework "
-                                  "instances.");
-    }
-
-    int r1 = getProperty(ctkPluginConstants::SERVICE_RANKING).toInt();
-    int r2 = reference.getProperty(ctkPluginConstants::SERVICE_RANKING).toInt();
-
-    if (r1 != r2)
-    {
-      // use ranking if ranking differs
-      return r1 < r2 ? false : true;
-    }
-    else
-    {
-      qlonglong id1 = getProperty(ctkPluginConstants::SERVICE_ID).toLongLong();
-      qlonglong id2 = reference.getProperty(ctkPluginConstants::SERVICE_ID).toLongLong();
-
-      // otherwise compare using IDs,
-      // is less than if it has a higher ID.
-      return id2< id1;
-    }
-  }
-
-  bool ctkServiceReference::operator==(const ctkServiceReference& reference) const
-  {
-    return d_func()->registration == reference.d_func()->registration;
-
+  return dbg.maybeSpace();
 }

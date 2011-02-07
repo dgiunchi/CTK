@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.2)
 
 #-----------------------------------------------------------------------------
 # See http://cmake.org/cmake/help/cmake-2-8-docs.html#section_Policies for details
@@ -108,10 +108,18 @@ ENDIF()
 #-----------------------------------------------------------------------------
 # Install directories, used for install rules.
 #
-SET(CTK_INSTALL_BIN_DIR "bin")
-SET(CTK_INSTALL_LIB_DIR "lib/ctk-${CTK_MAJOR_VERSION}.${CTK_MINOR_VERSION}")
-SET(CTK_INSTALL_INCLUDE_DIR "include/ctk-${CTK_MAJOR_VERSION}.${CTK_MINOR_VERSION}")
-SET(CTK_INSTALL_DOC_DIR "doc")
+IF(NOT CTK_INSTALL_BIN_DIR)
+  SET(CTK_INSTALL_BIN_DIR "bin")
+ENDIF()
+IF(NOT CTK_INSTALL_LIB_DIR)
+  SET(CTK_INSTALL_LIB_DIR "lib/ctk-${CTK_MAJOR_VERSION}.${CTK_MINOR_VERSION}")
+ENDIF()
+IF(NOT CTK_INSTALL_INCLUDE_DIR)
+  SET(CTK_INSTALL_INCLUDE_DIR "include/ctk-${CTK_MAJOR_VERSION}.${CTK_MINOR_VERSION}")
+ENDIF()
+IF(NOT CTK_INSTALL_DOC_DIR)
+  SET(CTK_INSTALL_DOC_DIR "doc")
+ENDIF()
 
 #-----------------------------------------------------------------------------
 # Update CMake module path
@@ -131,6 +139,11 @@ SET(CTK_WRAPPED_LIBRARIES_PYTHONQT CACHE INTERNAL "CTK libraries wrapped using P
 
 # Variable use in CTKConfig.cmake.in
 SET(CTK_LIBRARIES CACHE INTERNAL "CTK libraries" FORCE)
+SET(CTK_PLUGIN_LIBRARIES CACHE INTERNAL "CTK plugins" FORCE)
+
+# Used by CTKGenerateCTKConfig.cmake and also used to reference script from other scripts
+SET(CTK_CMAKE_DIR ${CTK_SOURCE_DIR}/CMake)
+SET(CTK_CMAKE_UTILITIES_DIR ${CTK_SOURCE_DIR}/Utilities/CMake)
 
 #-----------------------------------------------------------------------------
 # CMake Function(s) and Macro(s)
@@ -154,10 +167,8 @@ INCLUDE(CMake/ctkFunctionGenerateProjectXml.cmake)
 INCLUDE(CMake/ctkFunctionGeneratePluginManifest.cmake)
 INCLUDE(CMake/ctkMacroGeneratePluginResourceFile.cmake)
 INCLUDE(CMake/ctkFunctionCheckCompilerFlags.cmake)
-
-# Used by CTKGenerateCTKConfig.cmake
-SET(CTK_CMAKE_DIR ${CTK_SOURCE_DIR}/CMake)
-SET(CTK_CMAKE_UTILITIES_DIR ${CTK_SOURCE_DIR}/Utilities/CMake)
+INCLUDE(CMake/ctkFunctionGetIncludeDirs.cmake)
+INCLUDE(CMake/ctkFunctionGetGccVersion.cmake)
 
 #-----------------------------------------------------------------------------
 # Testing
@@ -230,7 +241,7 @@ ENDIF()
 #
 IF(WITH_COVERAGE)
   IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    SET(coverage_flags "-g -fprofile-arcs -ftest-coverage -O3 -DNDEBUG")
+    SET(coverage_flags "-g -fprofile-arcs -ftest-coverage -O0 -DNDEBUG")
     SET(COVERAGE_CXX_FLAGS ${coverage_flags})
     SET(COVERAGE_C_FLAGS ${coverage_flags})
   ENDIF()
@@ -239,13 +250,21 @@ ENDIF()
 #-----------------------------------------------------------------------------
 # CTK C/CXX Flags
 #
-SET(CTK_C_FLAGS "${COVERAGE_C_FLAGS} ${ADDITIONAL_C_FLAGS}")
-SET(CTK_CXX_FLAGS "${VISIBILITY_CXX_FLAGS} ${COVERAGE_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
+SET(CTK_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${COVERAGE_C_FLAGS} ${ADDITIONAL_C_FLAGS}")
+SET(CTK_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${COVERAGE_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
+  
   ctkFunctionCheckCompilerFlags("-fdiagnostics-show-option" cflags)
-  ctkFunctionCheckCompilerFlags("-fstack-protector-all" cflags)
+  
+  ctkFunctionGetGccVersion(${CMAKE_CXX_COMPILER} GCC_VERSION)
+  # With older version of gcc supporting the flag -fstack-protector-all, an extra dependency to libssp.so
+  # is introduced. If gcc is smaller than 4.4.0 and the build type is Release let's not include the flag.
+  # Doing so should allow to build package made for distribution using older linux distro.
+  IF(${GCC_VERSION} VERSION_GREATER "4.4.0" OR (CMAKE_BUILD_TYPE STREQUAL "Debug" AND ${GCC_VERSION} VERSION_LESS "4.4.0"))
+    ctkFunctionCheckCompilerFlags("-fstack-protector-all" cflags)
+  ENDIF()
   IF(MINGW)
     # suppress warnings about auto imported symbols
     SET(CTK_CXX_FLAGS "-Wl,--enable-auto-import ${CTK_CXX_FLAGS}")
@@ -279,21 +298,27 @@ SET(CTK_LIBS
   Scripting/Python/Widgets:OFF
   Visualization/VTK/Core:OFF
   Visualization/VTK/Widgets:OFF
-  Visualization/XIP:OFF
+  #Visualization/XIP:OFF # XIP library need some love :) - Let's disable it for now :(
   )
 
 #-----------------------------------------------------------------------------
 # CTK Plugins - Use ON or OFF to indicate if the plugin should be built by default
 #
 SET(CTK_PLUGINS
-  org.commontk.eventbus:ON
+  org.commontk.eventbus:OFF
   org.commontk.cli:OFF
-  org.commontk.dicom.wg23.app:OFF
-  org.commontk.dicom.wg23.core:OFF
-  org.commontk.dicom.wg23.host:OFF
-  org.commontk.example.dicomapp:OFF
+  org.commontk.configadmin:OFF
+  org.commontk.dah.app:OFF
+  org.commontk.dah.core:OFF
+  org.commontk.dah.exampleapp:OFF
+  org.commontk.dah.examplehost:OFF
+  org.commontk.dah.host:OFF
+  org.commontk.eventadmin:OFF
+  org.commontk.log:OFF
+  org.commontk.log4qt:OFF
   org.commontk.plugingenerator.core:OFF
   org.commontk.plugingenerator.ui:OFF
+  org.commontk.qtmobility.service:OFF
   )
 
 #-----------------------------------------------------------------------------
@@ -306,8 +331,9 @@ SET(CTK_APPLICATIONS
   ctkDICOMDemoSCU:OFF
   ctkDICOMQuery:OFF
   ctkDICOMRetrieve:OFF
-  ctkEventBusDemo:OFF
   ctkExampleHost:OFF
+  ctkExampleHostedApp:OFF
+  ctkEventBusDemo:OFF
   ctkPluginBrowser:OFF
   ctkPluginGenerator:OFF
   ctkSimplePythonShell:OFF
@@ -335,19 +361,25 @@ SET(CTK_APPLICATIONS_SUBDIRS )
 
 #-----------------------------------------------------------------------------
 # Build options associated with CTK libraries
-# Note also that if
-# the file Libs/<DIR>/<LIBNAME>/ctk_library_options.cmake exists and look like:
+#
+# The following FOREACH loops are used to:
+#   1) Add build options associated with either libraries, plugins and applications
+#   2) Update either CTK_LIBS_SUBDIRS, CTK_PLUGINS_SUBDIRS or CTK_APPS_SUBDIRS variables
+# 
+# For CTK libraries, if the file Libs/<DIR>/<LIBNAME>/ctk_library_options.cmake exists,
+# in addition to 'CTK_LIB_<DIR>/<LIBNAME>' option, the following ones
+# will also be available in CMake configure menu:
+#  CTK_LIB_<DIR>/<LIBNAME>_OPT1  (set to OFF)
+#  CTK_LIB_<DIR>/<LIBNAME>_OPT2  (set to ON)
+#
+# The file Libs/<DIR>/<LIBNAME>/ctk_library_options.cmake should look like:
 #
 #     SET(ctk_library_options
 #       OPT1:OFF
 #       OPT2:ON
 #       )
-#
-# In addition to 'CTK_LIB_<DIR>/<LIBNAME>' option, the following ones
-# will also be available in CMake configure menu:
-#  CTK_LIB_<DIR>/<LIBNAME>_OPT1  (set to OFF)
-#  CTK_LIB_<DIR>/<LIBNAME>_OPT2  (set to ON)
-#
+
+# Build options associated with CTK libraries
 SET(ctk_lib_options_list) # This list will be updated in ctkFunctionExtractOptionNameAndValue
 FOREACH(lib ${CTK_LIBS})
   ctkFunctionExtractOptionNameAndValue(${lib} lib_name lib_value)
@@ -381,24 +413,6 @@ FOREACH(app ${CTK_APPLICATIONS})
   OPTION(CTK_APP_${app_name} "Build ${app_name} Application." ${app_value})
   LIST(APPEND CTK_APPLICATIONS_SUBDIRS "${app_name}")
 ENDFOREACH()
-
-#-----------------------------------------------------------------------------
-# CTK Python wrapping - Propose the option only if CTK_LIB_Scriping/Python/Core is ON
-IF(CTK_LIB_Scripting/Python/Core)
-  find_package(PythonInterp)
-  IF(NOT PYTHONINTERP_FOUND)
-    MESSAGE(SEND_ERROR "PYTHON_EXECUTABLE not specified or inexistent when CTK_LIB_Scripting is enabled")
-  ENDIF()
-  OPTION(CTK_WRAP_PYTHONQT_FULL "Wrap CTK classes using Qt meta-object system into Python language" OFF)
-  OPTION(CTK_WRAP_PYTHONQT_LIGHT "Wrap CTK classes using Qt meta-object system into Python language" OFF)
-  IF(CTK_WRAP_PYTHONQT_FULL AND CTK_WRAP_PYTHONQT_LIGHT)
-    MESSAGE(SEND_ERROR "CTK_WRAP_PYTHONQT_{LIGHT,FULL} options are mutually exclusive. Please enable only one !")
-  ENDIF()
-ELSE()
-  # Note that an unset boolean variable is considered to be False
-  UNSET(CTK_WRAP_PYTHONQT_FULL CACHE)
-  UNSET(CTK_WRAP_PYTHONQT_LIGHT CACHE)
-ENDIF()
 
 #-----------------------------------------------------------------------------
 # Generate target_directories list - List of directory corresponding to the different
@@ -447,15 +461,38 @@ MARK_AS_ADVANCED(DGraph_EXECUTABLE)
 #-----------------------------------------------------------------------------
 # Let's make sure the enabled/disabled libraries, plugins or applications are coherent
 #
-ctkFunctionGenerateDGraphInput(${CTK_BINARY_DIR} "${target_directories}" FALSE)
+ctkFunctionGenerateDGraphInput(${CTK_BINARY_DIR} "${target_directories}")
+ctkFunctionGenerateDGraphInput(${CTK_BINARY_DIR} "${target_directories}" WITH_EXTERNALS)
 ctkMacroValidateBuildOptions("${CTK_BINARY_DIR}" "${DGraph_EXECUTABLE}" "${target_directories}")
+
+#-----------------------------------------------------------------------------
+# CTK Python wrapping - Propose the option only if CTK_LIB_Scriping/Python/Core is ON
+IF(CTK_LIB_Scripting/Python/Core)
+  find_package(PythonInterp)
+  IF(NOT PYTHONINTERP_FOUND)
+    MESSAGE(SEND_ERROR "PYTHON_EXECUTABLE variable should be set to build CTK_LIB_Scripting/Python")
+  ENDIF()
+  FIND_PACKAGE(PythonLibs)
+  IF(NOT PYTHONLIBS_FOUND)
+    MESSAGE(FATAL_ERROR "PYTHON_LIBRARIES and PYTHON_INCLUDE_DIRS should be set to build CTK_LIB_Scripting/Python")
+  ENDIF()
+  OPTION(CTK_WRAP_PYTHONQT_FULL "Wrap CTK classes using Qt meta-object system into Python language" OFF)
+  OPTION(CTK_WRAP_PYTHONQT_LIGHT "Wrap CTK classes using Qt meta-object system into Python language" OFF)
+  IF(CTK_WRAP_PYTHONQT_FULL AND CTK_WRAP_PYTHONQT_LIGHT)
+    MESSAGE(SEND_ERROR "CTK_WRAP_PYTHONQT_{LIGHT,FULL} options are mutually exclusive. Please enable only one !")
+  ENDIF()
+ELSE()
+  # Note that an unset boolean variable is considered to be False
+  UNSET(CTK_WRAP_PYTHONQT_FULL CACHE)
+  UNSET(CTK_WRAP_PYTHONQT_LIGHT CACHE)
+ENDIF()
 
 #-----------------------------------------------------------------------------
 # DGraph
 #
 
 # Generate DGraph input file expected by DGraph
-ctkFunctionGenerateDGraphInput(${CTK_BINARY_DIR} "${target_directories}" TRUE)
+ctkFunctionGenerateDGraphInput(${CTK_BINARY_DIR} "${target_directories}" WITH_OPTION)
 
 # Obtain list of target ordered topologically
 ctkMacroSetPaths("${QT_INSTALLED_LIBRARY_DIR}")
@@ -471,9 +508,8 @@ IF(RESULT_VAR)
   MESSAGE(FATAL_ERROR "Failed to obtain list of target ordered topologically.\n${RESULT_VAR}\n${CTK_BINARY_DIR}\n${error}")
 ENDIF()
 
-
 # Convert 'CTEST_PROJECT_SUBPROJECTS_OUTPUT' to a list
-STRING(REPLACE " " "\\;" CTEST_PROJECT_SUBPROJECTS ${CTEST_PROJECT_SUBPROJECTS_OUTPUT})
+STRING(REPLACE " " "\\;" CTEST_PROJECT_SUBPROJECTS "${CTEST_PROJECT_SUBPROJECTS_OUTPUT}")
 SET(CTEST_PROJECT_SUBPROJECTS ${CTEST_PROJECT_SUBPROJECTS})
 
 # If the list of subproject is empty, let's at least build CTKCore
@@ -503,6 +539,43 @@ IF(CTK_SUPERBUILD)
 ENDIF()
 
 #-----------------------------------------------------------------------------
+# Expand variables containing include directories for external projects
+# This relies on the variable EXTERNAL_TARGETS set in ctkMacroValidateBuildOptions
+FOREACH(_external_target ${EXTERNAL_TARGETS})
+  IF(${_external_target}_FIND_PACKAGE_CMD)
+    #MESSAGE("Calling FIND_PACKAGE(${${_external_target}_FIND_PACKAGE_CMD})")
+    FIND_PACKAGE(${${_external_target}_FIND_PACKAGE_CMD} REQUIRED)
+  ENDIF()
+ENDFOREACH()
+
+FOREACH(_external_target ${EXTERNAL_TARGETS})
+  IF(${_external_target}_INCLUDE_DIRS)
+    STRING(REPLACE "^" ";" _include_variable_list "${${_external_target}_INCLUDE_DIRS}")
+    IF(_include_variable_list)
+      #MESSAGE("[${_external_target}] Resolving include variables: ${${_external_target}_INCLUDE_DIRS}")
+      SET(${_external_target}_INCLUDE_DIRS "")
+      FOREACH(_include_variable ${_include_variable_list})
+        #MESSAGE("[${_external_target}] Appending ${${_include_variable}}")
+        IF(${_include_variable})
+          LIST(APPEND ${_external_target}_INCLUDE_DIRS ${${_include_variable}})
+        ELSE()
+          LIST(APPEND ${_external_target}_INCLUDE_DIRS ${_include_variable})
+        ENDIF()
+        #MESSAGE("[${_external_target}] New dirs: ${${_external_target}_INCLUDE_DIRS}")
+      ENDFOREACH()
+      #MESSAGE("[${_external_target}] Appended dirs: ${${_external_target}_INCLUDE_DIRS}")
+    ENDIF()
+  ENDIF()
+ENDFOREACH()
+
+# Since PYTHONQT_USE_VTK library option can be enabled independently of
+# Visualization/VTK/Core, let's make sure VTK has been properly discovered
+IF(CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK)
+  FIND_PACKAGE(VTK REQUIRED)
+ENDIF()
+SET(CTK_WRAP_PYTHONQT_USE_VTK ${CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK})
+
+#-----------------------------------------------------------------------------
 # CTK_SUPERBUILD_BINARY_DIR
 
 # If CTK_SUPERBUILD_BINARY_DIR isn't defined, it means CTK is *NOT* build using Superbuild.
@@ -523,6 +596,12 @@ CONFIGURE_FILE(${CTK_SOURCE_DIR}/UseCTK.cmake.in
 #
 SET(CMAKE_CXX_FLAGS ${CTK_CXX_FLAGS} CACHE STRING "CMake C Flags" FORCE)
 SET(CMAKE_C_FLAGS ${CTK_C_FLAGS} CACHE STRING "CMake CXX Flags" FORCE)
+
+#-----------------------------------------------------------------------------
+# Set the header template which defines custom export/import macros
+# for shared libraries
+#
+SET(CTK_EXPORT_HEADER_TEMPLATE "${CTK_SOURCE_DIR}/Libs/ctkExport.h.in")
 
 #-----------------------------------------------------------------------------
 # Add CTK library subdirectories
@@ -550,6 +629,11 @@ FOREACH(app ${CTK_APPLICATIONS_SUBDIRS})
     ADD_SUBDIRECTORY(Applications/${app})
   ENDIF()
 ENDFOREACH()
+
+IF(BUILD_TESTING)
+  ADD_SUBDIRECTORY(Applications/Testing)
+ENDIF(BUILD_TESTING)
+
 
 #-----------------------------------------------------------------------------
 # Add general purpose subdirectories

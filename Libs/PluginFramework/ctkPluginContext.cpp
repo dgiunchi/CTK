@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +20,11 @@
 =============================================================================*/
 
 #include "ctkPluginContext.h"
+#include "ctkPluginContext_p.h"
 
 #include "ctkPluginPrivate_p.h"
 #include "ctkPluginFrameworkContext_p.h"
+#include "ctkServices_p.h"
 #include "ctkServiceRegistration.h"
 #include "ctkServiceReference.h"
 #include "ctkServiceReferencePrivate.h"
@@ -30,115 +32,173 @@
 #include <stdexcept>
 
 
-  class ctkPluginContextPrivate
-  {
+ctkPluginContextPrivate::ctkPluginContextPrivate(ctkPluginPrivate* plugin)
+  : plugin(plugin)
+{}
 
-  public:
+void ctkPluginContextPrivate::isPluginContextValid() const
+{
+  if (!plugin) {
+    throw std::logic_error("This plugin context is no longer valid");
+  }
+}
 
-    ctkPluginPrivate* plugin;
-
-    ctkPluginContextPrivate(ctkPluginPrivate* plugin)
-      : plugin(plugin)
-    {}
-
-    /**
-     * Check that the plugin is still valid.
-     */
-    void isPluginContextValid() const
-    {
-      if (!plugin) {
-        throw std::logic_error("This plugin context is no longer valid");
-      }
-    }
-
-    void invalidate()
-    {
-      plugin = 0;
-    }
-
-  };
+void ctkPluginContextPrivate::invalidate()
+{
+  plugin = 0;
+}
 
 
-  ctkPluginContext::ctkPluginContext(ctkPluginPrivate* plugin)
+ctkPluginContext::ctkPluginContext(ctkPluginPrivate* plugin)
   : d_ptr(new ctkPluginContextPrivate(plugin))
-  {}
+{}
 
-  ctkPluginContext::~ctkPluginContext()
-  {
-    Q_D(ctkPluginContext);
-    delete d;
-  }
+ctkPluginContext::~ctkPluginContext()
+{
+  Q_D(ctkPluginContext);
+  delete d;
+}
 
-  ctkPlugin* ctkPluginContext::getPlugin() const
-  {
-    Q_D(const ctkPluginContext);
-    d->isPluginContextValid();
-    return d->plugin->q_func();
-  }
+QVariant ctkPluginContext::getProperty(const QString& key) const
+{
+  Q_D(const ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->fwCtx->props.value(key);
+}
 
-  ctkPlugin* ctkPluginContext::getPlugin(long id) const
-  {
-    Q_D(const ctkPluginContext);
-    return d->plugin->fwCtx->plugins->getPlugin(id);
-  }
+QSharedPointer<ctkPlugin> ctkPluginContext::getPlugin() const
+{
+  Q_D(const ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->q_func();
+}
 
-  QList<ctkPlugin*> ctkPluginContext::getPlugins() const
-  {
-    Q_D(const ctkPluginContext);
-    d->isPluginContextValid();
-    return d->plugin->fwCtx->plugins->getPlugins();
-  }
+QSharedPointer<ctkPlugin> ctkPluginContext::getPlugin(long id) const
+{
+  Q_D(const ctkPluginContext);
+  return d->plugin->fwCtx->plugins->getPlugin(id);
+}
 
-  ctkPlugin* ctkPluginContext::installPlugin(const QUrl& location, QIODevice* in)
-  {
-    Q_D(ctkPluginContext);
-    d->isPluginContextValid();
-    return d->plugin->fwCtx->plugins->install(location, in);
-  }
+QList<QSharedPointer<ctkPlugin> > ctkPluginContext::getPlugins() const
+{
+  Q_D(const ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->fwCtx->plugins->getPlugins();
+}
 
-  ctkServiceRegistration* ctkPluginContext::registerService(const QStringList& clazzes, QObject* service, const ServiceProperties& properties)
-  {
-    Q_D(ctkPluginContext);
-    d->isPluginContextValid();
-    return d->plugin->fwCtx->services.registerService(d->plugin, clazzes, service, properties);
-  }
+QSharedPointer<ctkPlugin> ctkPluginContext::installPlugin(const QUrl& location, QIODevice* in)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->fwCtx->plugins->install(location, in);
+}
 
-  QList<ctkServiceReference*> ctkPluginContext::getServiceReferences(const QString& clazz, const QString& filter)
+QFileInfo ctkPluginContext::getDataFile(const QString& filename)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  QDir dataRoot(d->plugin->getDataRoot().absolutePath());
+  if (!dataRoot.exists())
   {
-    Q_D(ctkPluginContext);
-    d->isPluginContextValid();
-    return d->plugin->fwCtx->services.get(clazz, filter);
-  }
-
-  ctkServiceReference* ctkPluginContext::getServiceReference(const QString& clazz)
-  {
-    Q_D(ctkPluginContext);
-    d->isPluginContextValid();
-    return d->plugin->fwCtx->services.get(d->plugin, clazz);
-  }
-
-  QObject* ctkPluginContext::getService(ctkServiceReference* reference)
-  {
-    if (reference == 0)
+    if (!dataRoot.mkpath(dataRoot.absolutePath()))
     {
-      throw std::invalid_argument("Null ctkServiceReference is not valid");
+      qWarning() << "Could not create persistent storage area:" << dataRoot.absolutePath();
     }
-
-    Q_D(ctkPluginContext);
-    d->isPluginContextValid();
-    return reference->d_func()->getService(d->plugin->q_func());
   }
 
-  bool ctkPluginContext::connectPluginListener(const QObject* receiver, const char* method,
-                                            Qt::ConnectionType type)
+  return QFileInfo(dataRoot, filename);
+}
+
+ctkServiceRegistration ctkPluginContext::registerService(const QStringList& clazzes, QObject* service, const ctkDictionary& properties)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->fwCtx->services->registerService(d->plugin, clazzes, service, properties);
+}
+
+ctkServiceRegistration ctkPluginContext::registerService(const char* clazz, QObject* service, const ctkDictionary& properties)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  QStringList clazzes;
+  clazzes.append(clazz);
+  return d->plugin->fwCtx->services->registerService(d->plugin, clazzes, service, properties);
+}
+
+QList<ctkServiceReference> ctkPluginContext::getServiceReferences(const QString& clazz, const QString& filter)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->fwCtx->services->get(clazz, filter, 0);
+}
+
+ctkServiceReference ctkPluginContext::getServiceReference(const QString& clazz)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  return d->plugin->fwCtx->services->get(d->plugin, clazz);
+}
+
+QObject* ctkPluginContext::getService(ctkServiceReference reference)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+
+  if (!reference)
   {
-    Q_D(ctkPluginContext);
-    // TODO check permissions for a direct connection
-    return receiver->connect(&(d->plugin->fwCtx->listeners), SIGNAL(pluginChanged(ctkPluginEvent)), method, type);
+    throw std::invalid_argument("Default constructed ctkServiceReference is not a valid input to getService()");
   }
+  return reference.d_func()->getService(d->plugin->q_func());
+}
 
-  bool ctkPluginContext::connectFrameworkListener(const QObject* receiver, const char* method, Qt::ConnectionType type)
+ bool ctkPluginContext::ungetService(const ctkServiceReference& reference)
+ {
+   Q_D(ctkPluginContext);
+   d->isPluginContextValid();
+   ctkServiceReference ref = reference;
+   return ref.d_func()->ungetService(d->plugin->q_func(), true);
+ }
+
+bool ctkPluginContext::connectPluginListener(const QObject* receiver, const char* method,
+                                             Qt::ConnectionType type)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  // TODO check permissions for a direct connection
+  if (type == Qt::DirectConnection || type == Qt::BlockingQueuedConnection)
   {
-    Q_D(ctkPluginContext);
-    return receiver->connect(&(d->plugin->fwCtx->listeners), SIGNAL(frameworkEvent(ctkPluginFrameworkEvent)), method, type);
+    return receiver->connect(&(d->plugin->fwCtx->listeners), SIGNAL(pluginChangedDirect(ctkPluginEvent)), method, type);
   }
+  else if (type == Qt::QueuedConnection)
+  {
+    return receiver->connect(&(d->plugin->fwCtx->listeners), SIGNAL(pluginChangedQueued(ctkPluginEvent)), method, type);
+  }
+  else
+  {
+    throw std::invalid_argument("Only Qt::DirectConnection, Qt::QueuedConnection, or Qt::BlockingQueuedConnection are allowed as type argument.");
+  }
+}
+
+bool ctkPluginContext::connectFrameworkListener(const QObject* receiver, const char* method, Qt::ConnectionType type)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  // TODO check permissions for a direct connection
+  return receiver->connect(&(d->plugin->fwCtx->listeners), SIGNAL(frameworkEvent(ctkPluginFrameworkEvent)), method, type);
+}
+
+void ctkPluginContext::connectServiceListener(QObject* receiver, const char* slot,
+                                             const QString& filter)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  d->plugin->fwCtx->listeners.addServiceSlot(getPlugin(), receiver, slot, filter);
+}
+
+void ctkPluginContext::disconnectServiceListener(QObject* receiver,
+                                                const char* slot)
+{
+  Q_D(ctkPluginContext);
+  d->isPluginContextValid();
+  d->plugin->fwCtx->listeners.removeServiceSlot(getPlugin(), receiver, slot);
+}

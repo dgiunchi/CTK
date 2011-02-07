@@ -16,15 +16,16 @@ INCLUDE(${VTK_USE_FILE})
 
 SET(KIT_export_directive "CTK_VISUALIZATION_VTK_WIDGETS_EXPORT")
 
-# Additional directories to include
-SET(KIT_include_directories
-  )
   
 # Source files
 SET(KIT_SRCS
   ctkVTKAbstractMatrixWidget.cpp
   ctkVTKAbstractMatrixWidget.h
   ctkVTKAbstractMatrixWidget_p.h
+  ctkVTKDataSetModel.cpp
+  ctkVTKDataSetModel.h
+  ctkVTKDataSetArrayComboBox.cpp
+  ctkVTKDataSetArrayComboBox.h
   ctkVTKMatrixWidget.cpp
   ctkVTKMatrixWidget.h
   ctkVTKRenderView.cpp
@@ -35,20 +36,28 @@ SET(KIT_SRCS
   ctkVTKSliceView.cpp
   ctkVTKSliceView.h
   ctkVTKSliceView_p.h
+  ctkVTKSurfaceMaterialPropertyWidget.cpp
+  ctkVTKSurfaceMaterialPropertyWidget.h
   ctkVTKTextPropertyWidget.cpp
   ctkVTKTextPropertyWidget.h
+  ctkVTKThumbnailView.cpp
+  ctkVTKThumbnailView.h
   )
 
 # Headers that should run through moc
 SET(KIT_MOC_SRCS
   ctkVTKAbstractMatrixWidget_p.h
+  ctkVTKDataSetArrayComboBox.h
+  ctkVTKDataSetModel.h
   ctkVTKMatrixWidget.h
   ctkVTKRenderView.h
   ctkVTKRenderView_p.h
   ctkVTKScalarBarWidget.h
   ctkVTKSliceView.h
   ctkVTKSliceView_p.h
+  ctkVTKSurfaceMaterialPropertyWidget.h
   ctkVTKTextPropertyWidget.h
+  ctkVTKThumbnailView.h
   )
 
 # UI files
@@ -101,7 +110,6 @@ ctkMacroGetTargetLibraries(KIT_target_libraries)
 ctkMacroBuildLib(
   NAME ${PROJECT_NAME}
   EXPORT_DIRECTIVE ${KIT_export_directive}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
   SRCS ${KIT_SRCS}
   MOC_SRCS ${KIT_MOC_SRCS}
   UI_FORMS ${KIT_UI_FORMS}

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ class QGroupBox;
 
 // CTK includes
 #include "ctkPimpl.h"
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 class ctkWorkflow;
 class ctkWorkflowStep;
 class ctkWorkflowButtonBoxWidget;
@@ -43,7 +43,7 @@ class ctkWorkflowWidgetPrivate;
 class CTK_WIDGETS_EXPORT ctkWorkflowWidget : public QWidget
 {
   Q_OBJECT
-
+  Q_PROPERTY(bool showButtonBoxWidget READ showButtonBoxWidget WRITE setShowButtonBoxWidget)
 public:
 
   typedef QWidget Superclass;
@@ -51,8 +51,8 @@ public:
   virtual ~ctkWorkflowWidget();
 
   /// Set/get the workflow associated with this widget.
-  virtual ctkWorkflow* workflow()const;
-  virtual void setWorkflow(ctkWorkflow* newWorkflow);
+  Q_INVOKABLE virtual ctkWorkflow* workflow()const;
+  Q_INVOKABLE virtual void setWorkflow(ctkWorkflow* newWorkflow);
 
   /// Get the widget constaining the title, subtitle, pre-text, post-text, error-text and client area
   /// layout.
@@ -63,7 +63,7 @@ public:
   void setShowButtonBoxWidget(bool newShowButtonBoxWidget);
 
   /// Get the widget with the 'next', 'back' and 'goTo' buttons
-  ctkWorkflowButtonBoxWidget* buttonBoxWidget()const;
+  Q_INVOKABLE ctkWorkflowButtonBoxWidget* buttonBoxWidget()const;
 
 public slots:
   /// Triggers updates of the the workflowGroupBox and the buttonBoxWidget when the current workflow

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkVTKRenderView_h
@@ -25,9 +25,10 @@
 #include <QWidget>
 
 // CTK includes
+#include <ctkAxesWidget.h>
 #include <ctkPimpl.h>
 
-#include "CTKVisualizationVTKWidgetsExport.h"
+#include "ctkVisualizationVTKWidgetsExport.h"
 
 class ctkVTKRenderViewPrivate;
 class vtkInteractorObserver;
@@ -141,6 +142,12 @@ public slots:
   /// \brief Reset focal point
   /// The visible scene bbox is computed, then the camera is recentered around its centroid.
   void resetFocalPoint();
+  
+  /// \brief Change camera to look from a given axis to the focal point
+  /// Translate/Rotate the camera to look from a given axis
+  /// The Field of View (fov) controls how far from the focal point the 
+  /// camera must be (final_pos = focal_point + 3*fov).
+  void lookFromAxis(const ctkAxesWidget::Axis& axis, double fov = 10.);
 
 public:
   /// Get underlying RenderWindow

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkDoubleRangeSlider_h
@@ -27,7 +27,7 @@
 
 // CTK includes
 #include <ctkPimpl.h>
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class ctkRangeSlider;
 class ctkDoubleRangeSliderPrivate;
@@ -49,6 +49,7 @@ class CTK_WIDGETS_EXPORT ctkDoubleRangeSlider : public QWidget
   Q_PROPERTY(bool tracking READ hasTracking WRITE setTracking)
   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation)
   Q_PROPERTY(double tickInterval READ tickInterval WRITE setTickInterval)
+  Q_PROPERTY(bool symmetricMoves READ symmetricMoves WRITE setSymmetricMoves)
 public:
   // Superclass typedef
   typedef QWidget Superclass;
@@ -152,6 +153,13 @@ public:
   /// The orientation must be Qt::Vertical (the default) or Qt::Horizontal.
   Qt::Orientation orientation()const;
   void setOrientation(Qt::Orientation orientation);
+
+  ///
+  /// When symmetricMoves is true, moving a handle will move the other handle
+  /// symmetrically, otherwise the handles are independent. False by default
+  bool symmetricMoves()const; 
+  void setSymmetricMoves(bool symmetry);
+
 signals:
   ///
   /// This signal is emitted when the slider minimum value has changed, 

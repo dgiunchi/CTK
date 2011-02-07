@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,29 +23,35 @@
 
 #include "ctkPluginFramework.h"
 #include "ctkPluginConstants.h"
-
+#include "ctkPluginContext.h"
+#include "ctkPluginContext_p.h"
 #include "ctkPluginFrameworkContext_p.h"
 
 
-  ctkPluginFrameworkPrivate::ctkPluginFrameworkPrivate(ctkPluginFramework& qq, ctkPluginFrameworkContext* fw)
-    : ctkPluginPrivate(qq, fw, 0, ctkPluginConstants::SYSTEM_PLUGIN_LOCATION,
-                    ctkPluginConstants::SYSTEM_PLUGIN_SYMBOLICNAME,
-                    // TODO: read version from the manifest resource
-                    ctkVersion(0, 9, 0))
-  {
-    systemHeaders.insert(ctkPluginConstants::PLUGIN_SYMBOLICNAME, symbolicName);
-    systemHeaders.insert(ctkPluginConstants::PLUGIN_NAME, location);
-    systemHeaders.insert(ctkPluginConstants::PLUGIN_VERSION, version.toString());
-  }
-
-  void ctkPluginFrameworkPrivate::init()
-  {
-    this->state = ctkPlugin::STARTING;
-    this->fwCtx->init();
-  }
-
-  void ctkPluginFrameworkPrivate::initSystemPlugin()
-  {
-    this->pluginContext = new ctkPluginContext(this);
-
+ctkPluginFrameworkPrivate::ctkPluginFrameworkPrivate(QWeakPointer<ctkPlugin> qq, ctkPluginFrameworkContext* fw)
+  : ctkPluginPrivate(qq, fw, 0, ctkPluginConstants::SYSTEM_PLUGIN_LOCATION,
+                     ctkPluginConstants::SYSTEM_PLUGIN_SYMBOLICNAME,
+                     // TODO: read version from the manifest resource
+                     ctkVersion(0, 9, 0))
+{
+  systemHeaders.insert(ctkPluginConstants::PLUGIN_SYMBOLICNAME, symbolicName);
+  systemHeaders.insert(ctkPluginConstants::PLUGIN_NAME, location);
+  systemHeaders.insert(ctkPluginConstants::PLUGIN_VERSION, version.toString());
 }
+
+void ctkPluginFrameworkPrivate::init()
+{
+  this->state = ctkPlugin::STARTING;
+  this->fwCtx->init();
+}
+
+void ctkPluginFrameworkPrivate::initSystemPlugin()
+{
+  this->pluginContext.reset(new ctkPluginContext(this));
+}
+
+void ctkPluginFrameworkPrivate::uninitSystemPlugin()
+{
+  this->pluginContext->d_func()->invalidate();
+}
+

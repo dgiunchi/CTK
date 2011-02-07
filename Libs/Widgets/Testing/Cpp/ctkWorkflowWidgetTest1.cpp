@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
   =========================================================================*/
 
 // QT includes
@@ -43,7 +43,7 @@
 #include <iostream>
 
 //-----------------------------------------------------------------------------
-bool buttonClickTest(QApplication& app, int defaultTime, ctkWorkflowAbstractWidgetStep* currentStep, QWidget* shownStepArea, QLineEdit* shownLineEdit, QLabel* shownLabel, QWidget* hiddenStepArea, QLineEdit* hiddenLineEdit, QLabel* hiddenLabel, ctkWorkflow* workflow, ctkWorkflowWidget* workflowWidget, QPushButton* backButton, QPushButton* nextButton, QPushButton* finishButton1=0, QPushButton* finishButton2=0)
+bool buttonClickTest(QApplication& app, int defaultTime, ctkWorkflowWidgetStep* currentStep, QWidget* shownStepArea, QLineEdit* shownLineEdit, QLabel* shownLabel, QWidget* hiddenStepArea, QLineEdit* hiddenLineEdit, QLabel* hiddenLabel, ctkWorkflow* workflow, ctkWorkflowWidget* workflowWidget, QPushButton* backButton, QPushButton* nextButton, QPushButton* finishButton1=0, QPushButton* finishButton2=0)
 {
   QTimer::singleShot(defaultTime, &app, SLOT(quit()));
   app.exec();
@@ -190,10 +190,13 @@ int userInteractionSimulator1(QApplication& app, ctkExampleDerivedWorkflowWidget
 {
   QPushButton* backButton = workflowWidget->buttonBoxWidget()->backButton();
   QPushButton* nextButton = workflowWidget->buttonBoxWidget()->nextButton();
-  QPushButton* finishButton = workflowWidget->buttonBoxWidget()->goToButtons().first();
   Q_ASSERT(backButton);
   Q_ASSERT(nextButton);
+
+#ifndef QT_NO_DEBUG
+  QPushButton* finishButton = workflowWidget->buttonBoxWidget()->goToButtons().first();
   Q_ASSERT(finishButton);
+#endif
 
   QList<derivedTestData*> tests;
 

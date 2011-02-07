@@ -3,6 +3,9 @@ PROJECT(CTKScriptingPythonWidgets)
 #
 # 3rd party dependencies
 #
+IF(CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK)
+  INCLUDE(${VTK_USE_FILE})
+ENDIF()
 
 #
 # See CTK/CMake/ctkMacroBuildLib.cmake for details
@@ -10,19 +13,16 @@ PROJECT(CTKScriptingPythonWidgets)
 
 SET(KIT_export_directive "CTK_SCRIPTING_PYTHON_WIDGETS_EXPORT")
 
-# Additional directories to include
-SET(KIT_include_directories
-  )
   
 # Source files
 SET(KIT_SRCS
-  ctkPythonShell.cpp
-  ctkPythonShell.h
+  ctkPythonConsole.cpp
+  ctkPythonConsole.h
   )
 
 # Headers that should run through moc
 SET(KIT_MOC_SRCS
-  ctkPythonShell.h
+  ctkPythonConsole.h
   )
 
 # UI files
@@ -40,7 +40,6 @@ ctkMacroGetTargetLibraries(KIT_target_libraries)
 ctkMacroBuildLib(
   NAME ${PROJECT_NAME}
   EXPORT_DIRECTIVE ${KIT_export_directive}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
   SRCS ${KIT_SRCS}
   MOC_SRCS ${KIT_MOC_SRCS}
   UI_FORMS ${KIT_UI_FORMS}
@@ -50,7 +49,7 @@ ctkMacroBuildLib(
   )
 
 # Plugins
-#ADD_SUBDIRECTORY(Plugins)
+ADD_SUBDIRECTORY(Plugins)
 
 # Testing
 IF(BUILD_TESTING)

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkRangeWidget_h
@@ -27,7 +27,7 @@
 // CTK includes
 #include <ctkPimpl.h>
 
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class ctkDoubleRangeSlider;
 class ctkRangeWidgetPrivate;
@@ -52,6 +52,7 @@ class CTK_WIDGETS_EXPORT ctkRangeWidget : public QWidget
   Q_PROPERTY(Qt::Alignment spinBoxTextAlignment READ spinBoxTextAlignment WRITE setSpinBoxTextAlignment)
   Q_PROPERTY(Qt::Alignment spinBoxAlignment READ spinBoxAlignment WRITE setSpinBoxAlignment)
   Q_PROPERTY(bool tracking READ hasTracking WRITE setTracking)
+  Q_PROPERTY(bool symmetricMoves READ symmetricMoves WRITE setSymmetricMoves)
 
 public:
   /// Superclass typedef
@@ -170,6 +171,12 @@ public:
   // ctkRangeWidget siblings.
   bool isAutoSpinBoxWidth()const;
   void setAutoSpinBoxWidth(bool autoWidth);
+  
+  ///
+  /// When symmetricMoves is true, moving a handle will move the other handle
+  /// symmetrically, otherwise the handles are independent. False by default
+  bool symmetricMoves()const;
+  void setSymmetricMoves(bool symmetry);
 
 public slots:
   ///
@@ -190,6 +197,7 @@ signals:
   void maximumValueChanged(double value);
   void maximumValueIsChanging(double value);
   void valuesChanged(double minValue, double maxValue);
+  void rangeChanged(double min, double max);
 
 protected slots:
   void startChanging();

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -90,11 +90,11 @@ ctkWorkflowWidget::~ctkWorkflowWidget()
 }
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkWorkflowWidget, ctkWorkflow*, workflow, Workflow);
-CTK_GET_CXX(ctkWorkflowWidget, ctkWorkflowGroupBox*, workflowGroupBox, WorkflowGroupBox);
-CTK_GET_CXX(ctkWorkflowWidget, bool, showButtonBoxWidget, ShowButtonBoxWidget);
-CTK_SET_CXX(ctkWorkflowWidget, bool, setShowButtonBoxWidget, ShowButtonBoxWidget);
-CTK_GET_CXX(ctkWorkflowWidget, ctkWorkflowButtonBoxWidget*, buttonBoxWidget, ButtonBoxWidget);
+CTK_GET_CPP(ctkWorkflowWidget, ctkWorkflow*, workflow, Workflow);
+CTK_GET_CPP(ctkWorkflowWidget, ctkWorkflowGroupBox*, workflowGroupBox, WorkflowGroupBox);
+CTK_GET_CPP(ctkWorkflowWidget, bool, showButtonBoxWidget, ShowButtonBoxWidget);
+CTK_SET_CPP(ctkWorkflowWidget, bool, setShowButtonBoxWidget, ShowButtonBoxWidget);
+CTK_GET_CPP(ctkWorkflowWidget, ctkWorkflowButtonBoxWidget*, buttonBoxWidget, ButtonBoxWidget);
 
 // --------------------------------------------------------------------------
 void ctkWorkflowWidget::setWorkflow(ctkWorkflow* newWorkflow)

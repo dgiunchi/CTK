@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkExampleWorkflowWidgetStepUsingSignalsAndSlots_h
@@ -80,7 +80,8 @@ class ctkExampleWorkflowWidgetStepUsingSignalsAndSlots : public QObject
 public:
 
   typedef QObject Superclass;
-  explicit ctkExampleWorkflowWidgetStepUsingSignalsAndSlots(QObject* parent = 0);
+  explicit ctkExampleWorkflowWidgetStepUsingSignalsAndSlots(ctkWorkflowStep* newStep,
+                                                            QObject* newParent = 0);
   virtual ~ctkExampleWorkflowWidgetStepUsingSignalsAndSlots();
 
   // Set/get the widget onto which this step's user interface will be placed

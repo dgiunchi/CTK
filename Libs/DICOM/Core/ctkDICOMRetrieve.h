@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkDICOMRetrieve_h
@@ -26,7 +26,7 @@
 #include <QObject>
 #include <QDir>
 
-#include "CTKDICOMCoreExport.h"
+#include "ctkDICOMCoreExport.h"
 
 class ctkDICOMRetrievePrivate;
 class CTK_DICOM_CORE_EXPORT ctkDICOMRetrieve : public QObject
@@ -47,6 +47,8 @@ public:
   int callingPort();
   void setCalledPort ( int port );
   int calledPort();
+  void setMoveDestinationAETitle ( QString moveDestinationAETitle );
+  const QString& moveDestinationAETitle();
 
   // Could be a slot...
   void retrieveSeries ( QString seriesInstanceUID, QDir directory );

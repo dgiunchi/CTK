@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,12 +26,12 @@
 #include "ctkPluginException.h"
 #include "ctkPluginArchive_p.h"
 #include "ctkPluginStorage_p.h"
+#include "ctkPluginFrameworkUtil_p.h"
 #include "ctkServiceException.h"
 
 #include <QApplication>
 #include <QFileInfo>
 #include <QUrl>
-#include <QServiceManager>
 
 #include <QDebug>
 
@@ -161,8 +161,33 @@ void ctkPluginDatabase::open()
     }
   }
 
+  removeUninstalledPlugins();
+
   //Update database based on the recorded timestamps
   updateDB();
+}
+
+void ctkPluginDatabase::removeUninstalledPlugins()
+{
+  checkConnection();
+
+  QSqlDatabase database = QSqlDatabase::database(m_connectionName);
+  QSqlQuery query(database);
+
+  beginTransaction(&query, Write);
+
+  try
+  {
+    QString statement = "DELETE FROM Plugins WHERE StartLevel==-2";
+    executeQuery(&query, statement);
+  }
+  catch (...)
+  {
+    rollbackTransaction(&query);
+    throw;
+  }
+
+  commitTransaction(&query);
 }
 
 void ctkPluginDatabase::updateDB()
@@ -188,11 +213,10 @@ void ctkPluginDatabase::updateDB()
     while (query.next())
     {
       QFileInfo pluginInfo(query.value(EBindIndex2).toString());
-      if (pluginInfo.lastModified() > QDateTime::fromString(query.value(EBindIndex3).toString(), Qt::ISODate))
+      if (pluginInfo.lastModified() > getQDateTimeFromString(query.value(EBindIndex3).toString()))
       {
         outdatedIds.append(query.value(EBindIndex).toLongLong());
         outdatedPlugins.append(qMakePair(query.value(EBindIndex1).toString(), query.value(EBindIndex2).toString()));
-        outdatedServiceNames.append(query.value(EBindIndex4).toString() + "_" + query.value(EBindIndex5).toString());
       }
     }
   }
@@ -222,29 +246,6 @@ void ctkPluginDatabase::updateDB()
     throw;
   }
 
-  try
-  {
-    QtMobility::QServiceManager serviceManager;
-    QStringListIterator serviceNameIter(outdatedServiceNames);
-    while (serviceNameIter.hasNext())
-    {
-      QString serviceName = serviceNameIter.next();
-      serviceManager.removeService(serviceName);
-      QtMobility::QServiceManager::Error error = serviceManager.error();
-      if (!(error == QtMobility::QServiceManager::NoError ||
-            error == QtMobility::QServiceManager::ComponentNotFound))
-      {
-        throw ctkServiceException(QString("Removing service named ") + serviceName +
-                               " failed: " + QString::number(static_cast<unsigned int>(error)));
-      }
-    }
-  }
-  catch (...)
-  {
-    rollbackTransaction(&query);
-    throw;
-  }
-
   commitTransaction(&query);
 
   QListIterator<QPair<QString,QString> > locationIter(outdatedPlugins);
@@ -262,7 +263,12 @@ ctkPluginArchive* ctkPluginDatabase::insertPlugin(const QUrl& location, const QS
 
   // Assemble the data for the sql record
   QFileInfo fileInfo(localPath);
-  const QString lastModified = fileInfo.lastModified().toString(Qt::ISODate);
+  if (!fileInfo.exists())
+  {
+    throw std::invalid_argument((localPath + " does not exist").toStdString());
+  }
+
+  const QString libTimestamp = getStringFromQDateTime(fileInfo.lastModified());
 
   QString resourcePrefix = fileInfo.baseName();
   if (resourcePrefix.startsWith("lib"))
@@ -278,7 +284,8 @@ ctkPluginArchive* ctkPluginDatabase::insertPlugin(const QUrl& location, const QS
 
   beginTransaction(&query, Write);
 
-  QString statement = "INSERT INTO Plugins(Location,LocalPath,SymbolicName,Version,State,Timestamp) VALUES(?,?,?,?,?,?)";
+  QString statement = "INSERT INTO Plugins(Location,LocalPath,SymbolicName,Version,State,LastModified,Timestamp,StartLevel,AutoStart)"
+      "VALUES(?,?,?,?,?,'',?,-1,-1)";
 
   QList<QVariant> bindValues;
   bindValues.append(location.toString());
@@ -286,7 +293,7 @@ ctkPluginArchive* ctkPluginDatabase::insertPlugin(const QUrl& location, const QS
   bindValues.append(QString("na"));
   bindValues.append(QString("na"));
   bindValues.append(ctkPlugin::INSTALLED);
-  bindValues.append(lastModified);
+  bindValues.append(libTimestamp);
 
   qlonglong pluginId = -1;
   try
@@ -310,7 +317,9 @@ ctkPluginArchive* ctkPluginDatabase::insertPlugin(const QUrl& location, const QS
   if (!pluginLoader.load())
   {
     rollbackTransaction(&query);
-    throw ctkPluginException(QString("The plugin could not be loaded: %1").arg(localPath));
+    ctkPluginException exc(QString("The plugin could not be loaded: %1").arg(localPath));
+    exc.setCause(pluginLoader.errorString());
+    throw exc;
   }
 
   QDirIterator dirIter(resourcePrefix, QDirIterator::Subdirectories);
@@ -373,6 +382,45 @@ ctkPluginArchive* ctkPluginDatabase::insertPlugin(const QUrl& location, const QS
       throw;
   }
 
+}
+
+void ctkPluginDatabase::setStartLevel(long pluginId, int startLevel)
+{
+  QSqlDatabase database = QSqlDatabase::database(m_connectionName);
+  QSqlQuery query(database);
+
+  QString statement = "UPDATE Plugins SET StartLevel=? WHERE ID=?";
+  QList<QVariant> bindValues;
+  bindValues.append(startLevel);
+  bindValues.append(QVariant::fromValue(pluginId));
+
+  executeQuery(&query, statement, bindValues);
+}
+
+void ctkPluginDatabase::setLastModified(long pluginId, const QDateTime& lastModified)
+{
+  QSqlDatabase database = QSqlDatabase::database(m_connectionName);
+  QSqlQuery query(database);
+
+  QString statement = "UPDATE Plugins SET LastModified=? WHERE ID=?";
+  QList<QVariant> bindValues;
+  bindValues.append(getStringFromQDateTime(lastModified));
+  bindValues.append(QVariant::fromValue(pluginId));
+
+  executeQuery(&query, statement, bindValues);
+}
+
+void ctkPluginDatabase::setAutostartSetting(long pluginId, int autostart)
+{
+  QSqlDatabase database = QSqlDatabase::database(m_connectionName);
+  QSqlQuery query(database);
+
+  QString statement = "UPDATE Plugins SET AutoStart=? WHERE ID=?";
+  QList<QVariant> bindValues;
+  bindValues.append(autostart);
+  bindValues.append(QVariant::fromValue(pluginId));
+
+  executeQuery(&query, statement, bindValues);
 }
 
 QStringList ctkPluginDatabase::findResourcesPath(long pluginId, const QString& path) const
@@ -517,40 +565,16 @@ void ctkPluginDatabase::setDatabasePath(const QString &databasePath)
 
 QString ctkPluginDatabase::getDatabasePath() const
 {
-    QString path;
-    if(m_databasePath.isEmpty())
-    {
-      QSettings settings;
-      path = settings.value("PluginDB/Path").toString();
-      if (path.isEmpty())
-      {
-        path = QApplication::applicationDirPath();
-        if (path.lastIndexOf("/") != path.length() -1)
-        {
-          path.append("/");
-        }
-        QString appName = QApplication::applicationName();
-        appName.replace(" ", "");
-        if (!appName.isEmpty())
-        {
-          path.append(appName + "_plugins.db");
-        }
-        else
-        {
-          path.append("pluginfw.db");
-          qWarning() << "Warning: Using generic plugin database name. You should "
-              "set an application name via QCoreApplication::setApplicationName()";
-        }
-      }
-      path = QDir::toNativeSeparators(path);
-    }
-    else
-    {
-      path = m_databasePath;
-    }
+  QString path = m_databasePath;
+  if(path.isEmpty())
+  {
+    path = QDir::homePath() + "/ctkpluginfw/plugins.db";
+    qWarning() << "No database path set. Using default:" << path;
+  }
 
-	qDebug() << "Using database:" << path;
-    return path;
+  path = QDir::toNativeSeparators(path);
+  qDebug() << "Using database:" << path;
+  return path;
 }
 
 
@@ -594,7 +618,10 @@ void ctkPluginDatabase::createTables()
                       "SymbolicName TEXT NOT NULL,"
                       "Version TEXT NOT NULL,"
                       "State INTEGER NOT NULL,"
-                      "Timestamp TEXT NOT NULL)");
+                      "LastModified TEXT NOT NULL,"
+                      "Timestamp TEXT NOT NULL,"
+                      "StartLevel INTEGER NOT NULL,"
+                      "AutoStart INTEGER NOT NULL)");
     try
     {
       executeQuery(&query, statement);
@@ -799,5 +826,14 @@ QList<ctkPluginArchive*> ctkPluginDatabase::getPluginArchives() const
   }
 
   return archives;
+}
 
+QString ctkPluginDatabase::getStringFromQDateTime(const QDateTime& dateTime) const
+{
+  return dateTime.toString(Qt::ISODate);
+}
+
+QDateTime ctkPluginDatabase::getQDateTimeFromString(const QString& dateTimeString) const
+{
+  return QDateTime::fromString(dateTimeString, Qt::ISODate);
 }

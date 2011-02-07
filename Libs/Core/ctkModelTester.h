@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkModelTester_h
@@ -29,7 +29,7 @@
 
 /// CTK includes
 #include "ctkPimpl.h"
-#include "CTKCoreExport.h"
+#include "ctkCoreExport.h"
 
 class QAbstractItemModel;
 class ctkModelTesterPrivate;
@@ -81,6 +81,14 @@ public:
   /// It also applies for row/column suppressions. 
   void setNestedInserts(bool enable);
   bool nestedInserts()const;
+
+  ///
+  /// When TestData is enabled, it checks if the display role of a valid
+  /// model index is valid too.
+  /// You can disable the test if you are ok with temporary invalid display
+  /// roles.
+  void setTestDataEnabled(bool enable);
+  bool testDataEnabled()const;
 
   ///
   /// Test the data consistency of a QModelIndex.

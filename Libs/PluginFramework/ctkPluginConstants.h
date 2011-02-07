@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@
 
 #include <QString>
 
-#include "CTKPluginFrameworkExport.h"
+#include "ctkPluginFrameworkExport.h"
 
 
 struct CTK_PLUGINFW_EXPORT ctkPluginConstants {
@@ -44,6 +44,25 @@ struct CTK_PLUGINFW_EXPORT ctkPluginConstants {
 
 
   /**
+   * Framework environment property identifying the Framework version.
+   *
+   * <p>
+   * The value of this property may be retrieved by calling the
+   * <code>ctkPluginContext::getProperty</code> method.
+   */
+  static const QString FRAMEWORK_VERSION; // = "org.commontk.pluginfw.version"
+
+  /**
+   * Framework environment property identifying the Framework implementation
+   * vendor.
+   *
+   * <p>
+   * The value of this property may be retrieved by calling the
+   * <code>ctkPluginContext::getProperty</code> method.
+   */
+  static const QString FRAMEWORK_VENDOR; // = "org.commontk.pluginfw.vendor"
+
+  /**
    * Specifies the persistent storage area used by the framework. The value of
    * this property must be a valid file path in the file system to a
    * directory. If the specified directory does not exist then the framework
@@ -57,6 +76,22 @@ struct CTK_PLUGINFW_EXPORT ctkPluginConstants {
    */
   static const QString FRAMEWORK_STORAGE; // = "org.commontk.pluginfw.storage"
 
+  /**
+   * Specifies if and when the persistent storage area for the framework
+   * should be cleaned. If this property is not set, then the framework
+   * storage area must not be cleaned.
+   *
+   * @see #FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT
+   */
+  static const QString FRAMEWORK_STORAGE_CLEAN; // = "org.commontk.pluginfw.storage.clean";
+
+  /**
+   * Specifies that the framework storage area must be cleaned before the
+   * framework is initialized for the first time. Subsequent inits, starts or
+   * updates of the framework will not result in cleaning the framework
+   * storage area.
+   */
+  static const QString FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT; //	= "onFirstInit";
 
   /**
    * Manifest header identifying the plugin's symbolic name.
@@ -270,14 +305,37 @@ struct CTK_PLUGINFW_EXPORT ctkPluginConstants {
    * previously assigned values since the Framework was started. These values
    * are NOT persistent across restarts of the Framework.
    */
-  static const QString SERVICE_ID; //	= "service.id"
+  // ATTENTION!!! If the value is changed, change also ctkEventConstants::SERVICE_ID
+  static const QString SERVICE_ID; // = "service.id"
+
+  /**
+   * Service property identifying a service's persistent identifier.
+   *
+   * <p>
+   * This property may be supplied in the <code>properties</code>
+   * <code>ctkDictionary</code> object passed to the
+   * <code>ctkPluginContext#registerService</code> method. The value of this
+   * property must be of type <code>QString</code> or <code>QStringList</code>.
+   *
+   * <p>
+   * A service's persistent identifier uniquely identifies the service and
+   * persists across multiple Framework invocations.
+   *
+   * <p>
+   * By convention, every plugin has its own unique namespace, starting with
+   * the plugin's identifier (see {@link ctkPlugin#getPluginId}) and followed by
+   * a dot (.). A plugin may use this as the prefix of the persistent
+   * identifiers for the services it registers.
+   */
+  // ATTENTION!!! If the value is changed, change also ctkEventConstants::SERVICE_PID
+  static const QString SERVICE_PID; // = "service.pid"
 
   /**
    * Service property identifying a service's ranking number.
    *
    * <p>
    * This property may be supplied in the
-   * <code>ServiceProperties</code> object passed to the
+   * <code>ctkDictionary</code> object passed to the
    * <code>ctkPluginContext::registerService</code> method. The value of this
    * property must be of type <code>int</code>.
    *

@@ -1,95 +1,115 @@
 PROJECT(CTKPluginFramework)
 
 #
-# 3rd party dependencies
-#
-
-SET(_qtmob_config "${CTK_BINARY_DIR}/../Utilities/QtMobility/QtMobilityConfig.cmake")
-IF(EXISTS ${_qtmob_config})
-  INCLUDE(${_qtmob_config})
-ELSE()
-  SET(QTMOBILITY_LIBRARY_DIR "${CTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-  SET(QTMOBILITY_INCLUDE_DIRS 
-  "${CTK_BINARY_DIR}/../CMakeExternals/Source/QtMobility/install/include"
-  )
-ENDIF()
-
-FIND_LIBRARY(QTMOBILITY_QTSERVICEFW_LIBRARY_DEBUG QtServiceFrameworkd
-             PATHS ${QTMOBILITY_LIBRARY_DIR}
-             )
-             
-FIND_LIBRARY(QTMOBILITY_QTSERVICEFW_LIBRARY_RELEASE QtServiceFramework
-             PATHS ${QTMOBILITY_LIBRARY_DIR}
-             )
-             
-SET(QTMOBILITY_QTSERVICEFW_LIBRARIES )
-IF(QTMOBILITY_QTSERVICEFW_LIBRARY_RELEASE AND QTMOBILITY_QTSERVICEFW_LIBRARY_DEBUG)
-  SET(QTMOBILITY_QTSERVICEFW_LIBRARIES optimized ${QTMOBILITY_QTSERVICEFW_LIBRARY_RELEASE} debug ${QTMOBILITY_QTSERVICEFW_LIBRARY_DEBUG})
-ELSEIF(QTMOBILITY_QTSERVICEFW_LIBRARY_DEBUG)
-  SET(QTMOBILITY_QTSERVICEFW_LIBRARIES ${QTMOBILITY_QTSERVICEFW_LIBRARY_DEBUG})
-ELSEIF(QTMOBILITY_QTSERVICEFW_LIBRARY_RELEASE)
-  SET(QTMOBILITY_QTSERVICEFW_LIBRARIES ${QTMOBILITY_QTSERVICEFW_LIBRARY_RELEASE})
-ENDIF()
-
-#
 # See CTK/CMake/ctkMacroBuildLib.cmake for details
 #
 
 SET(KIT_export_directive "CTK_PLUGINFW_EXPORT")
 
-# Additional directories to include
-SET(KIT_include_directories
-  ${QTMOBILITY_INCLUDE_DIRS}
-  )
   
 # Source files
 SET(KIT_SRCS
+  ctkCaseInsensitiveString.cpp
+  ctkDictionary.cpp
+  ctkLDAPExpr.cpp
+  ctkLDAPExpr_p.h
   ctkLDAPSearchFilter.cpp
   ctkPlugin.cpp
+  ctkPluginAbstractTracked_p.h
+  ctkPluginAbstractTracked.tpp
   ctkPluginArchive.cpp
+  ctkPluginArchive_p.h
   ctkPluginConstants.cpp
   ctkPluginContext.cpp
+  ctkPluginContext_p.h
   ctkPluginDatabase.cpp
+  ctkPluginDatabase_p.h
   ctkPluginDatabaseException.cpp
   ctkPluginEvent.cpp
   ctkPluginException.cpp
   ctkPluginFramework.cpp
+  ctkPluginFramework_global.h
   ctkPluginFrameworkFactory.cpp
   ctkPluginFrameworkContext.cpp
+  ctkPluginFrameworkContext_p.h
   ctkPluginFrameworkEvent.cpp
   ctkPluginFrameworkListeners.cpp
+  ctkPluginFrameworkListeners_p.h
   ctkPluginFrameworkPrivate.cpp
+  ctkPluginFrameworkPrivate_p.h
   ctkPluginFrameworkUtil.cpp
-  ctkPluginManager.cpp
+  ctkPluginFrameworkUtil_p.h
   ctkPluginManifest.cpp
+  ctkPluginManifest_p.h
   ctkPluginPrivate.cpp
+  ctkPluginPrivate_p.h
   ctkPlugins.cpp
-  ctkQtServiceRegistration.cpp
-  ctkQtServiceRegistrationPrivate.cpp
+  ctkPlugins_p.h
+  ctkPluginStorage.cpp
+  ctkPluginStorage_p.h
+  ctkPluginTracker.h
+  ctkPluginTracker.tpp
+  ctkPluginTrackerPrivate.h
+  ctkPluginTrackerPrivate.tpp
   ctkRequirePlugin.cpp
+  ctkRequirePlugin_p.h
+  ctkRuntimeException.cpp
+  ctkServiceEvent.cpp
   ctkServiceException.cpp
+  ctkServiceFactory.h
   ctkServiceReference.cpp
   ctkServiceReferencePrivate.cpp
   ctkServiceRegistration.cpp
   ctkServiceRegistrationPrivate.cpp
   ctkServices.cpp
-  ctkPluginStorage.cpp
+  ctkServices_p.h
+  ctkServiceSlotEntry.cpp
+  ctkServiceSlotEntry_p.h
+  ctkServiceTracker.h
+  ctkServiceTracker.tpp
+  ctkServiceTrackerCustomizer.h
+  ctkServiceTrackerPrivate.h
+  ctkServiceTrackerPrivate.tpp
+  ctkTrackedPlugin_p.h
+  ctkTrackedPlugin.tpp
+  ctkTrackedPluginListener_p.h
+  ctkTrackedService_p.h
+  ctkTrackedService.tpp
+  ctkTrackedServiceListener_p.h
   ctkVersion.cpp
   ctkVersionRange.cpp
-  ctkLDAPExpr.cpp
+  ctkVersionRange_p.h
 
-  # EventBus sources
-  EventBus/ctkEvent.cpp
-  EventBus/ctkEventBus.h
-  EventBus/ctkEventConstants.cpp
+  # Services
+  service/cm/ctkConfiguration.cpp
+  service/cm/ctkConfigurationAdmin.cpp
+  service/cm/ctkConfigurationEvent.cpp
+  service/cm/ctkConfigurationException.cpp
+  service/cm/ctkConfigurationListener.h
+  service/cm/ctkConfigurationPlugin.cpp
+  service/cm/ctkManagedService.h
+  service/cm/ctkManagedServiceFactory.h
+
+  service/event/ctkEvent.cpp
+  service/event/ctkEventAdmin.h
+  
+  service/event/ctkEventBus.h
+  
+  service/event/ctkEventConstants.cpp
+  service/event/ctkEventHandler.h
+
+  service/log/ctkLogEntry.h
+  service/log/ctkLogListener.h
+  service/log/ctkLogReaderService.h
+  service/log/ctkLogService.cpp
+  service/log/ctkLogStream.cpp
   )
 
 # Headers that should run through moc
 SET(KIT_MOC_SRCS
-  ctkPluginEvent.h
-  ctkPluginFrameworkEvent.h
   ctkPluginFrameworkListeners_p.h
-  ctkServiceFactory.h
+  ctkTrackedPluginListener_p.h
+  ctkTrackedServiceListener_p.h
 )
 
 # UI files
@@ -114,7 +134,6 @@ ctkMacroGetTargetLibraries(KIT_target_libraries)
 ctkMacroBuildLib(
   NAME ${PROJECT_NAME}
   EXPORT_DIRECTIVE ${KIT_export_directive}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
   SRCS ${KIT_SRCS}
   MOC_SRCS ${KIT_MOC_SRCS}
   UI_FORMS ${KIT_UI_FORMS}

@@ -13,12 +13,16 @@ SET(PLUGIN_SRCS
   ctkVTKWidgetsAbstractPlugin.cpp
   ctkVTKWidgetsAbstractPlugin.h
 
+  ctkVTKDataSetArrayComboBoxPlugin.cpp
+  ctkVTKDataSetArrayComboBoxPlugin.h
   ctkVTKRenderViewPlugin.cpp
   ctkVTKRenderViewPlugin.h
   ctkVTKScalarBarWidgetPlugin.cpp
   ctkVTKScalarBarWidgetPlugin.h
   ctkVTKSliceViewPlugin.cpp
   ctkVTKSliceViewPlugin.h
+  ctkVTKSurfaceMaterialPropertyWidgetPlugin.cpp
+  ctkVTKSurfaceMaterialPropertyWidgetPlugin.h
   ctkVTKTextPropertyWidgetPlugin.cpp
   ctkVTKTextPropertyWidgetPlugin.h
   )
@@ -27,9 +31,11 @@ SET(PLUGIN_SRCS
 SET(PLUGIN_MOC_SRCS
   ctkVTKWidgetsPlugins.h
 
+  ctkVTKDataSetArrayComboBoxPlugin.h
   ctkVTKRenderViewPlugin.h
   ctkVTKScalarBarWidgetPlugin.h
   ctkVTKSliceViewPlugin.h
+  ctkVTKSurfaceMaterialPropertyWidgetPlugin.h
   ctkVTKTextPropertyWidgetPlugin.h
   )
   

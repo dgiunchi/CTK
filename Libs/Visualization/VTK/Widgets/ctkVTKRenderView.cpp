@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -45,13 +45,14 @@ static ctkLogger logger("org.commontk.visualization.vtk.widgets.ctkVTKRenderView
 ctkVTKRenderViewPrivate::ctkVTKRenderViewPrivate(ctkVTKRenderView& object)
   :q_ptr(&object)
 {
+  qRegisterMetaType<ctkAxesWidget::Axis>("ctkAxesWidget::Axis");
   this->Renderer = vtkSmartPointer<vtkRenderer>::New();
   this->RenderWindow = vtkSmartPointer<vtkRenderWindow>::New();
   this->Axes = vtkSmartPointer<vtkAxesActor>::New();
   this->Orientation = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
   this->CornerAnnotation = vtkSmartPointer<vtkCornerAnnotation>::New();
   this->RenderPending = false;
-  this->RenderEnabled = false;
+  this->RenderEnabled = true;
   this->ZoomFactor = 0.05;
   this->PitchRollYawIncrement = 5;
   this->PitchDirection = ctkVTKRenderView::PitchUp;
@@ -278,10 +279,10 @@ void ctkVTKRenderView::forceRender()
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, vtkRenderWindow*, renderWindow, RenderWindow);
+CTK_GET_CPP(ctkVTKRenderView, vtkRenderWindow*, renderWindow, RenderWindow);
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, vtkRenderWindowInteractor*, interactor, CurrentInteractor);
+CTK_GET_CPP(ctkVTKRenderView, vtkRenderWindowInteractor*, interactor, CurrentInteractor);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setInteractor(vtkRenderWindowInteractor* newInteractor)
@@ -386,14 +387,14 @@ void ctkVTKRenderView::resetCamera()
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, vtkRenderer*, renderer, Renderer);
+CTK_GET_CPP(ctkVTKRenderView, vtkRenderer*, renderer, Renderer);
 
 //----------------------------------------------------------------------------
-CTK_SET_CXX(ctkVTKRenderView, bool, setRenderEnabled, RenderEnabled);
-CTK_GET_CXX(ctkVTKRenderView, bool, renderEnabled, RenderEnabled);
+CTK_SET_CPP(ctkVTKRenderView, bool, setRenderEnabled, RenderEnabled);
+CTK_GET_CPP(ctkVTKRenderView, bool, renderEnabled, RenderEnabled);
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, int, pitchRollYawIncrement, PitchRollYawIncrement);
+CTK_GET_CPP(ctkVTKRenderView, int, pitchRollYawIncrement, PitchRollYawIncrement);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setPitchRollYawIncrement(int newPitchRollYawIncrement)
@@ -403,7 +404,7 @@ void ctkVTKRenderView::setPitchRollYawIncrement(int newPitchRollYawIncrement)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, pitchDirection, PitchDirection);
+CTK_GET_CPP(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, pitchDirection, PitchDirection);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setPitchDirection(ctkVTKRenderView::RotateDirection newPitchDirection)
@@ -418,7 +419,7 @@ void ctkVTKRenderView::setPitchDirection(ctkVTKRenderView::RotateDirection newPi
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, rollDirection, RollDirection);
+CTK_GET_CPP(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, rollDirection, RollDirection);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setRollDirection(ctkVTKRenderView::RotateDirection newRollDirection)
@@ -433,7 +434,7 @@ void ctkVTKRenderView::setRollDirection(ctkVTKRenderView::RotateDirection newRol
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, yawDirection, YawDirection);
+CTK_GET_CPP(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, yawDirection, YawDirection);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setYawDirection(ctkVTKRenderView::RotateDirection newYawDirection)
@@ -448,8 +449,8 @@ void ctkVTKRenderView::setYawDirection(ctkVTKRenderView::RotateDirection newYawD
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, spinDirection, SpinDirection);
-CTK_SET_CXX(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, setSpinDirection, SpinDirection);
+CTK_GET_CPP(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, spinDirection, SpinDirection);
+CTK_SET_CPP(ctkVTKRenderView, ctkVTKRenderView::RotateDirection, setSpinDirection, SpinDirection);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::pitch()
@@ -499,7 +500,7 @@ void ctkVTKRenderView::setSpinEnabled(bool enabled)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, bool, spinEnabled, SpinEnabled);
+CTK_GET_CPP(ctkVTKRenderView, bool, spinEnabled, SpinEnabled);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setSpinIncrement(int newSpinIncrement)
@@ -509,7 +510,7 @@ void ctkVTKRenderView::setSpinIncrement(int newSpinIncrement)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, int, spinIncrement, SpinIncrement);
+CTK_GET_CPP(ctkVTKRenderView, int, spinIncrement, SpinIncrement);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setAnimationIntervalMs(int newAnimationIntervalMs)
@@ -519,7 +520,7 @@ void ctkVTKRenderView::setAnimationIntervalMs(int newAnimationIntervalMs)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, int, animationIntervalMs, AnimationIntervalMs);
+CTK_GET_CPP(ctkVTKRenderView, int, animationIntervalMs, AnimationIntervalMs);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setRockEnabled(bool enabled)
@@ -536,7 +537,7 @@ void ctkVTKRenderView::setRockEnabled(bool enabled)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, bool, rockEnabled, RockEnabled);
+CTK_GET_CPP(ctkVTKRenderView, bool, rockEnabled, RockEnabled);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setRockLength(int newRockLength)
@@ -546,7 +547,7 @@ void ctkVTKRenderView::setRockLength(int newRockLength)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, int, rockLength, RockLength);
+CTK_GET_CPP(ctkVTKRenderView, int, rockLength, RockLength);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setRockIncrement(int newRockIncrement)
@@ -556,7 +557,7 @@ void ctkVTKRenderView::setRockIncrement(int newRockIncrement)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, int, rockIncrement, RockIncrement);
+CTK_GET_CPP(ctkVTKRenderView, int, rockIncrement, RockIncrement);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::setZoomFactor(double newZoomFactor)
@@ -566,7 +567,7 @@ void ctkVTKRenderView::setZoomFactor(double newZoomFactor)
 }
 
 //----------------------------------------------------------------------------
-CTK_GET_CXX(ctkVTKRenderView, double, zoomFactor, ZoomFactor);
+CTK_GET_CPP(ctkVTKRenderView, double, zoomFactor, ZoomFactor);
 
 //----------------------------------------------------------------------------
 void ctkVTKRenderView::zoomIn()
@@ -615,4 +616,55 @@ void ctkVTKRenderView::resetFocalPoint()
   double y_center = (bounds[3] + bounds[2]) / 2.0;
   double z_center = (bounds[5] + bounds[4]) / 2.0;
   this->setFocalPoint(x_center, y_center, z_center);
+}
+
+//----------------------------------------------------------------------------
+void ctkVTKRenderView::lookFromAxis(const ctkAxesWidget::Axis& axis, double fov)
+{
+  Q_D(ctkVTKRenderView);
+  Q_ASSERT(d->Renderer);
+  if (!d->Renderer->IsActiveCameraCreated())
+    {
+    return;
+    }
+  vtkCamera * camera = d->Renderer->GetActiveCamera();
+  Q_ASSERT(camera);
+  double widefov = fov*3;
+  double* focalPoint = camera->GetFocalPoint();
+  switch (axis)
+    {
+    case ctkAxesWidget::Right:
+      camera->SetPosition(focalPoint[0]+widefov, focalPoint[1], focalPoint[2]);
+      camera->SetViewUp(0, 0, 1);
+      break;
+    case ctkAxesWidget::Left:
+      camera->SetPosition(focalPoint[0]-widefov, focalPoint[1], focalPoint[2]);
+      camera->SetViewUp(0, 0, 1);
+      break;
+    case ctkAxesWidget::Anterior:
+      camera->SetPosition(focalPoint[0], focalPoint[1]+widefov, focalPoint[2]);
+      camera->SetViewUp(0, 0, 1);
+      break;
+    case ctkAxesWidget::Posterior:
+      camera->SetPosition(focalPoint[0], focalPoint[1]-widefov, focalPoint[2]);
+      camera->SetViewUp(0, 0, 1);
+      break;
+    case ctkAxesWidget::Superior:
+      camera->SetPosition(focalPoint[0], focalPoint[1], focalPoint[2]+widefov);
+      camera->SetViewUp(0, 1, 0);
+      break;
+    case ctkAxesWidget::Inferior:
+      camera->SetPosition(focalPoint[0], focalPoint[1], focalPoint[2]-widefov);
+      camera->SetViewUp(0, 1, 0);
+      break;
+    case ctkAxesWidget::None:
+    default:
+      // do nothing
+      return;
+      break;
+    }
+  d->Renderer->ResetCameraClippingRange();
+  camera->ComputeViewPlaneNormal();
+  camera->OrthogonalizeViewUp();
+  d->Renderer->UpdateLightsGeometryToFollowCamera();
 }

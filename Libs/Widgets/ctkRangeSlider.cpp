@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -38,46 +38,40 @@ protected:
 public:
   ctkRangeSliderPrivate(ctkRangeSlider& object);
   void init();
-  
-  // Description:
-  // Copied verbatim from QSliderPrivate class (see QSlider.cpp)
+
+  /// Copied verbatim from QSliderPrivate class (see QSlider.cpp)
   int pixelPosToRangeValue(int pos) const;
   int pixelPosFromRangeValue(int val) const;
 
-  // Description:
-  // Draw the bottom and top sliders.
+  /// Draw the bottom and top sliders.
   void drawMinimumSlider( QStylePainter* painter ) const;
   void drawMaximumSlider( QStylePainter* painter ) const;
     
-  // Description:
-  // End points of the range on the Model
+  /// End points of the range on the Model
   int m_MaximumValue;
   int m_MinimumValue;
 
-  // Description:
-  // End points of the range on the GUI. This is synced with the model.
+  /// End points of the range on the GUI. This is synced with the model.
   int m_MaximumPosition;
   int m_MinimumPosition;
 
-  // Description:
-  // Controls selected ?
+  /// Controls selected ?
   QStyle::SubControl m_MinimumSliderSelected;
   QStyle::SubControl m_MaximumSliderSelected;
 
-  // Description:
-  // See QSliderPrivate::clickOffset. 
-  // Overrides this ivar
+  /// See QSliderPrivate::clickOffset. 
+  /// Overrides this ivar
   int m_SubclassClickOffset;
     
-  // Description:
-  // See QSliderPrivate::position
-  // Overrides this ivar.
+  /// See QSliderPrivate::position
+  /// Overrides this ivar.
   int m_SubclassPosition;
-
+  
+  /// Original width between the 2 bounds before any moves
   int m_SubclassWidth;
-  // Description:
-  // Boolean indicates the selected handle
-  //   True for the minimum range handle, false for the maximum range handle
+  
+  /// Boolean indicates the selected handle
+  ///   True for the minimum range handle, false for the maximum range handle
   enum Handle {
     NoHandle = 0x0,
     MinimumHandle = 0x1,
@@ -85,6 +79,10 @@ public:
   };
   Q_DECLARE_FLAGS(Handles, Handle);
   ctkRangeSliderPrivate::Handles m_SelectedHandles;
+
+  /// When symmetricMoves is true, moving a handle will move the other handle
+  /// symmetrically, otherwise the handles are independent.
+  bool m_SymmetricMoves;
 };
 
 // --------------------------------------------------------------------------
@@ -101,6 +99,7 @@ ctkRangeSliderPrivate::ctkRangeSliderPrivate(ctkRangeSlider& object)
   this->m_SubclassPosition = 0;
   this->m_SubclassWidth = 0;
   this->m_SelectedHandles = 0;
+  this->m_SymmetricMoves = false;
 }
 
 // --------------------------------------------------------------------------
@@ -241,6 +240,25 @@ ctkRangeSlider::ctkRangeSlider( Qt::Orientation o,
                                   QWidget* parentObject )
   :QSlider(o, parentObject)
   , d_ptr(new ctkRangeSliderPrivate(*this))
+{
+  Q_D(ctkRangeSlider);
+  d->init();
+}
+
+// --------------------------------------------------------------------------
+ctkRangeSlider::ctkRangeSlider(ctkRangeSliderPrivate* impl, QWidget* parent)
+  : QSlider(parent)
+  , d_ptr(impl)
+{
+  Q_D(ctkRangeSlider);
+  d->init();
+}
+
+// --------------------------------------------------------------------------
+ctkRangeSlider::ctkRangeSlider( ctkRangeSliderPrivate* impl, Qt::Orientation o,
+                                QWidget* parentObject )
+  :QSlider(o, parentObject)
+  , d_ptr(impl)
 {
   Q_D(ctkRangeSlider);
   d->init();
@@ -407,6 +425,20 @@ void ctkRangeSlider::setPositions(int min, int max)
     this->triggerAction(SliderMove);
     this->setValues(d->m_MinimumPosition, d->m_MaximumPosition);
     }
+}
+
+// --------------------------------------------------------------------------
+void ctkRangeSlider::setSymmetricMoves(bool symmetry)
+{
+  Q_D(ctkRangeSlider);
+  d->m_SymmetricMoves = symmetry;
+}
+
+// --------------------------------------------------------------------------
+bool ctkRangeSlider::symmetricMoves()const
+{
+  Q_D(const ctkRangeSlider);
+  return d->m_SymmetricMoves;
 }
 
 // --------------------------------------------------------------------------
@@ -664,18 +696,27 @@ void ctkRangeSlider::mouseMoveEvent(QMouseEvent* mouseEvent)
       }
     }
 
+  // The lower/left slider is down
   if (d->m_SelectedHandles == ctkRangeSliderPrivate::MinimumHandle)
     {
-    this->setMinimumPosition(qMin(newPosition,d->m_MaximumPosition));
+    double newMinPos = qMin(newPosition,d->m_MaximumPosition);
+    this->setPositions(newMinPos, d->m_MaximumPosition +
+      (d->m_SymmetricMoves ? d->m_MinimumPosition - newMinPos : 0));
     }
+  // The upper/right slider is down
   else if (d->m_SelectedHandles == ctkRangeSliderPrivate::MaximumHandle)
     {
-    this->setMaximumPosition(qMax(d->m_MinimumPosition, newPosition));
+    double newMaxPos = qMax(d->m_MinimumPosition, newPosition);
+    this->setPositions(d->m_MinimumPosition -
+      (d->m_SymmetricMoves ? newMaxPos - d->m_MaximumPosition: 0),
+      newMaxPos);
     }
+  // Both handles are down (the user clicked in between the handles)
   else if (d->m_SelectedHandles & ctkRangeSliderPrivate::MinimumHandle && 
            d->m_SelectedHandles & ctkRangeSliderPrivate::MaximumHandle)
     {
-    this->setPositions(newPosition - d->m_SubclassWidth, newPosition + d->m_SubclassWidth );
+    this->setPositions(newPosition - d->m_SubclassWidth,
+                       newPosition + d->m_SubclassWidth );
     }
   mouseEvent->accept();
 }

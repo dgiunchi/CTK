@@ -9,6 +9,8 @@ IF(${add_project})
   IF(DEFINED PYTHONQT_INSTALL_DIR AND NOT EXISTS ${PYTHONQT_INSTALL_DIR})
     MESSAGE(FATAL_ERROR "PYTHONQT_INSTALL_DIR variable is defined but corresponds to non-existing directory")
   ENDIF()
+
+  SET(PythonQt_enabling_variable PYTHONQT_LIBRARIES)
   
   SET(proj PythonQt)
   SET(proj_DEPENDENCIES)
@@ -18,9 +20,17 @@ IF(${add_project})
   IF(NOT DEFINED PYTHONQT_INSTALL_DIR)
   #   MESSAGE(STATUS "Adding project:${proj}")
     
-    # Generate ep_PythonQt_args
     SET(ep_PythonQt_args)
-    foreach(qtlib gui network opengl sql svg uitools webkit xml xmlpatterns)
+    
+    # Should PythonQt use VTK 
+    IF(CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK)
+      LIST(APPEND proj_DEPENDENCIES VTK)
+      LIST(APPEND ep_PythonQt_args -DVTK_DIR:PATH=${VTK_DIR})
+    ENDIF()
+    LIST(APPEND ep_PythonQt_args -DPythonQt_USE_VTK:BOOL=${CTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK})
+    
+    # Enable Qt libraries PythonQt wrapping if required
+    foreach(qtlib core gui network opengl sql svg uitools webkit xml xmlpatterns)
       STRING(TOUPPER ${qtlib} qtlib_uppercase)
       LIST(APPEND ep_PythonQt_args -DPythonQt_Wrap_Qt${qtlib}:BOOL=${CTK_LIB_Scripting/Python/Core_PYTHONQT_WRAP_QT${qtlib_uppercase}})
     endforeach()
@@ -33,7 +43,7 @@ IF(${add_project})
       
     ExternalProject_Add(${proj}
       GIT_REPOSITORY "${git_protocol}://github.com/commontk/PythonQt.git"
-      GIT_TAG "patched"
+      GIT_TAG "origin/patched"
       CMAKE_GENERATOR ${gen}
       BUILD_COMMAND ""
       CMAKE_ARGS
@@ -53,4 +63,7 @@ IF(${add_project})
   ELSE()
     ctkMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
   ENDIF()
+
+  SET(${PythonQt_enabling_variable}_INCLUDE_DIRS PYTHONQT_INCLUDE_DIR PYTHON_INCLUDE_DIRS)
+  SET(${PythonQt_enabling_variable}_FIND_PACKAGE_CMD PythonQt)
 ENDIF()

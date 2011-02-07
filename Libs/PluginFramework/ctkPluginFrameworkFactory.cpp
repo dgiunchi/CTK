@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,19 +24,19 @@
 #include "ctkPluginFrameworkContext_p.h"
 
 
-  ctkPluginFrameworkFactory::ctkPluginFrameworkFactory(const ctkProperties& initProps)
-    : fwCtx(new ctkPluginFrameworkContext(initProps))
-  {
+ctkPluginFrameworkFactory::ctkPluginFrameworkFactory(const ctkProperties& initProps)
+  : fwCtx(new ctkPluginFrameworkContext(initProps))
+{
 
-  }
+}
 
-  ctkPluginFrameworkFactory::~ctkPluginFrameworkFactory()
-  {
-    delete fwCtx;
-  }
+ctkPluginFrameworkFactory::~ctkPluginFrameworkFactory()
+{
+  fwCtx->uninit();
+  delete fwCtx;
+}
 
-  ctkPluginFramework* ctkPluginFrameworkFactory::getFramework()
-  {
-    return &(fwCtx->systemPlugin);
-
+QSharedPointer<ctkPluginFramework> ctkPluginFrameworkFactory::getFramework()
+{
+  return fwCtx->systemPlugin;
 }

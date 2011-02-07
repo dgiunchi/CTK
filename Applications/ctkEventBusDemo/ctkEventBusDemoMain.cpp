@@ -21,9 +21,10 @@
 #include <ctkPluginFrameworkFactory.h>
 #include <ctkPluginFramework.h>
 #include <ctkPluginException.h>
+#include <ctkPluginContext.h>
 #include <ctkServiceReference.h>
 
-#include <EventBus/ctkEventBus.h>
+#include <service/event/ctkEventBus.h>
 
 #include <QApplication>
 #include <QString>
@@ -46,7 +47,7 @@ int main(int argv, char** argc) {
 
   // setup the plugin framework
   ctkPluginFrameworkFactory fwFactory;
-  ctkPluginFramework* framework = fwFactory.getFramework();
+  QSharedPointer<ctkPluginFramework> framework = fwFactory.getFramework();
 
   try {
     framework->init();
@@ -63,50 +64,46 @@ int main(int argv, char** argc) {
 
   qApp->addLibraryPath(pluginPath);
 
-  // construct the name of the plugin with the business logic
-  // (thus the actual logic of the hosted app)
-  QString pluginName = "org_commontk_eventbus";
-
-
-  // try to find the plugin and install all plugins available in 
-  // pluginPath (but do not start them)
   QStringList libFilter;
   libFilter << "*.dll" << "*.so" << "*.dylib";
   QDirIterator dirIter(pluginPath, libFilter, QDir::Files);
-  bool pluginFound = false;
-  QString pluginFileLocation;
-  ctkPlugin* plugin;
-  while(dirIter.hasNext()) {
-    try {
+
+  QStringList pluginsToInstall;
+  pluginsToInstall << "org_commontk_eventbus";
+
+  QList<QSharedPointer<ctkPlugin> > installedPlugins;
+  while(dirIter.hasNext())
+  {
+    try
+    {
       QString fileLocation = dirIter.next();
-      if (fileLocation.contains("org_commontk_eventbus")) {
-        plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
-        plugin->start(ctkPlugin::START_TRANSIENT);
+      foreach(QString pluginToInstall, pluginsToInstall)
+      {          
+        if (fileLocation.contains(pluginToInstall))
+        {
+          QSharedPointer<ctkPlugin> plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
+          installedPlugins << plugin;
+          break;
+        }
       }
-      if (fileLocation.contains(pluginName)) {
-        pluginFound = true;
-        pluginFileLocation = fileLocation;
-      }
-    } catch (const ctkPluginException& e) {
+    }
+    catch (const ctkPluginException& e)
+    {
       qCritical() << e.what();
     }
   }
 
-  // if we did not find the business logic: abort
-  if(!pluginFound) {
-    qCritical() << "Could not find plugin.";
-    qCritical() << "  Plugin name: " << pluginName;
-    qCritical() << "  Plugin path: " << pluginPath;
-    exit(3);
-  }
-
-
-  ctkServiceReference *ebr = framework->getPluginContext()->getServiceReference("ctkEventBus");
-  ctkEventBus * eb = (ctkEventBus *)framework->getPluginContext()->getService(ebr);
-
   framework->start();
 
-  MainWindow win;
+  foreach(QSharedPointer<ctkPlugin> plugin, installedPlugins)
+  {
+      plugin->start(ctkPlugin::START_TRANSIENT);
+  }
+
+  ctkServiceReference ebr = framework->getPluginContext()->getServiceReference("ctkEventBus");
+  ctkEventBus *eb = framework->getPluginContext()->getService<ctkEventBus>(ebr);
+
+  MainWindow win(eb);
   win.show();
 
   return app.exec();

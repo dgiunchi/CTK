@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -28,55 +28,29 @@
 
 // PythonQT includes
 #include <PythonQt.h>
+#include <PythonQt_QtBindings.h>
 
 // STD includes
 #include <csignal>
 
-#ifdef CTK_PYTHONQT_WRAP_QTGUI
-void PythonQt_init_QtGui(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTNETWORK
-void PythonQt_init_QtNetwork(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTOPENGL
-void PythonQt_init_QtOpenGL(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTSQL
-void PythonQt_init_QtSql(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTSVG
-void PythonQt_init_QtSvg(PyObject*); 
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTUITOOLS
-void PythonQt_init_QtUiTools(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTWEBKIT
-void PythonQt_init_QtWebKit(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTXML
-void PythonQt_init_QtXml(PyObject*);
-#endif
-
-#ifdef CTK_PYTHONQT_WRAP_QTXMLPATTERNS
-void PythonQt_init_QtXmlPatterns(PyObject*);
+#ifdef __GNUC__
+// Disable warnings related to signal() function
+// See http://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
+// Note: Ideally the incriminated functions and macros should be fixed upstream ...
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 
 //-----------------------------------------------------------------------------
 ctkAbstractPythonManager::ctkAbstractPythonManager(QObject* _parent) : Superclass(_parent)
 {
-
+  this->InitFunction = 0;
 }
 
 //-----------------------------------------------------------------------------
 ctkAbstractPythonManager::~ctkAbstractPythonManager()
 {
+  PyThreadState* state = PyThreadState_Get();
+  Py_EndInterpreter(state);
   PythonQt::cleanup();
 }
 
@@ -112,43 +86,11 @@ void ctkAbstractPythonManager::initPythonQt()
   this->connect(PythonQt::self(), SIGNAL(pythonStdErr(const QString&)),
                 SLOT(printStderr(const QString&)));
   
-  #ifdef CTK_PYTHONQT_WRAP_QTGUI
-  PythonQt_init_QtGui(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTNETWORK
-  PythonQt_init_QtNetwork(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTOPENGL
-  PythonQt_init_QtOpenGL(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTSQL
-  PythonQt_init_QtSql(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTSVG
-  PythonQt_init_QtSvg(0); 
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTUITOOLS
-  PythonQt_init_QtUiTools(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTWEBKIT
-  PythonQt_init_QtWebKit(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTXML
-  PythonQt_init_QtXml(0);
-  #endif
-
-  #ifdef CTK_PYTHONQT_WRAP_QTXMLPATTERNS
-  PythonQt_init_QtXmlPatterns(0);
-  #endif
+  PythonQt_init_QtBindings();
   
   QStringList initCode;
+
+  // Update 'sys.path'
   initCode << "import sys";
   foreach (QString path, this->pythonPaths())
     {
@@ -158,7 +100,13 @@ void ctkAbstractPythonManager::initPythonQt()
   _mainContext.evalScript(initCode.join("\n"));
 
   this->preInitialization();
+  if (this->InitFunction)
+    {
+    (*this->InitFunction)();
+    }
+  emit this->pythonPreInitialized();
 
+  this->executeInitializationScripts();
   emit this->pythonInitialized();
 }
 
@@ -170,6 +118,11 @@ QStringList ctkAbstractPythonManager::pythonPaths()
 
 //-----------------------------------------------------------------------------
 void ctkAbstractPythonManager::preInitialization()
+{
+}
+
+//-----------------------------------------------------------------------------
+void ctkAbstractPythonManager::executeInitializationScripts()
 {
 }
 
@@ -198,7 +151,7 @@ QVariant ctkAbstractPythonManager::executeString(const QString& code)
   PythonQtObjectPtr main = ctkAbstractPythonManager::mainContext();
   if (main)
     {
-    ret = main.evalScript(code, Py_single_input);
+    ret = main.evalScript(code, Py_file_input);
     }
   return ret;
 }
@@ -211,6 +164,102 @@ void ctkAbstractPythonManager::executeFile(const QString& filename)
     {
     main.evalFile(filename);
     }
+}
+
+//-----------------------------------------------------------------------------
+void ctkAbstractPythonManager::setInitializationFunction(void (*initFunction)())
+{
+  this->InitFunction = initFunction;
+}
+
+//----------------------------------------------------------------------------
+QStringList ctkAbstractPythonManager::pythonAttributes(const QString& pythonVariableName,
+                                                       const QString& module,
+                                                       bool appendParenthesis) const
+{
+  Q_ASSERT(PyThreadState_GET()->interp);
+  PyObject* dict = PyImport_GetModuleDict();
+
+  // Split module by '.' and retrieve the object associated if the last module
+  PyObject* object = 0;
+  PyObject* prevObject = 0;
+  QStringList moduleList = module.split(".", QString::SkipEmptyParts);
+  foreach(const QString& module, moduleList)
+    {
+    object = PyDict_GetItemString(dict, module.toAscii().data());
+    if (prevObject) { Py_DECREF(prevObject); }
+    if (!object)
+      {
+      break;
+      }
+    Py_INCREF(object);
+    dict = PyModule_GetDict(object);
+    prevObject = object;
+    }
+  if (!object)
+    {
+    return QStringList();
+    }
+
+//  PyObject* object = PyDict_GetItemString(dict, module.toAscii().data());
+//  if (!object)
+//    {
+//    return QStringList();
+//    }
+//  Py_INCREF(object);
+
+  if (!pythonVariableName.isEmpty())
+    {
+    QStringList tmpNames = pythonVariableName.split('.');
+    for (int i = 0; i < tmpNames.size() && object; ++i)
+      {
+      QByteArray tmpName = tmpNames.at(i).toLatin1();
+      PyObject* prevObj = object;
+      if (PyDict_Check(object))
+        {
+        object = PyDict_GetItemString(object, tmpName.data());
+        Py_XINCREF(object);
+        }
+      else
+        {
+        object = PyObject_GetAttrString(object, tmpName.data());
+        }
+      Py_DECREF(prevObj);
+      }
+    PyErr_Clear();
+    }
+
+  QStringList results;
+  if (object)
+    {
+    PyObject* keys = PyObject_Dir(object);
+    if (keys)
+      {
+      PyObject* key;
+      PyObject* value;
+      int nKeys = PyList_Size(keys);
+      for (int i = 0; i < nKeys; ++i)
+        {
+        key = PyList_GetItem(keys, i);
+        value = PyObject_GetAttr(object, key);
+        if (!value)
+          {
+          continue;
+          }
+        QString key_str(PyString_AsString(key));
+        // Append "()" if the associated object is a function
+        if (appendParenthesis && PyCallable_Check(value))
+          {
+          key_str.append("()");
+          }
+        results << key_str;
+        Py_DECREF(value);
+        }
+      Py_DECREF(keys);
+      }
+    Py_DECREF(object);
+    }
+  return results;
 }
 
 //-----------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,8 +25,9 @@
 #include <QHash>
 #include <QString>
 #include <QVariant>
+#include <QSharedPointer>
 
-#include "CTKPluginFrameworkExport.h"
+#include "ctkPluginFrameworkExport.h"
 
 #include "ctkPluginFramework_global.h"
 
@@ -36,7 +37,8 @@
   /**
    * A factory for creating ctkPluginFramework instances.
    */
-  class CTK_PLUGINFW_EXPORT ctkPluginFrameworkFactory {
+  class CTK_PLUGINFW_EXPORT ctkPluginFrameworkFactory
+  {
 
   public:
 
@@ -67,7 +69,7 @@
      * @return A new, configured ctkPluginFramework instance. The plugin
      *         framework instance must be in the ctkPlugin::INSTALLED state.
      */
-    ctkPluginFramework* getFramework();
+    QSharedPointer<ctkPluginFramework> getFramework();
 
   private:
 

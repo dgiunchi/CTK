@@ -1,27 +1,22 @@
-SET(KIT ${PROJECT_NAME})
+# Code in this directory will be compiled into
+# a utility library. Test executables may
+# link to it to bootstrap a plugin framework and
+# start registered tests.
 
-CREATE_TEST_SOURCELIST(Tests ${KIT}CppTests.cpp
-  ctkLDAPExpreTest.cpp
-  )
+SET(SRCS
+  ctkPluginFrameworkTestUtil.cpp
+  ctkPluginFrameworkTestRunner.cpp
+  ctkTestSuiteInterface.h
+)
 
-SET (TestsToRun ${Tests})
-REMOVE (TestsToRun ${KIT}CppTests.cpp)
+SET(MOC_SRCS )
 
-SET(LIBRARY_NAME ${PROJECT_NAME})
+SET(MY_MOC_CXX )
 
-ADD_EXECUTABLE(${KIT}CppTests ${Tests})
-TARGET_LINK_LIBRARIES(${KIT}CppTests ${LIBRARY_NAME} ${CTK_BASE_LIBRARIES})
+#QT4_WRAP_CPP(MY_MOC_CXX ${MOC_SRCS})
 
-SET( KIT_TESTS ${CPP_TEST_PATH}/${KIT}CppTests)
+SET(lib_name ${fwtestutil_lib})
 
-MACRO( SIMPLE_TEST  TESTNAME )
-  ADD_TEST( ${TESTNAME} ${KIT_TESTS} ${TESTNAME} )
-  SET_PROPERTY(TEST ${TESTNAME} PROPERTY LABELS ${PROJECT_NAME})
-ENDMACRO( SIMPLE_TEST  )
-
-#
-# Add Tests
-#
-
-SIMPLE_TEST( ctkLDAPExpreTest )
+ADD_LIBRARY(${lib_name} SHARED ${SRCS} ${MY_MOC_CXX})
+TARGET_LINK_LIBRARIES(${lib_name} ${fw_lib})
 

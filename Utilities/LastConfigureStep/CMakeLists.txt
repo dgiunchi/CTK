@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 ###########################################################################
 #
@@ -33,7 +33,7 @@
 #
 ###########################################################################
 
-# The commands in this directory are intended to be executed as
+# The commands in this directory are intended to be executed at
 # the end of the whole configuration process, as a "last step".
 # This directory is typically the last SUBDIRS in the main CMakeLists.txt.
 # It enable the above commands to use variables that might have been configured
@@ -58,7 +58,7 @@ SET(CTK_EXTERNAL_LIBRARIES)
 # target dependency which are neither CTK or static library
 SET(link_type)
 FOREACH(ctk_target_dependency ${ctk_target_dependencies})
-  STRING(REGEX MATCH "(general|optimized|debug)" is_link_type ${ctk_target_dependency})
+  STRING(REGEX MATCH "^(general|optimized|debug)$" is_link_type ${ctk_target_dependency})
   IF(is_link_type)
     SET(link_type ${ctk_target_dependency})
   ELSE()
@@ -78,6 +78,9 @@ FOREACH(ctk_target_dependency ${ctk_target_dependencies})
     ENDIF()
   ENDIF()
 ENDFOREACH()
+
+# Clean variable
+LIST(REMOVE_DUPLICATES CTK_BASE_INCLUDE_DIRS)
 
 #-----------------------------------------------------------------------------
 # Create the CTKConfig.cmake file containing the CTK configuration.

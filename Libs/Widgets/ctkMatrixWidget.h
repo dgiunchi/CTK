@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -22,37 +22,46 @@
 #define __ctkMatrixWidget_h
 
 /// Qt includes
-#include <QTableWidget>
+#include <QWidget>
 
 /// CTK includes
 #include "ctkPimpl.h"
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class ctkMatrixWidgetPrivate;
 
 ///
 /// ctkMatrixWidget is the base class of matrix widgets.
-/// \todo Wrap model signals to emit signals when the matrix is changed.
-/// Right now you can connect to the signal:
-/// matrixWidget->model()->dataChanged(...)
-class CTK_WIDGETS_EXPORT ctkMatrixWidget : public QTableWidget
+class CTK_WIDGETS_EXPORT ctkMatrixWidget: public QWidget
 {
   Q_OBJECT
-  Q_PROPERTY(bool editable READ editable WRITE setEditable)
+  Q_PROPERTY(int columnCount READ columnCount WRITE setColumnCount)
+  Q_PROPERTY(int rowCount READ rowCount WRITE setRowCount)
+  Q_PROPERTY(bool editable READ isEditable WRITE setEditable)
   Q_PROPERTY(double minimum READ minimum WRITE setMinimum)
-  Q_PROPERTY(double maximum READ maximum WRITE setMaximum)   
+  Q_PROPERTY(double maximum READ maximum WRITE setMaximum)
   Q_PROPERTY(int decimals READ decimals WRITE setDecimals)
   Q_PROPERTY(double singleStep READ singleStep WRITE setSingleStep)
 
 public:
   /// Superclass typedef
-  typedef QTableWidget Superclass;
+  typedef QWidget Superclass;
 
-  /// Constructor, builds a 4x4 matrix
+  /// Constructor, builds a 4x4 identity matrix
   explicit ctkMatrixWidget(QWidget* parent = 0);
   /// Constructor, builds a custom rowsXcolumns matrix
   explicit ctkMatrixWidget(int rows, int columns, QWidget* parent = 0);
   virtual ~ctkMatrixWidget();
+
+  /// Set the number of columns of the matrix
+  /// \sa rowCount, setRowCount
+  int columnCount()const;
+  virtual void setColumnCount(int newColumnCount);
+
+  /// Set the number of rows of the matrix
+  /// \sa columnCount, setColumnCount
+  int rowCount()const;
+  virtual void setRowCount(int newRowCount);
 
   ///
   /// Set / Get values of the matrix
@@ -66,19 +75,20 @@ public:
   void setVector(const QVector<double> & vector);
 
   ///
-  /// This property determines whether the user can edit values
-  bool editable()const;
+  /// This property determines whether the user can edit values by
+  /// double clicking on the items. True by default
+  bool isEditable()const;
   void setEditable(bool newEditable);
 
-  /// 
+  ///
   /// This property holds the minimum value of matrix elements.
   ///
   /// Any matrix elements whose values are less than the new minimum value will be reset to equal
   /// the new minimum value.
   double minimum()const;
   void setMinimum(double newMinimum);
-  
-  /// 
+
+  ///
   /// This property holds the maximum value of matrix elements.
   ///
   /// Any matrix elements whose values are greater than the new maximum value will be reset to equal
@@ -90,7 +100,7 @@ public:
   /// Utility function that sets the min/max at once.
   void setRange(double newMinimum, double newMaximum);
 
-  /// 
+  ///
   /// This property holds the step value of the spinbox.
   ///
   /// When the user uses the arrows to change the value of the spinbox used to adjust the value of
@@ -98,7 +108,7 @@ public:
   double singleStep()const;
   void setSingleStep(double step);
 
-  /// 
+  ///
   /// This property holds the precision of the spinbox, in decimals.
   ///
   /// Dictates how many decimals will be used for displaying and interpreting doubles by the spinbox
@@ -112,20 +122,20 @@ public:
   virtual QSize sizeHint () const;
 
 public slots:
+
   ///
   /// Reset the matrix to identity
-  void reset();
+  void identity();
+
+signals:
+  void matrixChanged();
 
 protected:
-  ///
-  /// Reimplemented from QTableView
-  /// Share the width/height evenly between columns/rows.
-  virtual void updateGeometries();
-  
+  virtual void resizeEvent(QResizeEvent* event);
+
   ///
   /// protected constructor to derive private implementations
-  ctkMatrixWidget(int rows, int columns,
-                  ctkMatrixWidgetPrivate& pvt, QWidget* parent=0);
+  ctkMatrixWidget(ctkMatrixWidgetPrivate& pvt, QWidget* parent=0);
 private:
   QScopedPointer<ctkMatrixWidgetPrivate> d_ptr;
   Q_DECLARE_PRIVATE(ctkMatrixWidget);

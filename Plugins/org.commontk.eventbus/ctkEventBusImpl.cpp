@@ -1,21 +1,24 @@
 #include "ctkEventBusImpl_p.h"
 
 #include <QSetIterator>
+
 #include "ctkEventHandlerWrapper_p.h"
 
+
+#define ctkEventArgument(type,data) QArgument<type >(#type, data)
 
 //using namespace mafCore;
 using namespace mafEventBus;
 
-ctkEventBusImpl* ctkEventBusImpl::instance()
+/*ctkEventBusImpl* ctkEventBusImpl::instance()
 {
   static ctkEventBusImpl inst;
   return &inst;
-}
+}*/
 
 ctkEventBusImpl::ctkEventBusImpl()
 {
-
+    m_MafEventBusManager = mafEventBusManager::instance();
 }
 
 void ctkEventBusImpl::postEvent(const ctkEvent& event)
@@ -28,37 +31,36 @@ void ctkEventBusImpl::sendEvent(const ctkEvent& event)
   dispatchEvent(event, false);
 }
 
-void ctkEventBusImpl::publishSignal(const QObject* publisher, const char* signal, const QString& signal_topic, Qt::ConnectionType type) {
-    // event bus addproperty Event
-    //need a TOPIC
-    mafEvent *event = new mafEvent(signal_topic, mafEventTypeLocal, mafSignatureTypeSignal, const_cast<QObject *>(publisher), signal);
-    m_MafEventBusManager->addEventProperty(*event);
+void ctkEventBusImpl::publishSignal(const QObject* publisher, const char* signal, const QString& topic,
+                                    Qt::ConnectionType type)
+{
+    mafEvent *mesbEvent = new mafEvent(topic, mafEventTypeLocal, mafSignatureTypeSignal, const_cast<QObject *>(publisher), signal);
+    m_MafEventBusManager->addEventProperty(*mesbEvent);
 }
 
-QString ctkEventBusImpl::subscribeSlot(const QObject* subscriber, const char* member, const ctkProperties& properties) {
-    QStringList topicList;
-    QVariant v = properties[EventConstants::EVENT_TOPIC];
-    topicList = v.toStringList();
-
-    QStringListIterator i(topicList);
-    while (i.hasNext()) {
-        mafEvent *mesbEvent = new mafEvent(i.next(), mafEventTypeLocal, mafSignatureTypeCallback, const_cast<QObject *>(subscriber), member);
-        m_MafEventBusManager->addEventProperty(*mesbEvent);
-    }
+QString ctkEventBusImpl::subscribeSlot(const QObject* subscriber, const char* member, const QString& topic, const ctkDictionary& properties)
+{
+    mafEvent *mesbEvent = new mafEvent(topic, mafEventTypeLocal, mafSignatureTypeCallback, const_cast<QObject *>(subscriber), member);
+    m_MafEventBusManager->addEventProperty(*mesbEvent);
 
 	// to be changed!!!!!!
-	return QString("");
+	return QString();
   // TODO check for duplicates
 
   /*ctkEventHandlerWrapper* wrapper = new ctkEventHandlerWrapper(subscriber, member, properties);
   if (wrapper->init())
   {
     bucket(wrapper);
-  }*/
+  }
+
+  // TODO return id
+  return QString();*/
 }
 
-void ctkEventBusImpl::updateProperties(const QString& subsriptionId, const ctkProperties& properties) {
-	
+void ctkEventBusImpl::updateProperties(const QString& subscriptionId, const ctkDictionary& properties)
+{
+  Q_UNUSED(subscriptionId)
+  Q_UNUSED(properties)
 }
 
 void ctkEventBusImpl::dispatchEvent(const ctkEvent& event, bool isAsync)
@@ -78,13 +80,25 @@ void ctkEventBusImpl::dispatchEvent(const ctkEvent& event, bool isAsync)
     iter.next()->handleEvent(event);
   }*/
 
-  QString topic = event.topic(); //may contains widlcards
+  QString topic = event.getTopic(); //may contains widlcards
 
   mafEvent *mebEvent = new mafEvent();
   mebEvent->setEventTopic(topic);
   mebEvent->setEventType(mafEventTypeLocal);
-  mebEvent->setEventFilter(NULL);
+  //mebEvent->setEventFilter(NULL);
   //need to think about the arguments inside the event
+
+
+  typedef QList<QGenericArgument> ctkEventArgumentList;
+
+  ctkEventArgumentList list;
+  mafList<mafVariant> le(event.getProperty("localEvent").toList());
+  mafList<mafVariant> ld(event.getProperty("localData").toList());
+
+  list.append(Q_ARG(mafList<mafVariant>,le));
+  list.append(Q_ARG(mafList<mafVariant>,ld));
+
+  m_MafEventBusManager->notifyEvent(topic, mafEventTypeRemote, &list);
   m_MafEventBusManager->notifyEvent(*mebEvent);
 
 }
@@ -103,3 +117,14 @@ QSet<ctkEventHandlerWrapper*> ctkEventBusImpl::handlers(const QString& topic)
   return globalWildcard.toSet();
 }
 
+bool ctkEventBusImpl::createServer(const QString &communication_protocol, unsigned int listen_port) {
+        return m_MafEventBusManager->createServer(communication_protocol,listen_port);
+}
+
+void ctkEventBusImpl::startListen() {
+	m_MafEventBusManager->startListen();
+}
+
+bool ctkEventBusImpl::createClient(const QString &communication_protocol, const QString &server_host, unsigned int port) {
+        return m_MafEventBusManager->createClient(communication_protocol,server_host,port);
+}

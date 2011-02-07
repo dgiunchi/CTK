@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkVTKObject_h
@@ -71,6 +71,17 @@ int qvtkDisconnectAll()                                                 \
 }
 
 //-----------------------------------------------------------------------------
+#define QVTK_OBJECT_IS_CONNECTION_METHOD                                \
+bool qvtkIsConnected(vtkObject* vtk_obj = 0,                            \
+                     unsigned long vtk_event = vtkCommand::NoEvent,     \
+                     const QObject* qt_obj = 0,                         \
+                     const char* qt_slot = 0)                           \
+{                                                                       \
+  return MyQVTK.containsConnection(vtk_obj, vtk_event,                  \
+                                   qt_obj, qt_slot);                    \
+}
+
+//-----------------------------------------------------------------------------
 #define QVTK_OBJECT_BLOCK_CONNECTION_METHOD                              \
 void qvtkBlock(vtkObject* vtk_obj, unsigned long vtk_event,              \
   const QObject* qt_obj)                                                 \
@@ -87,24 +98,31 @@ void qvtkBlock(const QString& id, bool blocked)                          \
 
 //-----------------------------------------------------------------------------
 #define QVTK_OBJECT_BLOCKALL_CONNECTION_METHOD                          \
-void qvtkBlockAll()                                                     \
+bool qvtkBlockAll()                                                     \
 {                                                                       \
-  MyQVTK.blockAllConnections(true);                                     \
+  return MyQVTK.blockAllConnections(true);                              \
 }
 
 //-----------------------------------------------------------------------------
-#define QVTK_OBJECT_UNBLOCK_CONNECTION_METHOD                             \
-void qvtkUnblock(vtkObject* vtk_obj, unsigned long vtk_event,             \
-  const QObject* qt_obj)                                                  \
-{                                                                         \
-  MyQVTK.blockConnection(false, vtk_obj, vtk_event, qt_obj);              \
+#define QVTK_OBJECT_BLOCKALL_CONNECTION_METHOD2                         \
+bool qvtkBlockAll(bool block)                                           \
+{                                                                       \
+  return MyQVTK.blockAllConnections(block);                             \
+}
+
+//-----------------------------------------------------------------------------
+#define QVTK_OBJECT_UNBLOCK_CONNECTION_METHOD                           \
+void qvtkUnblock(vtkObject* vtk_obj, unsigned long vtk_event,           \
+  const QObject* qt_obj)                                                \
+{                                                                       \
+  MyQVTK.blockConnection(false, vtk_obj, vtk_event, qt_obj);            \
 }
 
 //-----------------------------------------------------------------------------
 #define QVTK_OBJECT_UNBLOCKALL_CONNECTION_METHOD                        \
-void qvtkUnblockAll()                                                   \
+bool qvtkUnblockAll()                                                   \
 {                                                                       \
-  MyQVTK.blockAllConnections(false);                                    \
+  return MyQVTK.blockAllConnections(false);                             \
 }
 
 //-----------------------------------------------------------------------------
@@ -115,13 +133,14 @@ protected:                                         \
   QVTK_OBJECT_RECONNECT_METHOD_2                   \
   QVTK_OBJECT_REMOVE_CONNECTION_METHOD             \
   QVTK_OBJECT_REMOVEALL_CONNECTION_METHOD          \
+  QVTK_OBJECT_IS_CONNECTION_METHOD                 \
   QVTK_OBJECT_BLOCK_CONNECTION_METHOD              \
   QVTK_OBJECT_BLOCK_CONNECTION_METHOD2             \
   QVTK_OBJECT_UNBLOCK_CONNECTION_METHOD            \
   QVTK_OBJECT_BLOCKALL_CONNECTION_METHOD           \
+  QVTK_OBJECT_BLOCKALL_CONNECTION_METHOD2          \
   QVTK_OBJECT_UNBLOCKALL_CONNECTION_METHOD         \
 private:                                           \
   ctkVTKObjectEventsObserver MyQVTK;
-
 
 #endif

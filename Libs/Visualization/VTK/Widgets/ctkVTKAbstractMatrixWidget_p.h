@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkVTKAbstractMatrixWidget_p_h
@@ -29,7 +29,7 @@
 #include "ctkVTKAbstractMatrixWidget.h"
 
 // VTK includes
-#include <vtkWeakPointer.h>
+#include <vtkSmartPointer.h>
 
 class vtkMatrix4x4;
 
@@ -42,7 +42,7 @@ class ctkVTKAbstractMatrixWidgetPrivate: public QObject
 protected:
   ctkVTKAbstractMatrixWidget* const q_ptr;
 
-public:  
+public:
   ctkVTKAbstractMatrixWidgetPrivate(ctkVTKAbstractMatrixWidget& object);
   void init();
 
@@ -50,12 +50,13 @@ public:
   vtkMatrix4x4* matrix()const;
 
 public slots:
-  /// 
+  ///
   /// Triggered upon VTK transform modified event
   void updateMatrix();
+  void updateVTKMatrix();
 
 protected:
-  vtkWeakPointer<vtkMatrix4x4> Matrix;
+  vtkSmartPointer<vtkMatrix4x4> Matrix;
 };
 
-#endif 
+#endif

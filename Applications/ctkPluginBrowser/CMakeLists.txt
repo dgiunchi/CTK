@@ -17,6 +17,7 @@ SET(KIT_SRCS
 SET(KIT_MOC_SRCS
   ctkPluginBrowser.h
   ctkPluginBrowserEditors.h
+  ctkPluginTableModel.h
   )
 
 # UI files
@@ -26,19 +27,15 @@ SET(KIT_UI_FORMS
 
 # Resources
 SET(KIT_resources
+  ctkPluginBrowserResources.qrc
 )
 
 # Target libraries - See CMake/ctkMacroGetTargetLibraries.cmake
 # The following macro will read the target libraries from the file 'target_libraries.cmake'
 ctkMacroGetTargetLibraries(KIT_target_libraries)
 
-# Additional directories to include - Not that CTK_INCLUDE_LIBRARIES is already included
-SET(KIT_include_directories
-  )
-
 ctkMacroBuildApp(
   NAME ${PROJECT_NAME}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
   SRCS ${KIT_SRCS}
   MOC_SRCS ${KIT_MOC_SRCS}
   UI_FORMS ${KIT_UI_FORMS}

@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,12 +22,21 @@
 #include <ctkPluginFrameworkFactory.h>
 #include <ctkPluginFramework.h>
 #include <ctkPluginException.h>
+#include <ctkPluginContext.h>
+
+#include <ctkExampleDicomHost.h>
+#include <ctkHostAppExampleWidget.h>
+#include <ui_ctkExampleHostMainWindow.h>
 
 #include <QApplication>
+#include <QMainWindow>
+#include <QVBoxLayout>
+
 #include <QString>
 #include <QStringList>
 #include <QDirIterator>
 #include <QWidget>
+#include <QUrl>
 
 int main(int argv, char** argc)
 {
@@ -38,7 +47,7 @@ int main(int argv, char** argc)
   qApp->setApplicationName("ctkExampleHost");
 
   ctkPluginFrameworkFactory fwFactory;
-  ctkPluginFramework* framework = fwFactory.getFramework();
+  QSharedPointer<ctkPluginFramework> framework = fwFactory.getFramework();
 
   try {
     framework->init();
@@ -57,30 +66,60 @@ int main(int argv, char** argc)
 
   qApp->addLibraryPath(pluginPath);
 
-//  QStringList libFilter;
-//  libFilter << "*.dll" << "*.so" << "*.dylib";
-//  QDirIterator dirIter(pluginPath, libFilter, QDir::Files);
-//  while(dirIter.hasNext())
-//  {
-//    try
-//    {
-//      QString fileLocation = dirIter.next();
-//      if (fileLocation.contains("org_commontk_dicom_wg23"))
-//      {
-//        ctkPlugin* plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
-//        plugin->start(ctkPlugin::START_TRANSIENT);
-//      }
-//    }
-//    catch (const ctkPluginException& e)
-//    {
-//      qCritical() << e.what();
-//    }
-//  }
+  QStringList libFilter;
+  libFilter << "*.dll" << "*.so" << "*.dylib";
+  QDirIterator dirIter(pluginPath, libFilter, QDir::Files);
+
+  QStringList pluginsToInstall;
+  pluginsToInstall << "org_commontk_dah_core" << "org_commontk_dah_host"
+                   << "org_commontk_dah_examplehost";
+
+  QList<QSharedPointer<ctkPlugin> > installedPlugins;
+  while(dirIter.hasNext())
+  {
+    try
+    {
+      QString fileLocation = dirIter.next();
+      foreach(QString pluginToInstall, pluginsToInstall)
+      {
+        if (fileLocation.contains(pluginToInstall))
+        {
+          QSharedPointer<ctkPlugin> plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
+          installedPlugins << plugin;
+          break;
+        }
+      }
+    }
+    catch (const ctkPluginException& e)
+    {
+      qCritical() << e.what();
+    }
+  }
 
   framework->start();
 
-  QWidget placeholder;
-  placeholder.show();
+  foreach(QSharedPointer<ctkPlugin> plugin, installedPlugins)
+  {
+    plugin->start();
+  }
+
+
+  QMainWindow mainWindow;
+  Ui::MainWindow ui;
+  ui.setupUi(&mainWindow);
+  if ( QApplication::argc() > 1 )
+  {
+    ui.controlWidget->setAppFileName(QApplication::argv()[1]);
+  }
+
+//  mainWindow.addDockWidget(static_cast<Qt::DockWidgetArea>(4),new ctkHostAppExampleWidget());
+
+//  QVBoxLayout* layout = new QVBoxLayout(&mainWindow);
+
+//  ctkHostAppExampleWidget* placeholder = new ctkHostAppExampleWidget(&mainWindow);
+
+//  layout->addWidget(placeholder);
+  mainWindow.show();
 
   return app.exec();
 

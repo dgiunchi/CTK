@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -47,7 +47,7 @@ ADD_DEFINITIONS(-DNO_SYMBOL_EXPORT)
 SET(MY_EXPORT_HEADER_PREFIX CTKCore)
 SET(MY_LIBRARY_EXPORT_DIRECTIVE CTK_CORE_EXPORT)
 CONFIGURE_FILE(
-  ${CTK_SOURCE_DIR}/Libs/CTKExport.h.in
+  ${CTK_SOURCE_DIR}/Libs/ctkExport.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/${MY_EXPORT_HEADER_PREFIX}Export.h
   )
 

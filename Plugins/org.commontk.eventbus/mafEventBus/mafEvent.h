@@ -46,9 +46,6 @@ public:
     /// Allow to set or modify the event ID
     void setEventTopic(mafString topic);
 
-    /// Allow to set or modify the event ID
-    void setEventFilter(QObject *filter);
-
     /// Return the Id associated with the event.
     mafString eventTopic() const;
 
@@ -69,50 +66,6 @@ private:
 };
 
 typedef mafEvent * mafEventPointer;
-
-inline mafEventHash *mafEvent::entries() {
-    return m_EventHash;
-}
-
-inline mafEventHash *mafEvent::entries() const {
-    return m_EventHash;
-}
-
-inline mafVariant &mafEvent::operator[](mafString key) const{
-    return (*m_EventHash)[key];
-}
-
-inline mafEventType mafEvent::eventType() const {
-    return static_cast<mafEventType>(entries()->value(TYPE).toInt());
-}
-
-inline mafString mafEvent::eventTopic() const {
-    return entries()->value(TOPIC).toString();
-}
-
-inline bool mafEvent::isEventLocal() const {
-    int et = entries()->value(TYPE).toInt();
-    return et == mafEventTypeLocal;
-}
-
-inline void mafEvent::setEventType(mafEventType et) {
-    entries()->insert(TYPE, static_cast<int>(et));
-}
-
-inline void mafEvent::setEventTopic(mafString topic) {
-    entries()->insert(TOPIC, topic);
-}
-
-inline void mafEvent::setEventFilter(QObject *filter) {
-    mafVariant var;
-    var.setValue(filter);
-    entries()->insert(FILTER, var);
-}
-
-/*inline mafString mafEvent::eventIdName() const {
-    mafId id = eventId();
-    return mafIdProvider::instance()->idName(id);
-}*/
 
 } // namespace mafEventBus
 

@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,58 +29,36 @@
 
 #include "ctkServiceFactory.h"
 #include "ctkPluginConstants.h"
+#include "ctkPluginFrameworkContext_p.h"
+#include "ctkServiceException.h"
 #include "ctkServiceRegistrationPrivate.h"
-#include "ctkQtServiceRegistration_p.h"
-#include "ctkLDAPExpr.h"
+#include "ctkLDAPExpr_p.h"
 
 
-  using namespace QtMobility;
-
-
-
-  struct ServiceRegistrationComparator
+struct ServiceRegistrationComparator
+{
+  bool operator()(const ctkServiceRegistration& a, const ctkServiceRegistration& b) const
   {
-    bool operator()(const ctkServiceRegistration* a, const ctkServiceRegistration* b) const
-    {
-      return *a < *b;
-    }
-  };
+    return a < b;
+  }
+};
 
-  ServiceProperties ctkServices::createServiceProperties(const ServiceProperties& in,
-                                                      const QStringList& classes,
-                                                      long sid)
+ctkDictionary ctkServices::createServiceProperties(const ctkDictionary& in,
+                                                       const QStringList& classes,
+                                                       long sid)
+{
+  static qlonglong nextServiceID = 1;
+  ctkDictionary props = in;
+
+  if (!classes.isEmpty())
   {
-    static qlonglong nextServiceID = 1;
-    ServiceProperties props;
-
-    if (!in.isEmpty())
-    {
-      for (ServiceProperties::const_iterator it = in.begin(); it != in.end(); ++it)
-      {
-        const QString key = it.key();
-        const QString lcKey = it.key().toLower();
-        for (QListIterator<QString> i(props.keys()); i.hasNext(); )
-        {
-          if (lcKey == i.next())
-          {
-            throw std::invalid_argument(std::string("Several entries for property: ") + key.toStdString());
-          }
-        }
-
-        props.insert(lcKey, in.value(key));
-      }
-    }
-
-    if (!classes.isEmpty())
-    {
-      props.insert(ctkPluginConstants::OBJECTCLASS, classes);
-    }
-
-    props.insert(ctkPluginConstants::SERVICE_ID, sid != -1 ? sid : nextServiceID++);
-
-    return props;
+    props.insert(ctkPluginConstants::OBJECTCLASS, classes);
   }
 
+  props.insert(ctkPluginConstants::SERVICE_ID, sid != -1 ? sid : nextServiceID++);
+
+  return props;
+}
 
 ctkServices::ctkServices(ctkPluginFrameworkContext* fwCtx)
   : mutex(QMutex::Recursive), framework(fwCtx)
@@ -95,17 +73,15 @@ ctkServices::~ctkServices()
 
 void ctkServices::clear()
 {
-  QList<ctkServiceRegistration*> serviceRegs = services.keys();
-  qDeleteAll(serviceRegs);
   services.clear();
   classServices.clear();
   framework = 0;
 }
 
-ctkServiceRegistration* ctkServices::registerService(ctkPluginPrivate* plugin,
+ctkServiceRegistration ctkServices::registerService(ctkPluginPrivate* plugin,
                              const QStringList& classes,
                              QObject* service,
-                             const ServiceProperties& properties)
+                             const ctkDictionary& properties)
 {
   if (service == 0)
   {
@@ -125,152 +101,43 @@ ctkServiceRegistration* ctkServices::registerService(ctkPluginPrivate* plugin,
     {
       if (!checkServiceClass(service, cls))
       {
-        throw std::invalid_argument
-            (std::string("Service object is not an instance of ") + cls.toStdString());
+        QString msg = QString("Service class %1 is not an instance of %2. Maybe you forgot the Q_INTERFACES macro in the service class.")
+            .arg(service->metaObject()->className()).arg(cls);
+        throw std::invalid_argument(msg.toStdString());
       }
     }
   }
 
-  ctkServiceRegistration* res = new ctkServiceRegistration(plugin, service,
-                                createServiceProperties(properties, classes));
+  ctkServiceRegistration res(plugin, service,
+                             createServiceProperties(properties, classes));
   {
     QMutexLocker lock(&mutex);
     services.insert(res, classes);
     for (QStringListIterator i(classes); i.hasNext(); )
     {
       QString currClass = i.next();
-      QList<ctkServiceRegistration*>& s = classServices[currClass];
-      QList<ctkServiceRegistration*>::iterator ip =
+      QList<ctkServiceRegistration>& s = classServices[currClass];
+      QList<ctkServiceRegistration>::iterator ip =
           std::lower_bound(s.begin(), s.end(), res, ServiceRegistrationComparator());
       s.insert(ip, res);
     }
   }
 
-  //ctkServiceReference* r = res->getReference();
-  // TODO
-  //Listeners l = bundle.fwCtx.listeners;
-  //l.serviceChanged(l.getMatchingServiceListeners(r),
-  //                 new ServiceEvent(ServiceEvent.REGISTERED, r),
-  //                 null);
+  ctkServiceReference r = res.getReference();
+  plugin->fwCtx->listeners.serviceChanged(
+      plugin->fwCtx->listeners.getMatchingServiceSlots(r),
+      ctkServiceEvent(ctkServiceEvent::REGISTERED, r));
   return res;
 }
 
-void ctkServices::registerService(ctkPluginPrivate* plugin, QByteArray serviceDescription)
-{
-  QMutexLocker lock(&mutex);
 
-  QBuffer serviceBuffer(&serviceDescription);
-  qServiceManager.addService(&serviceBuffer);
-  QServiceManager::Error error = qServiceManager.error();
-  if (!(error == QServiceManager::NoError || error == QServiceManager::ServiceAlreadyExists))
-  {
-    throw std::invalid_argument(std::string("Registering the service descriptor for plugin ")
-                                + plugin->symbolicName.toStdString() + " failed: " +
-                                getQServiceManagerErrorString(error).toStdString());
-  }
-
-  QString serviceName = plugin->symbolicName + "_" + plugin->version.toString();
-  QList<QServiceInterfaceDescriptor> descriptors = qServiceManager.findInterfaces(serviceName);
-
-  if (descriptors.isEmpty())
-  {
-    qDebug().nospace() << "Warning: No interfaces found for service name " << serviceName
-        << " in plugin " << plugin->symbolicName << " (ctkVersion " << plugin->version.toString() << ")";
-  }
-
-  QListIterator<QServiceInterfaceDescriptor> it(descriptors);
-  while (it.hasNext())
-  {
-    QServiceInterfaceDescriptor descr = it.next();
-    qDebug() << "Registering:" << descr.interfaceName();
-    QStringList classes;
-    ServiceProperties props;
-
-    QStringList customKeys = descr.customAttributes();
-    QStringListIterator keyIt(customKeys);
-    bool classAttrFound = false;
-    while (keyIt.hasNext())
-    {
-      QString key = keyIt.next();
-      if (key == ctkPluginConstants::OBJECTCLASS)
-      {
-        classAttrFound = true;
-        classes << descr.customAttribute(key);
-      }
-      else
-      {
-        props.insert(key, descr.customAttribute(key));
-      }
-    }
-
-    if (!classAttrFound)
-    {
-      throw std::invalid_argument(std::string("The custom attribute \"") +
-                                  ctkPluginConstants::OBJECTCLASS.toStdString() +
-                                  "\" is missing in the interface description of \"" +
-                                  descr.interfaceName().toStdString());
-    }
-
-    ctkServiceRegistration* res = new ctkQtServiceRegistration(plugin,
-                                                         descr,
-                                                         createServiceProperties(props, classes));
-    services.insert(res, classes);
-    for (QStringListIterator i(classes); i.hasNext(); )
-    {
-      QString currClass = i.next();
-      QList<ctkServiceRegistration*>& s = classServices[currClass];
-      QList<ctkServiceRegistration*>::iterator ip =
-          std::lower_bound(s.begin(), s.end(), res, ServiceRegistrationComparator());
-      s.insert(ip, res);
-    }
-
-    //ctkServiceReference* r = res->getReference();
-    // TODO
-    //Listeners l = bundle.fwCtx.listeners;
-    //l.serviceChanged(l.getMatchingServiceListeners(r),
-    //                 new ServiceEvent(ServiceEvent.REGISTERED, r),
-    //                 null);
-  }
-}
-
-QString ctkServices::getQServiceManagerErrorString(QServiceManager::Error error)
-{
-  switch (error)
-  {
-  case QServiceManager::NoError:
-    return QString("No error occurred.");
-  case QServiceManager::StorageAccessError:
-    return QString("The service data storage is not accessible. This could be because the caller does not have the required permissions.");
-  case QServiceManager::InvalidServiceLocation:
-    return QString("The service was not found at its specified location.");
-  case QServiceManager::InvalidServiceXml:
-    return QString("The XML defining the service metadata is invalid.");
-  case QServiceManager::InvalidServiceInterfaceDescriptor:
-    return QString("The service interface descriptor is invalid, or refers to an interface implementation that cannot be accessed in the current scope.");
-  case QServiceManager::ServiceAlreadyExists:
-    return QString("Another service has previously been registered with the same location.");
-  case QServiceManager::ImplementationAlreadyExists:
-    return QString("Another service that implements the same interface version has previously been registered.");
-  case QServiceManager::PluginLoadingFailed:
-    return QString("The service plugin cannot be loaded.");
-  case QServiceManager::ComponentNotFound:
-    return QString("The service or interface implementation has not been registered.");
-  case QServiceManager::ServiceCapabilityDenied:
-    return QString("The security session does not allow the service based on its capabilities.");
-  case QServiceManager::UnknownError:
-    return QString("An unknown error occurred.");
-  default:
-    return QString("Unknown error enum.");
-  }
-}
-
-void ctkServices::updateServiceRegistrationOrder(ctkServiceRegistration* sr,
+void ctkServices::updateServiceRegistrationOrder(const ctkServiceRegistration& sr,
                                               const QStringList& classes)
 {
   QMutexLocker lock(&mutex);
   for (QStringListIterator i(classes); i.hasNext(); )
   {
-    QList<ctkServiceRegistration*>& s = classServices[i.next()];
+    QList<ctkServiceRegistration>& s = classServices[i.next()];
     s.removeAll(sr);
     s.insert(std::lower_bound(s.begin(), s.end(), sr, ServiceRegistrationComparator()), sr);
   }
@@ -282,20 +149,20 @@ bool ctkServices::checkServiceClass(QObject* service, const QString& cls) const
 }
 
 
-QList<ctkServiceRegistration*> ctkServices::get(const QString& clazz) const
+QList<ctkServiceRegistration> ctkServices::get(const QString& clazz) const
 {
   QMutexLocker lock(&mutex);
   return classServices.value(clazz);
 }
 
 
-ctkServiceReference* ctkServices::get(ctkPluginPrivate* plugin, const QString& clazz) const
+ctkServiceReference ctkServices::get(ctkPluginPrivate* plugin, const QString& clazz) const
 {
   QMutexLocker lock(&mutex);
   try {
-    QList<ctkServiceReference*> srs = get(clazz, QString());
+    QList<ctkServiceReference> srs = get(clazz, QString(), plugin);
     qDebug() << "get service ref" << clazz << "for plugin"
-             << plugin->location << " = " << srs;
+             << plugin->location << " = " << srs.size() << "refs";
 
     if (!srs.isEmpty()) {
       return srs.front();
@@ -304,103 +171,98 @@ ctkServiceReference* ctkServices::get(ctkPluginPrivate* plugin, const QString& c
   catch (const std::invalid_argument& )
   { }
 
-  return 0;
+  return ctkServiceReference();
 }
 
 
-QList<ctkServiceReference*> ctkServices::get(const QString& clazz, const QString& filter) const
+QList<ctkServiceReference> ctkServices::get(const QString& clazz, const QString& filter,
+                                            ctkPluginPrivate* plugin) const
 {
+  Q_UNUSED(plugin)
+
   QMutexLocker lock(&mutex);
 
-  QListIterator<ctkServiceRegistration*>* s = 0;
-  ctkLDAPExpr* ldap = 0;
+  QListIterator<ctkServiceRegistration>* s = 0;
+  QList<ctkServiceRegistration> v;
+  ctkLDAPExpr ldap;
   if (clazz.isEmpty())
   {
     if (!filter.isEmpty())
     {
-      ldap = new ctkLDAPExpr(filter);
-      QSet<QString> matched = ldap->getMatchedObjectClasses();
+      ldap = ctkLDAPExpr(filter);
+      QSet<QString> matched = ldap.getMatchedObjectClasses();
       if (!matched.isEmpty())
       {
-        //TODO
-//        ArrayList v = null;
-//        boolean vReadOnly = true;;
-//        for (Iterator i = matched.iterator(); i.hasNext(); ) {
-//          ArrayList cl = (ArrayList) classServices.get(i.next());
-//          if (cl != null) {
-//            if (v == null) {
-//              v = cl;
-//            } else {
-//              if (vReadOnly) {
-//                v = new ArrayList(v);
-//                vReadOnly = false;
-//              }
-//              v.addAll(cl);
-//            }
-//          }
-//        }
-//        if (v != null) {
-//          s = v.iterator();
-//        } else {
-//          return null;
-//        }
+        v.clear();
+        foreach (QString className, matched)
+        {
+          const QList<ctkServiceRegistration>& cl = classServices[className];
+          v += cl;
+        }
+        if (!v.isEmpty())
+        {
+          s = new QListIterator<ctkServiceRegistration>(v);
+        }
+        else
+        {
+          return QList<ctkServiceReference>();
+        }
       }
       else
       {
-        s = new QListIterator<ctkServiceRegistration*>(services.keys());
+        s = new QListIterator<ctkServiceRegistration>(services.keys());
       }
     }
     else
     {
-      s = new QListIterator<ctkServiceRegistration*>(services.keys());
+      s = new QListIterator<ctkServiceRegistration>(services.keys());
     }
   }
   else
   {
-    QList<ctkServiceRegistration*> v = classServices.value(clazz);
+    QList<ctkServiceRegistration> v = classServices.value(clazz);
     if (!v.isEmpty())
     {
-      s = new QListIterator<ctkServiceRegistration*>(v);
+      s = new QListIterator<ctkServiceRegistration>(v);
     }
     else
     {
-      return QList<ctkServiceReference*>();
+      return QList<ctkServiceReference>();
     }
     if (!filter.isEmpty())
     {
-      ldap = new ctkLDAPExpr(filter);
+      ldap = ctkLDAPExpr(filter);
     }
   }
 
-  QList<ctkServiceReference*> res;
+  QList<ctkServiceReference> res;
   while (s->hasNext())
   {
-    ctkServiceRegistration* sr = s->next();
-    ctkServiceReference* sri = sr->getReference();
+    ctkServiceRegistration sr = s->next();
+    ctkServiceReference sri = sr.getReference();
 
-    if (filter.isEmpty() || ldap->evaluate(sr->d_func()->properties, false))
+    if (filter.isEmpty() || ldap.evaluate(sr.d_func()->properties, false))
     {
       res.push_back(sri);
     }
   }
 
   delete s;
-  delete ldap;
 
   return res;
 }
 
 
-void ctkServices::removeServiceRegistration(ctkServiceRegistration* sr)
+void ctkServices::removeServiceRegistration(const ctkServiceRegistration& sr)
 {
   QMutexLocker lock(&mutex);
 
-  QStringList classes = sr->d_func()->properties.value(ctkPluginConstants::OBJECTCLASS).toStringList();
+  QStringList classes = sr.d_func()->properties.value(ctkPluginConstants::OBJECTCLASS).toStringList();
   services.remove(sr);
   for (QStringListIterator i(classes); i.hasNext(); )
   {
     QString currClass = i.next();
-    QList<ctkServiceRegistration*>& s = classServices[currClass];
+    QList<ctkServiceRegistration>& s = classServices[currClass];
     if (s.size() > 1)
     {
       s.removeAll(sr);
@@ -413,15 +275,15 @@ void ctkServices::removeServiceRegistration(ctkServiceRegistration* sr)
 }
 
 
-QList<ctkServiceRegistration*> ctkServices::getRegisteredByPlugin(ctkPluginPrivate* p) const
+QList<ctkServiceRegistration> ctkServices::getRegisteredByPlugin(ctkPluginPrivate* p) const
 {
   QMutexLocker lock(&mutex);
 
-  QList<ctkServiceRegistration*> res;
-  for (QHashIterator<ctkServiceRegistration*, QStringList> i(services); i.hasNext(); )
+  QList<ctkServiceRegistration> res;
+  for (QHashIterator<ctkServiceRegistration, QStringList> i(services); i.hasNext(); )
   {
-    ctkServiceRegistration* sr = i.next().key();
-    if ((sr->d_func()->plugin = p))
+    ctkServiceRegistration sr = i.next().key();
+    if ((sr.d_func()->plugin == p))
     {
       res.push_back(sr);
     }
@@ -430,15 +292,15 @@ QList<ctkServiceRegistration*> ctkServices::getRegisteredByPlugin(ctkPluginPriva
 }
 
 
-QList<ctkServiceRegistration*> ctkServices::getUsedByPlugin(ctkPlugin* p) const
+QList<ctkServiceRegistration> ctkServices::getUsedByPlugin(QSharedPointer<ctkPlugin> p) const
 {
   QMutexLocker lock(&mutex);
 
-  QList<ctkServiceRegistration*> res;
-  for (QHashIterator<ctkServiceRegistration*, QStringList> i(services); i.hasNext(); )
+  QList<ctkServiceRegistration> res;
+  for (QHashIterator<ctkServiceRegistration, QStringList> i(services); i.hasNext(); )
   {
-    ctkServiceRegistration* sr = i.next().key();
-    if (sr->d_func()->isUsedByPlugin(p))
+    ctkServiceRegistration sr = i.next().key();
+    if (sr.d_func()->isUsedByPlugin(p))
     {
       res.push_back(sr);
     }

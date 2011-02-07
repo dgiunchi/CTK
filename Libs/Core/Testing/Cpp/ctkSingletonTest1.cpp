@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,41 +15,37 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // QT includes
-#include <QApplication>
+#include <QtGlobal>
 
 // CTK includes
-#include "ctkSingleton.h"
+#include "ctkSingletonTestHelper.h"
 
 // STD includes
 #include <cstdlib>
 #include <iostream>
 
 //-----------------------------------------------------------------------------
-class ctkSingletonHelper
-{
-public:
-  CTK_SINGLETON_DECLARE(ctkSingletonHelper);
-};
-
-//-----------------------------------------------------------------------------
-void ctkSingletonHelper::classInitialize()
-{
-}
-
-//-----------------------------------------------------------------------------
 int ctkSingletonTest1(int argc, char * argv [] )
 {
-  QApplication app(argc, argv);
-
-  ctkSingletonHelper ctkObject;
-
-  ctkObject.classInitialize();
-
-
+  Q_UNUSED(argc);
+  Q_UNUSED(argv);
+  
+  if (!ctkSingletonTestHelper::instance())
+    {
+    std::cerr << "Problem with ctkSingletonTestHelper::instance()" << std::endl;
+    return EXIT_FAILURE;
+    }
+  ctkSingletonTestHelper::instance()->registerNorthFace();
+  ctkSingletonTestHelper::instance()->registerNorthFace();
+  if (ctkSingletonTestHelper::instance()->northFaceCount() != 2)
+    {
+    std::cerr << "Problem with ctkSingletonTestHelper" << std::endl;
+    return EXIT_FAILURE;
+    }
   return EXIT_SUCCESS;
 }
 

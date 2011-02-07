@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkAbstractPluginFactory_tpp
@@ -34,7 +34,7 @@
 //----------------------------------------------------------------------------
 template<typename BaseClassType>
 ctkFactoryPluginItem<BaseClassType>::ctkFactoryPluginItem(const QString& _path)
-  :Path(_path)
+  :ctkAbstractFactoryFileBasedItem<BaseClassType>(_path)
 {
 }
 
@@ -44,13 +44,6 @@ bool ctkFactoryPluginItem<BaseClassType>::load()
 {
   this->Loader.setFileName(this->path());
   return this->Loader.load();
-}
-
-//----------------------------------------------------------------------------
-template<typename BaseClassType>
-QString ctkFactoryPluginItem<BaseClassType>::path()const
-{ 
-  return this->Path; 
 }
 
 //----------------------------------------------------------------------------
@@ -80,7 +73,7 @@ BaseClassType* ctkFactoryPluginItem<BaseClassType>::instanciator()
     if (this->verbose())
       {
       qWarning() << "Failed to access interface [" << BaseClassType::staticMetaObject.className()
-               << "] in plugin:" << this->path();
+               << "] in plugin:" << this->path() << "\n instead, got object of type:" << object->metaObject()->className();
       }
     delete object; // Clean memory
     return 0;
@@ -94,7 +87,7 @@ BaseClassType* ctkFactoryPluginItem<BaseClassType>::instanciator()
 //----------------------------------------------------------------------------
 template<typename BaseClassType>
 ctkAbstractPluginFactory<BaseClassType>::ctkAbstractPluginFactory()
-:ctkAbstractFactory<BaseClassType>()
+:ctkAbstractFileBasedFactory<BaseClassType>()
 {
 }
 
@@ -117,16 +110,6 @@ bool ctkAbstractPluginFactory<BaseClassType>::registerLibrary(const QString& key
   
   _item->setVerbose(this->verbose());
   return this->registerItem(key, _item);
-}
-
-//----------------------------------------------------------------------------
-template<typename BaseClassType>
-QString ctkAbstractPluginFactory<BaseClassType>::path(const QString& key)
-{
-  ctkFactoryPluginItem<BaseClassType>* _item =
-      dynamic_cast<ctkFactoryPluginItem<BaseClassType>*>(this->item(key));
-  Q_ASSERT(_item);
-  return _item->path();
 }
 
 //----------------------------------------------------------------------------

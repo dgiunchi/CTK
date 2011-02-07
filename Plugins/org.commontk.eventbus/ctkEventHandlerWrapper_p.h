@@ -3,8 +3,8 @@
 
 #include <QStringList>
 
-#include <EventBus/ctkEventBus.h>
-#include <EventBus/ctkEventConstants.h>
+#include <service/event/ctkEventBus.h>
+#include <service/event/ctkEventConstants.h>
 #include <ctkLDAPSearchFilter.h>
 
 #include <iostream>
@@ -37,7 +37,7 @@ public:
     topicList.clear();
 
     // Get topic names
-    QVariant v = properties[EventConstants::EVENT_TOPIC];
+    QVariant v = properties[ctkEventConstants::EVENT_TOPIC];
     topicList = v.toStringList();
 
     if (topicList.empty())
@@ -45,7 +45,7 @@ public:
       return false;
     }
 
-    v = properties[EventConstants::EVENT_FILTER];
+    v = properties[ctkEventConstants::EVENT_FILTER];
     filter = ctkLDAPSearchFilter(v.toString());
     return true;
   }
@@ -63,7 +63,7 @@ public:
     catch (const std::exception& e)
     {
       // TODO logging
-      std::cerr << "Exception occured during publishing " << qPrintable(event.topic()) << ": " << e.what() << std::endl;
+      std::cerr << "Exception occured during publishing " << qPrintable(event.getTopic()) << ": " << e.what() << std::endl;
     }
 
   }

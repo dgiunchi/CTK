@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 ###########################################################################
 #
@@ -63,6 +63,27 @@ SET(CTK_CONFIG_INSTALL_ONLY)
 
 # The "use" file.
 SET(CTK_USE_FILE ${CTK_SUPERBUILD_BINARY_DIR}/UseCTK.cmake)
+
+# Generate list of target to exports
+SET(CTK_TARGETS_TO_EXPORT ${CTK_LIBRARIES} ${CTK_PLUGIN_LIBRARIES})
+
+# Append CTK PythonQt static libraries
+FOREACH(lib ${CTK_WRAPPED_LIBRARIES_PYTHONQT})
+  LIST(APPEND CTK_TARGETS_TO_EXPORT ${lib}PythonQt)
+ENDFOREACH()
+
+# Export targets so they can be imported by a project using CTK
+# as an external library
+EXPORT(TARGETS ${CTK_TARGETS_TO_EXPORT} FILE ${CTK_SUPERBUILD_BINARY_DIR}/CTKExports.cmake)
+
+# Write a set of variables containing plugin specific include directories
+SET(CTK_PLUGIN_INCLUDE_DIRS_CONFIG)
+FOREACH(plugin ${CTK_PLUGIN_LIBRARIES})
+  SET(${plugin}_INCLUDE_DIRS ${${plugin}_SOURCE_DIR} ${${plugin}_BINARY_DIR})
+  ctkFunctionGetIncludeDirs(${plugin}_INCLUDE_DIRS ${plugin})
+  SET(CTK_PLUGIN_INCLUDE_DIRS_CONFIG "${CTK_PLUGIN_INCLUDE_DIRS_CONFIG}
+SET(${plugin}_INCLUDE_DIRS \"${${plugin}_INCLUDE_DIRS}\")")
+ENDFOREACH()
 
 # Determine the include directories needed.
 SET(CTK_INCLUDE_DIRS_CONFIG

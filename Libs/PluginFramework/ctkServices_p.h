@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,6 @@
 #include <QObject>
 #include <QMutex>
 #include <QStringList>
-#include <QServiceManager>
 
 #include "ctkServiceRegistration.h"
 #include "ctkPluginPrivate_p.h"
@@ -43,18 +42,16 @@ public:
 
   mutable QMutex mutex;
 
-  QtMobility::QServiceManager qServiceManager;
-
   /**
-   * Creates a new ServiceProperties object containing <code>in</code>
+   * Creates a new ctkDictionary object containing <code>in</code>
    * with the keys converted to lower case.
    *
    * @param classes A list of class names which will be added to the
-   *        created ServiceProperties object under the key
+   *        created ctkDictionary object under the key
    *        PluginConstants::OBJECTCLASS.
    * @param sid A service id which will be used instead of a default one.
    */
-  static ServiceProperties createServiceProperties(const ServiceProperties& in,
+  static ctkDictionary createServiceProperties(const ctkDictionary& in,
                                  const QStringList& classes = QStringList(),
                                  long sid = -1);
 
@@ -63,14 +60,14 @@ public:
    * Mapping of registered service to class names under which
    * the service is registerd.
    */
-  QHash<ctkServiceRegistration*, QStringList> services;
+  QHash<ctkServiceRegistration, QStringList> services;
 
   /**
    * Mapping of classname to registered service.
    * The List of registered services are ordered with the highest
    * ranked service first.
    */
-  QHash<QString, QList<ctkServiceRegistration*> > classServices;
+  QHash<QString, QList<ctkServiceRegistration> > classServices;
 
 
   ctkPluginFrameworkContext* framework;
@@ -96,12 +93,10 @@ public:
    * instance of all the named classes in the classes parameter.</li>
    * </ul>
    */
-  ctkServiceRegistration* registerService(ctkPluginPrivate* plugin,
+  ctkServiceRegistration registerService(ctkPluginPrivate* plugin,
                                const QStringList& classes,
                                QObject* service,
-                               const ServiceProperties& properties);
-
-  void registerService(ctkPluginPrivate* plugin, QByteArray serviceDescription);
+                               const ctkDictionary& properties);
 
 
   /**
@@ -111,7 +106,7 @@ public:
    * @param serviceRegistration The ctkServiceRegistrationPrivate object.
    * @param rank New rank of object.
    */
-  void updateServiceRegistrationOrder(ctkServiceRegistration* sr,
+  void updateServiceRegistrationOrder(const ctkServiceRegistration& sr,
                                       const QStringList& classes);
 
 
@@ -132,7 +127,7 @@ public:
    * @param clazz The class name of the requested service.
    * @return A sorted list of {@link ctkServiceRegistrationPrivate} objects.
    */
-  QList<ctkServiceRegistration*> get(const QString& clazz) const;
+  QList<ctkServiceRegistration> get(const QString& clazz) const;
 
 
   /**
@@ -142,7 +137,7 @@ public:
    * @param clazz The class name of the requested service.
    * @return A {@link ctkServiceReference} object.
    */
-  ctkServiceReference* get(ctkPluginPrivate* plugin, const QString& clazz) const;
+  ctkServiceReference get(ctkPluginPrivate* plugin, const QString& clazz) const;
 
 
   /**
@@ -154,7 +149,8 @@ public:
    * @param plugin The plugin requesting reference.
    * @return A list of {@link ctkServiceReference} object.
    */
-  QList<ctkServiceReference*> get(const QString& clazz, const QString& filter) const;
+  QList<ctkServiceReference> get(const QString& clazz, const QString& filter,
+                                 ctkPluginPrivate* plugin) const;
 
 
   /**
@@ -162,7 +158,7 @@ public:
    *
    * @param sr The ctkServiceRegistration object that is registered.
    */
-  void removeServiceRegistration(ctkServiceRegistration* sr) ;
+  void removeServiceRegistration(const ctkServiceRegistration& sr) ;
 
 
   /**
@@ -171,7 +167,7 @@ public:
    * @param p The plugin
    * @return A set of {@link ctkServiceRegistration} objects
    */
-  QList<ctkServiceRegistration*> getRegisteredByPlugin(ctkPluginPrivate* p) const;
+  QList<ctkServiceRegistration> getRegisteredByPlugin(ctkPluginPrivate* p) const;
 
 
   /**
@@ -180,9 +176,7 @@ public:
    * @param p The plugin
    * @return A set of {@link ctkServiceRegistration} objects
    */
-  QList<ctkServiceRegistration*> getUsedByPlugin(ctkPlugin* p) const;
-
-  QString getQServiceManagerErrorString(QtMobility::QServiceManager::Error error);
+  QList<ctkServiceRegistration> getUsedByPlugin(QSharedPointer<ctkPlugin> p) const;
 
 };
 

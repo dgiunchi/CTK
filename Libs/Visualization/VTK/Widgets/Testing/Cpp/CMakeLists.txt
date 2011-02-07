@@ -4,12 +4,18 @@ SET(KIT ${PROJECT_NAME})
 # Tests
 #
 SET(TEST_SOURCES
+  ctkVTKDataSetArrayComboBoxTest1.cpp
+  ctkVTKDataSetModelTest1.cpp
+  ctkVTKMatrixWidgetTest1.cpp
   ctkTransferFunctionBarsItemTest1.cpp
   ctkTransferFunctionViewTest1.cpp
   ctkTransferFunctionViewTest2.cpp
   ctkTransferFunctionViewTest3.cpp
   ctkTransferFunctionViewTest4.cpp
   ctkTransferFunctionViewTest5.cpp
+  ctkVTKSurfaceMaterialPropertyWidgetTest1.cpp
+  ctkVTKTextPropertyWidgetTest1.cpp
+  ctkVTKThumbnailViewTest1.cpp
   )
 
 IF(CTK_USE_CHARTS)
@@ -57,6 +63,9 @@ ENDMACRO( SIMPLE_TEST  )
 # Add Tests
 #
 
+SIMPLE_TEST( ctkVTKDataSetArrayComboBoxTest1 )
+SIMPLE_TEST( ctkVTKDataSetModelTest1 )
+SIMPLE_TEST( ctkVTKMatrixWidgetTest1 )
 SIMPLE_TEST( ctkTransferFunctionBarsItemTest1 )
 SIMPLE_TEST( ctkTransferFunctionViewTest1 )
 SIMPLE_TEST( ctkTransferFunctionViewTest2 )
@@ -71,6 +80,9 @@ IF (CTK_USE_CHARTS)
   SIMPLE_TEST( ctkVTKScalarsToColorsViewTest4 )
   SIMPLE_TEST( ctkVTKScalarsToColorsWidgetTest1 )
 ENDIF(CTK_USE_CHARTS)
+SIMPLE_TEST( ctkVTKSurfaceMaterialPropertyWidgetTest1 )
+SIMPLE_TEST( ctkVTKTextPropertyWidgetTest1 )
+SIMPLE_TEST( ctkVTKThumbnailViewTest1 )
 
 #
 # Add Tests expecting CTKData to be set

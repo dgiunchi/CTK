@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
 #include <QApplication>
 #include <QString>
+#include <QTimer>
 
 // CTK includes
 #include "ctkDoubleRangeSlider.h"
@@ -293,6 +294,20 @@ int ctkDoubleRangeSliderTest1(int argc, char * argv [] )
   //             << slider.maximumPosition() << std::endl;
   //   return EXIT_FAILURE;
   //   }
+  slider.setSymmetricMoves(true);
+  
+  if (slider.symmetricMoves() != true)
+    {
+    std::cerr << "ctkDoubleRangeSlider::setSymmetricMoves failed" << std::endl;
+    return EXIT_FAILURE;
+    }
 
-  return EXIT_SUCCESS;
+  slider.show();
+
+  if (argc < 2 || QString(argv[1]) != "-I" )
+    {
+    QTimer::singleShot(200, &app, SLOT(quit()));
+    }
+
+  return app.exec();
 }

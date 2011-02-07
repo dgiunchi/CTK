@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,9 +24,55 @@
 #define CTKPLUGINFRAMEWORK_GLOBAL_H
 
 #include <QHash>
+#include <QStringList>
+#include <QVariant>
 
-typedef QHash<QString, QVariant> ServiceProperties;
-typedef QHash<QString, QVariant> ctkDictionary;
 typedef QHash<QString, QVariant> ctkProperties;
+
+#if QT_VERSION < 0x040700
+#include <QSharedPointer>
+template<class T>
+inline uint qHash(const QSharedPointer<T>& ptr)
+{
+  return qHash<T>(ptr.data());
+}
+#endif
+
+
+template<class A>
+QStringList getIIDs()
+{
+  return QString(qobject_interface_iid<A*>());
+}
+
+template<class A, class B>
+QStringList getIIDs()
+{
+  QStringList ids;
+  ids << qobject_interface_iid<A*>();
+  ids << qobject_interface_iid<B*>();
+  return ids;
+}
+
+template<class A, class B, class C>
+QStringList getIIDs()
+{
+  QStringList ids;
+  ids << qobject_interface_iid<A*>();
+  ids << qobject_interface_iid<B*>();
+  ids << qobject_interface_iid<C*>();
+  return ids;
+}
+
+template<class A, class B, class C, class D>
+QStringList getIIDs()
+{
+  QStringList ids;
+  ids << qobject_interface_iid<A*>();
+  ids << qobject_interface_iid<B*>();
+  ids << qobject_interface_iid<C*>();
+  ids << qobject_interface_iid<D*>();
+  return ids;
+}
 
 #endif // CTKPLUGINFRAMEWORK_GLOBAL_H

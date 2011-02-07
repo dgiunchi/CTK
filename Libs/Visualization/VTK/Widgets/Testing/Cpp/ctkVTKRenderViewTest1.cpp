@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -80,6 +80,14 @@ int ctkVTKRenderViewTest1(int argc, char * argv [] )
 
   // Add actor
   renderView.renderer()->AddActor(sphereActor);
+
+  renderView.lookFromAxis(ctkAxesWidget::Right);
+  renderView.lookFromAxis(ctkAxesWidget::Left, 10);
+  renderView.lookFromAxis(ctkAxesWidget::Anterior, 1.);
+  renderView.lookFromAxis(ctkAxesWidget::Posterior, 1.);
+  renderView.lookFromAxis(ctkAxesWidget::Superior, 0.333333);
+  renderView.lookFromAxis(ctkAxesWidget::Inferior, 0.333333);
+  renderView.lookFromAxis(ctkAxesWidget::None, 100.);
 
   if (!interactive)
     {

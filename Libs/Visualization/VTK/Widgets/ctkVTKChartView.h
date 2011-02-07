@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
 // CTK includes
 #include <ctkPimpl.h>
-#include "CTKVisualizationVTKWidgetsExport.h"
+#include "ctkVisualizationVTKWidgetsExport.h"
 class ctkVTKChartViewPrivate;
 
 // VTK includes

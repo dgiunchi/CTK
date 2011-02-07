@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -48,7 +48,7 @@
 MACRO(ctkMacroBuildPlugin)
   CtkMacroParseArguments(MY
     "EXPORT_DIRECTIVE;SRCS;MOC_SRCS;UI_FORMS;INCLUDE_DIRECTORIES;TARGET_LIBRARIES;RESOURCES;CACHED_RESOURCEFILES;LIBRARY_TYPE"
-    ""
+    "TEST_PLUGIN"
     ${ARGN}
     )
 
@@ -78,6 +78,16 @@ MACRO(ctkMacroBuildPlugin)
   SET(Plugin-Vendor )
   SET(Plugin-Version )
 
+  SET(Custom-Headers )
+
+  IF(MY_TEST_PLUGIN)
+    # Since the test plug-ins are not considered when calculating
+    # target dependencies via DGraph, we add the dependencies
+    # manually here
+    #MESSAGE("${lib_name}_DEPENDENCIES ${MY_TARGET_LIBRARIES}")
+    LIST(APPEND ${lib_name}_DEPENDENCIES ${MY_TARGET_LIBRARIES})
+  ENDIF()
+
   # If a file named manifest_headers.cmake exists, read it
   SET(manifest_headers_dep )
   IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/manifest_headers.cmake")
@@ -90,23 +100,14 @@ MACRO(ctkMacroBuildPlugin)
   # --------------------------------------------------------------------------
   # Include dirs
   SET(my_includes
-    ${CTK_BASE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MY_INCLUDE_DIRECTORIES}
     )
 
   # Add the include directories from the plugin dependencies
-  # The variable ${lib_name}_DEPENDENCIES is set in the
-  # macro ctkMacroValidateBuildOptions
-  FOREACH(dep ${${lib_name}_DEPENDENCIES})
-    LIST(APPEND my_includes
-         ${${dep}_SOURCE_DIR}
-         ${${dep}_BINARY_DIR}
-         )
-  ENDFOREACH()
-
-  LIST(REMOVE_DUPLICATES my_includes)
+  # and external dependencies
+  ctkFunctionGetIncludeDirs(my_includes ${lib_name})
 
   INCLUDE_DIRECTORIES(
     ${my_includes}
@@ -117,20 +118,20 @@ MACRO(ctkMacroBuildPlugin)
   SET(MY_LIBNAME ${lib_name})
   
   CONFIGURE_FILE(
-    ${CTK_SOURCE_DIR}/Libs/CTKExport.h.in
+    ${CTK_EXPORT_HEADER_TEMPLATE}
     ${CMAKE_CURRENT_BINARY_DIR}/${MY_EXPORT_HEADER_PREFIX}Export.h
     )
   SET(dynamicHeaders
     "${dynamicHeaders};${CMAKE_CURRENT_BINARY_DIR}/${MY_EXPORT_HEADER_PREFIX}Export.h")
 
   # Make sure variable are cleared
-  SET(MY_MOC_CXX)
-  SET(MY_UI_CXX)
+  SET(MY_MOC_CPP)
+  SET(MY_UI_CPP)
   SET(MY_QRC_SRCS)
 
   # Wrap
-  QT4_WRAP_CPP(MY_MOC_CXX ${MY_MOC_SRCS})
-  QT4_WRAP_UI(MY_UI_CXX ${MY_UI_FORMS})
+  QT4_WRAP_CPP(MY_MOC_CPP ${MY_MOC_SRCS})
+  QT4_WRAP_UI(MY_UI_CPP ${MY_UI_FORMS})
   IF(DEFINED MY_RESOURCES)
     QT4_ADD_RESOURCES(MY_QRC_SRCS ${MY_RESOURCES})
   ENDIF()
@@ -151,6 +152,7 @@ MACRO(ctkMacroBuildPlugin)
     SYMBOLIC_NAME ${Plugin-SymbolicName}
     VENDOR ${Plugin-Vendor}
     VERSION ${Plugin-Version}
+    CUSTOM_HEADERS ${Custom-Headers}
     )
 
   IF(manifest_headers_dep)
@@ -175,22 +177,38 @@ MACRO(ctkMacroBuildPlugin)
 
   SOURCE_GROUP("Generated" FILES
     ${MY_QRC_SRCS}
-    ${MY_MOC_CXX}
-    ${MY_UI_CXX}
+    ${MY_MOC_CPP}
+    ${MY_UI_CPP}
     )
   
   ADD_LIBRARY(${lib_name} ${MY_LIBRARY_TYPE}
     ${MY_SRCS}
-    ${MY_MOC_CXX}
-    ${MY_UI_CXX}
+    ${MY_MOC_CPP}
+    ${MY_UI_CPP}
     ${MY_QRC_SRCS}
     )
+
+  # Set the output directory for the plugin
+  SET(output_dir_suffix "plugins")
+  IF(MY_TEST_PLUGIN)
+    SET(output_dir_suffix "test_plugins")
+  ENDIF()
+  IF(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    SET(runtime_output_dir "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${output_dir_suffix}")
+  ELSE()
+    SET(runtime_output_dir "${CMAKE_CURRENT_BINARY_DIR}/${output_dir_suffix}")
+  ENDIF()
+  IF(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    SET(library_output_dir "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${output_dir_suffix}")
+  ELSE()
+    SET(library_output_dir "${CMAKE_CURRENT_BINARY_DIR}/${output_dir_suffix}")
+  ENDIF()
 
   # Apply properties to the library target.
   SET_TARGET_PROPERTIES(${lib_name} PROPERTIES
     COMPILE_FLAGS "-DQT_PLUGIN"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/plugins"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/plugins"
+    RUNTIME_OUTPUT_DIRECTORY ${runtime_output_dir}
+    LIBRARY_OUTPUT_DIRECTORY ${library_output_dir}
     PREFIX "lib"
     )
 
@@ -212,6 +230,11 @@ MACRO(ctkMacroBuildPlugin)
   ENDIF()
 
   TARGET_LINK_LIBRARIES(${lib_name} ${my_libs})
+
+  # Update CTK_PLUGINS
+  IF(NOT MY_TEST_PLUGIN)
+    SET(CTK_PLUGIN_LIBRARIES ${CTK_PLUGIN_LIBRARIES} ${lib_name} CACHE INTERNAL "CTK plugins" FORCE)
+  ENDIF()
   
   # Install headers
   #FILE(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")

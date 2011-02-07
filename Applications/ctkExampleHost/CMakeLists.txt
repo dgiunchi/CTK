@@ -6,16 +6,18 @@ PROJECT(ctkExampleHost)
 
 SET(KIT_SRCS
   ctkExampleHostMain.cpp
+  ctkHostAppExampleWidget.cpp
 )
 
 # Headers that should run through moc
 SET(KIT_MOC_SRCS
-
+  ctkHostAppExampleWidget.h
 )
 
 # UI files
 SET(KIT_UI_FORMS
-  
+  ctkExampleHostMainWindow.ui
+  ctkHostAppExampleWidget.ui
 )
 
 # Resources
@@ -27,18 +29,8 @@ SET(KIT_resources
 # The following macro will read the target libraries from the file 'target_libraries.cmake'
 ctkMacroGetTargetLibraries(KIT_target_libraries)
 
-# Additional directories to include - Note that CTK_INCLUDE_LIBRARIES is already included
-SET(KIT_include_directories
-)
-
-# Fix this after having discussed include dependencies with Jc
-FOREACH(_dep ${${PROJECT_NAME}_DEPENDENCIES})
-  INCLUDE_DIRECTORIES(${${_dep}_SOURCE_DIR} ${${_dep}_BINARY_DIR})
-ENDFOREACH()
-
 ctkMacroBuildApp(
   NAME ${PROJECT_NAME}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
   SRCS ${KIT_SRCS}
   MOC_SRCS ${KIT_MOC_SRCS}
   UI_FORMS ${KIT_UI_FORMS}

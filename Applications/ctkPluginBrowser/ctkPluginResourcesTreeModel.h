@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,7 @@
 
 #include <QAbstractItemModel>
 #include <QDir>
+#include <QSharedPointer>
 
 class ctkPlugin;
 class ctkPluginResourceTreeItem;
@@ -32,7 +33,7 @@ class ctkPluginResourcesTreeModel : public QAbstractItemModel
 {
 public:
 
-  ctkPluginResourcesTreeModel(const ctkPlugin* plugin, QObject* parent = 0);
+  ctkPluginResourcesTreeModel(QSharedPointer<const ctkPlugin> plugin, QObject* parent = 0);
   ~ctkPluginResourcesTreeModel();
 
   QVariant data(const QModelIndex &index, int role) const;
@@ -47,7 +48,7 @@ public:
 
 private:
 
-  const ctkPlugin* plugin;
+  QSharedPointer<const ctkPlugin> plugin;
   ctkPluginResourceTreeItem* rootItem;
 
 };

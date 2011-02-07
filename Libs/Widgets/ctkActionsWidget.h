@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkActionsWidget_h
@@ -28,7 +28,7 @@
 
 // CTK includes
 #include "ctkPimpl.h"
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 class ctkActionsWidgetPrivate;
 class ctkSortFilterActionsProxyModelPrivate;
 
@@ -45,6 +45,7 @@ class QTreeView;
 /// ctkActionsWidget internally uses a QStandardItemModel where each item data
 /// (QStandardItem::data) contain a pointer to the QAction.
 /// QActions can optionally be ordered by group
+/// TODO: Add "hide empty group" property to hide empty groups
 class CTK_WIDGETS_EXPORT ctkActionsWidget : public QWidget
 {
   Q_OBJECT
@@ -69,15 +70,20 @@ public:
   /// Return a pointer on a group item (you probably have no use for it)
   QStandardItem* groupItem(const QString& category);
 
-  /// Show/hide QActions that have an empty shortcut
+  /// If true, shows QActions that have an empty shortcut, otherwise hide them.
+  /// True by default
   void setActionsWithNoShortcutVisible(bool show);
   bool areActionsWithNoShortcutVisible()const;
 
-  /// Show/hide QActions that have an empty shortcut
+  /// If true, shows QMenus, otherwise hide them.
+  /// True by default
   void setMenuActionsVisible(bool show);
   bool areMenuActionsVisible()const;
 
+  /// Return the unsorted/unfiltered model of all the actions
   QStandardItemModel* model()const;
+
+  /// return the view used to display the action model
   QTreeView* view()const;
 
 protected slots:

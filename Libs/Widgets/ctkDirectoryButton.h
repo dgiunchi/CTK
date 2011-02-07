@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -24,11 +24,16 @@
 // Qt includes
 #include <QDir>
 #include <QFileDialog>
+#include <QIcon>
 
 // CTK includes
 #include <ctkPimpl.h>
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 class ctkDirectoryButtonPrivate;
+
+// QFileDialog::Options can be used since Qt 4.7.0 (QT_VERSION >= 0x040700)
+// it is disabled to support older Qt versions
+//#define USE_QFILEDIALOG_OPTIONS 1
 
 /// ctkDirectoryButton is a QPushButton to select a directory path.
 /// The absolute path is displayed on the button. When clicked, a
@@ -37,19 +42,22 @@ class ctkDirectoryButtonPrivate;
 class CTK_WIDGETS_EXPORT ctkDirectoryButton: public QWidget
 {
   Q_OBJECT
-  Q_PROPERTY(QString directory READ directory WRITE setDirectory)
+  Q_PROPERTY(QString directory READ directory WRITE setDirectory NOTIFY directoryChanged USER true)
   Q_PROPERTY(QString caption READ caption WRITE setCaption)
-#if QT_VERSION >= 0x040700
+  Q_PROPERTY(QIcon icon READ icon WRITE setIcon)
+  /// Qt versions prior to 4.7.0 didn't expose QFileDialog::Options in the
+  /// public API. We need to create a custom property that will be used when
+  /// instanciating a QFileDialog in ctkDirectoryButton::browse()
+#ifdef USE_QFILEDIALOG_OPTIONS
   Q_PROPERTY(QFileDialog::Options options READ options WRITE setOptions)
 #else
   Q_PROPERTY(Options options READ options WRITE setOptions)
-  // QFileDialog::Options is not a meta-type, we need to create our own.
   Q_FLAGS(Option Options);
 #endif
 
 public:
-#if QT_VERSION < 0x040700
-  // QFileDialog::Options is not a meta-type, we need to create our own.
+#ifndef USE_QFILEDIALOG_OPTIONS
+  // Same options than QFileDialog::Options
   enum Option
   {
     ShowDirsOnly          = 0x00000001,
@@ -85,9 +93,15 @@ public:
   void setCaption(const QString& caption);
   const QString& caption()const;
 
+  ///
+  /// The icon of the button
+  /// By default use QStyle::SP_DirIcon
+  void setIcon(const QIcon& icon);
+  QIcon icon()const;
+
   /// Options of the file dialog pop up.
   /// \sa QFileDialog::getExistingDirectory
-#if QT_VERSION >= 0x040700
+#ifdef USE_QFILEDIALOG_OPTIONS
   void setOptions(const QFileDialog::Options& options);
   const QFileDialog::Options& options()const;
 #else
@@ -116,7 +130,7 @@ private:
   Q_DISABLE_COPY(ctkDirectoryButton);
 };
 
-#if QT_VERSION < 0x040700
+#ifndef USE_QFILEDIALOG_OPTIONS
 Q_DECLARE_OPERATORS_FOR_FLAGS(ctkDirectoryButton::Options);
 #endif
 

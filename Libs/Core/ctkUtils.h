@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkUtils_h
@@ -27,7 +27,7 @@
 // STD includes
 #include <vector>
 
-#include "CTKCoreExport.h"
+#include "ctkCoreExport.h"
 
 namespace ctk {
 ///
@@ -42,6 +42,30 @@ void CTK_CORE_EXPORT qListToSTLVector(const QStringList& list, std::vector<std::
 ///
 /// Convert a Vector of string to QStringList
 void CTK_CORE_EXPORT stlVectorToQList(const std::vector<std::string>& vector, QStringList& list);
+
+///
+/// Convert a nameFilter to a list of file extensions:
+/// "Images (*.png *.jpg *.tiff)" -> "*.png", "*.jpg", "*.tiff"
+/// Note: the nameFilter can be a simple wildcard "*.jpg" in that case, it
+/// will simply return it.
+/// \sa nameFiltersToExtensions
+QStringList CTK_CORE_EXPORT nameFilterToExtensions(const QString& nameFilter);
+
+///
+/// Convert a nameFilter to a list of file extensions:
+/// "Images (*.png *.jpg *.tiff)", "Text (*.txt)" -> "*.png", "*.jpg", "*.tiff", "*.txt"
+QStringList CTK_CORE_EXPORT nameFiltersToExtensions(const QStringList& nameFilters);
+
+///
+/// Convert a wildcar extension filter ("*.jpg") into a regular expression string
+/// "*.jpg" -> ".*\\.jpg?$"
+QString CTK_CORE_EXPORT extensionToRegExp(const QString& extension);
+
+///
+/// Convert a list of wildcar extension filters ("*.jpg")
+/// into a regular expression string
+/// "*.jpg", "*.txt" -> "(.*\\.jpg?$|.*\\.txt?$)"
+QRegExp CTK_CORE_EXPORT nameFiltersToRegExp(const QStringList& nameFilters);
 
 }
 

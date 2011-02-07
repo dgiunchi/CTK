@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,8 +15,23 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
+
+
+/* Notes:
+ *
+ * This program is a test driver for the DcmScu class and puts the results
+ * in an sqlite database.  This command will query a public dicom server:
+ *
+ * ../CTK-build/bin/ctkDICOMQuery test.db FINDSCU MI2B2 mi2b2.slicer.org 11112
+ *
+ * you can get a similar
+ * functionality with this command line:
+ *
+ * findscu --verbose -aec MI2B2 -P -k "0010,0010=F*" mi2b2.slicer.org 11112 patqry.dcm | grep Patients
+ *
+ */
 
 // Qt includes
 #include <QApplication>

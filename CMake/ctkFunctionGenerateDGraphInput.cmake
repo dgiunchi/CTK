@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,21 +15,28 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
 # Generate a DGrapgh input file expected by DGraph executable.
 #
-FUNCTION(ctkFunctionGenerateDGraphInput dir target_directories with_option)
+FUNCTION(ctkFunctionGenerateDGraphInput dir target_directories)
   IF(NOT EXISTS ${dir})
     MESSAGE(FATAL_ERROR "Directory ${dir} doesn't exist!")
   ENDIF()
+
+  CtkMacroParseArguments(MY
+    ""
+    "WITH_OPTION;WITH_EXTERNALS"
+    ${ARGN}
+    )
 
   SET(dgraph_list )
 
   SET(edges)
   SET(vertices)
+  SET(isolated_vertex_candidates)
   
   FOREACH(target_info ${target_directories})
 
@@ -48,7 +55,7 @@ FUNCTION(ctkFunctionGenerateDGraphInput dir target_directories with_option)
     ENDIF()
 
     SET(include_dep 1)
-    IF(${with_option})
+    IF(MY_WITH_OPTION)
       SET(include_dep ${${option_name}})
     ENDIF()
     IF(${include_dep})
@@ -72,11 +79,18 @@ FUNCTION(ctkFunctionGenerateDGraphInput dir target_directories with_option)
       # Make sure the variable is cleared
       SET(ctk_dependencies)
 
-      # filter dependencies starting with CTK
-      ctkMacroGetAllCTKTargetLibraries("${dependencies}" ctk_dependencies)
+      IF(MY_WITH_EXTERNALS)
+        SET(ctk_dependencies ${dependencies})
+      ELSE()
+        # filter dependencies starting with CTK org org_commontk_
+        ctkMacroGetAllCTKTargetLibraries("${dependencies}" ctk_dependencies)
+      ENDIF()
 
       IF(ctk_dependencies)
         LIST(APPEND vertices ${target_project_name})
+      ELSE()
+        # isolated vertex candidate
+        LIST(APPEND isolated_vertex_candidates ${target_project_name})
       ENDIF()
 
       # Generate XML related to the dependencies
@@ -90,6 +104,24 @@ FUNCTION(ctkFunctionGenerateDGraphInput dir target_directories with_option)
     
   ENDFOREACH()
 
+  FOREACH(isolated_vertex_candidate ${isolated_vertex_candidates})
+    SET(_found 0)
+    FOREACH(dgraph_entry ${dgraph_list})
+      STRING(REPLACE "\n" "" dgraph_entry "${dgraph_entry}")
+      STRING(REPLACE " " ";" dgraph_entry "${dgraph_entry}")
+      LIST(FIND dgraph_entry ${isolated_vertex_candidate} _index)
+      IF(_index GREATER -1)
+        SET(_found 1)
+        BREAK()
+      ENDIF()
+    ENDFOREACH()
+
+    IF(NOT _found)
+      LIST(APPEND vertices ${isolated_vertex_candidate})
+      SET(dgraph_list "${isolated_vertex_candidate}\n" ${dgraph_list})
+    ENDIF()
+  ENDFOREACH()
+
   IF(vertices)
     LIST(REMOVE_DUPLICATES vertices)
   ENDIF()
@@ -98,8 +130,10 @@ FUNCTION(ctkFunctionGenerateDGraphInput dir target_directories with_option)
 
   SET(dgraph_list "${numberOfVertices} ${numberOfEdges}\n" ${dgraph_list})
 
-  IF(${with_option})
+  IF(MY_WITH_OPTION)
     SET(filename "${dir}/DGraphInput.txt")
+  ELSEIF(MY_WITH_EXTERNALS)
+    SET(filename "${dir}/DGraphInput-alldep-withext.txt")
   ELSE()
     SET(filename "${dir}/DGraphInput-alldep.txt")
   ENDIF()

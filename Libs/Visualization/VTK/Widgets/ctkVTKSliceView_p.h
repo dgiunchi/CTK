@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkVTKSliceView_p_h
@@ -40,6 +40,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkWeakPointer.h>
 #include <vtkImageMapper.h>
+#include <vtkCornerAnnotation.h>
 
 class vtkRenderWindowInteractor;
 
@@ -60,6 +61,8 @@ public:
   vtkSmartPointer<vtkLightBoxRendererManager>   LightBoxRendererManager;
   bool                                          RenderPending;
   bool                                          RenderEnabled;
+  vtkSmartPointer<vtkRenderer>                  OverlayRenderer;
+  vtkSmartPointer<vtkCornerAnnotation>          OverlayCornerAnnotation;
 
 };
 

@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -75,12 +75,19 @@ ctkDICOMServerNodeWidget::ctkDICOMServerNodeWidget(QWidget* _parent):Superclass(
   QMap<QString, QVariant> node;
   if ( settings.value("ServerNodeCount").toInt() == 0 )
   {
-    node["Name"] = "localhost";
+    node["Name"] = "Local Database";
+    node["CheckState"] = Qt::Checked;
+    node["AETitle"] = "N/A";
+    node["Address"] = "N/A";
+    node["Port"] = "N/A";
+    settings.setValue("ServerNodeCount", 2);
+    settings.setValue("ServerNodes/0", QVariant(node));
+    node["Name"] = "ExampleHost";
+    node["CheckState"] = Qt::Unchecked;
     node["AETitle"] = "CTK_AE";
     node["Address"] = "localhost";
     node["Port"] = "11112";
-    settings.setValue("ServerNodeCount", 3);
-    settings.setValue("ServerNodes/0", QVariant(node));
+    settings.setValue("ServerNodes/1", QVariant(node));
     settings.sync();
   }
 
@@ -91,6 +98,7 @@ ctkDICOMServerNodeWidget::ctkDICOMServerNodeWidget(QWidget* _parent):Superclass(
     node = settings.value(QString("ServerNodes/%1").arg(row)).toMap();
     QTableWidgetItem *newItem;
     newItem = new QTableWidgetItem( node["Name"].toString() );
+    newItem->setCheckState( Qt::CheckState(node["CheckState"].toInt()) );
     d->nodeTable->setItem(row, 0, newItem);
     newItem = new QTableWidgetItem( node["AETitle"].toString() );
     d->nodeTable->setItem(row, 1, newItem);
@@ -182,6 +190,7 @@ void ctkDICOMServerNodeWidget::saveSettings()
       {
         node[keys.at(k)] = d->nodeTable->item(row,k)->text();
       }
+      node["CheckState"] = d->nodeTable->item(row,0)->checkState();
       settings.setValue(QString("ServerNodes/%1").arg(row), QVariant(node));
     }
   }

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
   =========================================================================*/
 
 #ifndef __ctkWorkflowStep_p_h
@@ -23,6 +23,7 @@
 
 // Qt includes
 #include <QObject>
+
 class QString;
 class QState;
 
@@ -31,10 +32,12 @@ class QState;
 #include "ctkWorkflow.h"
 #include "ctkWorkflowStep.h"
 #include "ctkWorkflowTransitions.h"
+#include "ctkCoreExport.h"
+
 class ctkWorkflow;
 
 //-----------------------------------------------------------------------------
-class ctkWorkflowStepPrivate: public QObject
+class CTK_CORE_EXPORT ctkWorkflowStepPrivate: public QObject
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(ctkWorkflowStep);

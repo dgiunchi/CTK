@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -59,6 +59,25 @@ class ctkCollapsibleGroupBoxStyle:public QProxyStyle
 ctkCollapsibleGroupBox::ctkCollapsibleGroupBox(QWidget* _parent)
   :QGroupBox(_parent)
 {
+  this->init();
+}
+
+//-----------------------------------------------------------------------------
+ctkCollapsibleGroupBox::ctkCollapsibleGroupBox(const QString& title, QWidget* _parent)
+  :QGroupBox(title, _parent)
+{
+  this->init();
+}
+
+//-----------------------------------------------------------------------------
+ctkCollapsibleGroupBox::~ctkCollapsibleGroupBox()
+{
+
+}
+
+//-----------------------------------------------------------------------------
+void ctkCollapsibleGroupBox::init()
+{
   this->setCheckable(true);
   connect(this, SIGNAL(toggled(bool)), this, SLOT(expand(bool)));
 
@@ -72,12 +91,6 @@ ctkCollapsibleGroupBox::ctkCollapsibleGroupBox(QWidget* _parent)
     "ctkCollapsibleGroupBox::indicator:unchecked{"
     "image: url(:/Icons/expand-down.png);}");
 #endif
-}
-
-//-----------------------------------------------------------------------------
-ctkCollapsibleGroupBox::~ctkCollapsibleGroupBox()
-{
-
 }
 
 //-----------------------------------------------------------------------------

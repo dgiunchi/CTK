@@ -37,9 +37,6 @@ public:
     /// Emit event corresponding to the given id (present into the event_dictionary) locally to the application.
     /*virtual*/ void notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
 
-    /// Send remotely the event corresponding to the given id.
-    /*virtual*/ void notifyEventRemote(const mafEvent &event_dictionary, mafList<mafVariant> *argList = NULL) const;
-
     /// Set the active server side network connector type.
     void setNetworkConnectorServer(mafNetworkConnector *connector);
 
@@ -61,17 +58,6 @@ private:
     mafNetworkConnector *m_NetworkConnectorClient; ///< Class used to manage the communication with the remote event bus.
 };
 
-/////////////////////////////////////////////////////////////
-// Inline methods
-/////////////////////////////////////////////////////////////
-
-inline mafNetworkConnector *mafEventDispatcherRemote::networkConnectorServer() {
-    return m_NetworkConnectorServer;
-}
-
-inline mafNetworkConnector *mafEventDispatcherRemote::networkConnectorClient() {
-    return m_NetworkConnectorClient;
-}
 
 } //namespace mafEventBus
 

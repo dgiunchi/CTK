@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,10 +22,14 @@
 #ifndef CTKPLUGIN_H
 #define CTKPLUGIN_H
 
-#include "ctkPluginContext.h"
+#include <QHash>
+#include <QWeakPointer>
+#include <QMetaType>
 
 #include "ctkVersion.h"
+#include "service/log/ctkLogStream.h"
 
+class ctkPluginContext;
 class ctkPluginArchive;
 class ctkPluginFrameworkContext;
 class ctkPluginPrivate;
@@ -74,6 +78,7 @@ class ctkPluginPrivate;
 class CTK_PLUGINFW_EXPORT ctkPlugin {
 
   Q_DECLARE_PRIVATE(ctkPlugin)
+  Q_DISABLE_COPY(ctkPlugin)
 
 public:
 
@@ -87,7 +92,7 @@ public:
      * <code>%ctkPlugin</code> object may still be available and used for
      * introspection.
      */
-    UNINSTALLED,
+    UNINSTALLED = 0x00000001,
 
     /**
      * The plugin is installed but not yet resolved.
@@ -101,7 +106,7 @@ public:
      * code dependencies and move the plugin to the <code>RESOLVED</code>
      * state.
      */
-    INSTALLED,
+    INSTALLED = 0x00000002,
 
     /**
      * The plugin is resolved and is able to be started.
@@ -119,7 +124,7 @@ public:
      * <code>RESOLVED</code> state before it can be started. The Framework may
      * attempt to resolve a plugin at any time.
      */
-    RESOLVED,
+    RESOLVED = 0x00000004,
 
     /**
      * The plugin is in the process of starting.
@@ -137,7 +142,7 @@ public:
      * plugin may remain in this state for some time until the activation is
      * triggered.
      */
-    STARTING,
+    STARTING = 0x00000008,
 
     /**
      * The plugin is in the process of stopping.
@@ -149,7 +154,7 @@ public:
      * <code>ctkPluginActivator::stop</code> method completes the plugin is
      * stopped and must move to the <code>RESOLVED</code> state.
      */
-    STOPPING,
+    STOPPING = 0x00000010,
 
     /**
      * The plugin is now running.
@@ -158,7 +163,7 @@ public:
      * A plugin is in the <code>ACTIVE</code> state when it has been
      * successfully started and activated.
      */
-    ACTIVE
+    ACTIVE = 0x00000020
   };
 
   /**
@@ -182,7 +187,7 @@ public:
      *
      * @see #start(const StartOptions&)
      */
-    START_TRANSIENT,
+    START_TRANSIENT = 0x00000001,
 
     /**
      * The plugin start operation must activate the plugin according to the
@@ -197,7 +202,7 @@ public:
      * @see ctkPluginConstants#PLUGIN_ACTIVATIONPOLICY
      * @see #start(const StartOptions&)
      */
-    START_ACTIVATION_POLICY
+    START_ACTIVATION_POLICY = 0x00000002
 
   };
 
@@ -221,7 +226,7 @@ public:
      *
      * @see #stop(const StopOptions&)
      */
-    STOP_TRANSIENT
+    STOP_TRANSIENT = 0x00000001
   };
 
   /**
@@ -425,6 +430,67 @@ public:
   virtual void stop(const StopOptions& options = 0);
 
   /**
+   * Uninstalls this plugin.
+   *
+   * <p>
+   * This method causes the Plugin Framework to notify other plugins that this
+   * plugin is being uninstalled, and then puts this plugin into the
+   * <code>UNINSTALLED</code> state. The Framework must remove any resources
+   * related to this plugin that it is able to remove.
+   *
+   * <p>
+   * If this plugin is required by other plugins which are already resolved,
+   * the Framework must keep this plugin loaded until the
+   * Framework is relaunched.
+   *
+   * <p>
+   * The following steps are required to uninstall a plugin:
+   * <ol>
+   * <li>If this plugin's state is <code>UNINSTALLED</code> then an
+   * <code>std::logic_error</code> is thrown.
+   *
+   * <li>If this plugin's state is <code>ACTIVE</code>, <code>STARTING</code>
+   * or <code>STOPPING</code>, this plugin is stopped as described in the
+   * <code>ctkPlugin::stop</code> method. If <code>ctkPlugin::stop</code> throws an
+   * exception, a Framework event of type ctkFrameworkEvent::ERROR is
+   * fired containing the exception.
+   *
+   * <li>This plugin's state is set to <code>UNINSTALLED</code>.
+   *
+   * <li>A plugin event of type ctkPluginEvent::UNINSTALLED is fired.
+   *
+   * <li>This plugin and any persistent storage area provided for this plugin
+   * by the Framework are removed.
+   * </ol>
+   *
+   * <b>Preconditions </b>
+   * <ul>
+   * <li><code>getState()</code> not in &#x007B; <code>UNINSTALLED</code>
+   * &#x007D;.
+   * </ul>
+   * <b>Postconditions, no exceptions thrown </b>
+   * <ul>
+   * <li><code>getState()</code> in &#x007B; <code>UNINSTALLED</code>
+   * &#x007D;.
+   * <li>This plugin has been uninstalled.
+   * </ul>
+   * <b>Postconditions, when an exception is thrown </b>
+   * <ul>
+   * <li><code>getState()</code> not in &#x007B; <code>UNINSTALLED</code>
+   * &#x007D;.
+   * <li>This plugin has not been uninstalled.
+   * </ul>
+   *
+   * @throws ctkPluginException If the uninstall failed. This can occur if
+   *         another thread is attempting to change this plugin's state and
+   *         does not complete in a timely manner.
+   * @throws std::logic_error If this plugin has been uninstalled or this
+   *         plugin tries to change its own state.
+   * @see #stop()
+   */
+  void uninstall();
+
+  /**
    * Returns this plugin's {@link ctkPluginContext}. The returned
    * <code>ctkPluginContext</code> can be used by the caller to act on behalf
    * of this plugin.
@@ -562,7 +628,7 @@ public:
    * <p>
    *
    * @param path The path name of the resource.
-   * @return A QString to the resource, or a null QString if no resource could be
+   * @return A QByteArray to the resource, or a null QByteArray if no resource could be
    *         found.
    * @throws std::logic_error If this plugin has been
    *         uninstalled.
@@ -589,13 +655,28 @@ protected:
   friend class ctkPlugins;
   friend class ctkServiceReferencePrivate;
 
-  ctkPluginPrivate * const d_ptr;
+  // Do NOT change this to QScopedPointer<ctkPluginPrivate>!
+  // We would need to include ctkPlugin.h (and ctkPluginPrivate_p.h)
+  // at a lot of places...
+  ctkPluginPrivate* d_ptr;
 
-  ctkPlugin(ctkPluginFrameworkContext* fw, ctkPluginArchive* ba);
-  ctkPlugin(ctkPluginPrivate& dd);
+  ctkPlugin();
+  void init(ctkPluginPrivate* dd);
+  void init(const QWeakPointer<ctkPlugin>& self, ctkPluginFrameworkContext* fw, ctkPluginArchive* ba);
 };
 
+Q_DECLARE_METATYPE(ctkPlugin*)
+Q_DECLARE_METATYPE(QSharedPointer<ctkPlugin>)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ctkPlugin::States)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ctkPlugin::StartOptions)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ctkPlugin::StopOptions)
+
+CTK_PLUGINFW_EXPORT QDebug operator<<(QDebug debug, ctkPlugin::State state);
+CTK_PLUGINFW_EXPORT QDebug operator<<(QDebug debug, const ctkPlugin& plugin);
+CTK_PLUGINFW_EXPORT QDebug operator<<(QDebug debug, ctkPlugin const * plugin);
+
+CTK_PLUGINFW_EXPORT ctkLogStream& operator<<(ctkLogStream& stream, ctkPlugin const * plugin);
+CTK_PLUGINFW_EXPORT ctkLogStream& operator<<(ctkLogStream& stream, const QSharedPointer<ctkPlugin>& plugin);
 
 #endif // CTKPLUGIN_H

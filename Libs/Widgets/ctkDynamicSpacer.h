@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkDynamicSpacer_h
@@ -26,7 +26,7 @@
 
 // CTK includes
 #include <ctkPimpl.h>
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class ctkDynamicSpacerPrivate;
 
@@ -38,7 +38,7 @@ class CTK_WIDGETS_EXPORT ctkDynamicSpacer : public QWidget
   Q_OBJECT
   Q_PROPERTY(QSizePolicy activeSizePolicy READ activeSizePolicy WRITE setActiveSizePolicy);
   Q_PROPERTY(QSizePolicy inactiveSizePolicy READ inactiveSizePolicy WRITE setInactiveSizePolicy);
-  Q_PROPERTY(bool activate READ isActivated WRITE activate);
+  Q_PROPERTY(bool active READ isActive WRITE setActive);
 public:
   /// Constructor, builds a ctkDynamicSpacer, inactive by default
   ctkDynamicSpacer(QWidget *parent = 0);
@@ -57,12 +57,14 @@ public:
   /// Return the what size policy is current:
   /// false is inactive Size Policy that is current
   /// true is active SizePolicy that is current
-  bool isActivated()const;
+  bool isActive()const;
+  inline bool isInactive()const;
 
 public slots:
   /// Change the size policy. If enable is true, activeSizePolicy is used,
   /// inactiveSizePolicy otherwise
-  void activate(bool enable);
+  void setActive(bool enable);
+  inline void setInactive(bool disable);
 
 protected:
   QScopedPointer<ctkDynamicSpacerPrivate> d_ptr;
@@ -82,5 +84,14 @@ void ctkDynamicSpacer::setInactiveSizePolicy(QSizePolicy::Policy horizontal, QSi
   this->setInactiveSizePolicy(QSizePolicy(horizontal, vertical));
 }
 
+bool ctkDynamicSpacer::isInactive()const
+{
+  return !this->isActive();
+}
+
+void ctkDynamicSpacer::setInactive(bool disable)
+{
+  this->setActive(!disable);
+}
 
 #endif

@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -112,7 +112,6 @@ set(CTEST_UPDATE_COMMAND "${CTEST_GIT_COMMAND}")
 MACRO(run_ctest)
   ctest_start(${model})
   ctest_update(SOURCE "${CTEST_SOURCE_DIRECTORY}" RETURN_VALUE res)
-  #ctest_submit(PARTS Update Notes)
 
   # force a build if this is the first run and the build dir is empty
   if(NOT EXISTS "${CTEST_BINARY_DIRECTORY}/CMakeCache.txt")
@@ -132,6 +131,9 @@ ${ADDITIONNAL_CMAKECACHE_OPTION}
   endif()
   
   if (res GREATER 0 OR force_build)
+  
+    ctest_submit(PARTS Update)
+      
     message("Configure SuperBuild")
     
     set_property(GLOBAL PROPERTY SubProject SuperBuild)
@@ -179,21 +181,23 @@ ${ADDITIONNAL_CMAKECACHE_OPTION}
      # Build target
      set(CTEST_BUILD_TARGET "${subproject}")
      ctest_build(BUILD "${ctk_build_dir}" APPEND)
+     ctest_submit(PARTS Build)
      
      # Loop over kit suffixes and try to build the corresponding target
      foreach(kit_suffixe ${kit_suffixes})
        message("----------- [ Build ${subproject}${kit_suffixe} ] -----------")
        set(CTEST_BUILD_TARGET "${subproject}${kit_suffixe}")
        ctest_build(BUILD "${ctk_build_dir}" APPEND)
+       ctest_submit(PARTS Build)
      endforeach()
      
-     ctest_submit(PARTS Build)
     endforeach()
     
     if (WITH_DOCUMENTATION)
       # Build Documentation target
       set(CTEST_BUILD_TARGET "doc")
       ctest_build(BUILD "${ctk_build_dir}" APPEND)
+      ctest_submit(PARTS Build)
     endif()
     
     # HACK Unfortunately ctest_coverage ignores the build argument, try to force it...

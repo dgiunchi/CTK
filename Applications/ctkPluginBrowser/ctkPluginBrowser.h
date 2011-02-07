@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,10 @@
 
 #include "ctkPluginBrowserEditors.h"
 
+#include <ctkPluginEvent.h>
 #include <ctkPluginFrameworkEvent.h>
+#include <ctkPlugin.h>
+#include <ctkServiceEvent.h>
 
 
 class ctkPluginFramework;
@@ -49,13 +52,30 @@ private slots:
   void dbResourceDoubleClicked(const QModelIndex& index);
 
   void frameworkEvent(const ctkPluginFrameworkEvent& event);
+  void pluginEvent(const ctkPluginEvent& event);
+  void serviceEvent(const ctkServiceEvent& event);
+
+  void startPlugin();
+  void startPluginNow();
+  void stopPlugin();
 
 private:
+
+  void closeEvent(QCloseEvent* closeEvent);
+
+  void updatePluginToolbar(QSharedPointer<ctkPlugin> plugin);
+  void startPlugin(ctkPlugin::StartOptions options);
+
+  QMap<ctkPluginEvent::Type, QString> pluginEventTypeToString;
 
   ctkPluginFramework* framework;
 
   Ui::ctkPluginBrowserWindow ui;
   ctkPluginBrowserEditors* editors;
+
+  QAction* startPluginNowAction;
+  QAction* startPluginAction;
+  QAction* stopPluginAction;
 };
 
 #endif // CTKPLUGINBROWSER_H

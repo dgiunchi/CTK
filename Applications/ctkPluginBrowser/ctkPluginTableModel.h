@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,11 +27,15 @@
 #include <QList>
 
 #include <ctkPlugin.h>
+#include <ctkPluginEvent.h>
 
 class ctkPluginContext;
 
 class ctkPluginTableModel : public QAbstractTableModel
 {
+
+  Q_OBJECT
+
 public:
 
   ctkPluginTableModel(ctkPluginContext* pc, QObject* parent = 0);
@@ -43,11 +47,15 @@ public:
   int columnCount(const QModelIndex& parent = QModelIndex()) const;
   int rowCount(const QModelIndex& parent = QModelIndex()) const;
 
+protected slots:
+
+  void pluginChanged(const ctkPluginEvent& event);
+
 private:
 
   QString getStringForState(const ctkPlugin::State state) const;
 
-  QList<ctkPlugin*> plugins;
+  QList<QSharedPointer<ctkPlugin> > plugins;
 };
 
 #endif // CTKPLUGINTABLEMODEL_H

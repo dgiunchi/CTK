@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,114 +30,142 @@
 #include "ctkPluginStorage_p.h"
 #include "ctkPlugins_p.h"
 #include "ctkPluginFrameworkListeners_p.h"
-#include "ctkServices_p.h"
 
 
-  class ctkPlugin;
+class ctkPlugin;
+class ctkPluginStorage;
+class ctkServices;
 
-  class ctkPluginFrameworkContext {
+class ctkPluginFrameworkContext
+{
 
-  public:
+public:
 
-      /**
-       * All plugins in this framework.
-       */
-      ctkPlugins* plugins;
+  /**
+   * All plugins in this framework.
+   */
+  ctkPlugins* plugins;
 
-      /**
-       * All listeners in this framework.
-       */
-      ctkPluginFrameworkListeners listeners;
+  /**
+   * All listeners in this framework.
+   */
+  ctkPluginFrameworkListeners listeners;
 
-      /**
-       * All registered services in this framework.
-       */
-      ctkServices services;
+  /**
+   * All registered services in this framework.
+   */
+  ctkServices* services;
 
-      /**
-       * System plugin
-       */
-      ctkPluginFramework systemPlugin;
+  /**
+   * System plugin
+   */
+  QSharedPointer<ctkPluginFramework> systemPlugin;
 
-      /**
-       * ctkPlugin storage
-       */
-      ctkPluginStorage storage;
+  /**
+   * ctkPlugin storage
+   */
+  ctkPluginStorage* storage;
 
-      /**
-       * Framework id.
-       */
-      int id;
+  /**
+   * Private Plugin data storage
+   */
+  QDir dataStorage;
 
-      /**
-       * global lock.
-       */
-      static QMutex globalFwLock;
+  /**
+   * First framework init
+   */
+  bool firstInit;
 
-      /**
-       * Id to use for next instance of plugin framework.
-       */
-      static int globalId;
+  /**
+   * Framework id.
+   */
+  int id;
 
-      ctkProperties props;
+  /**
+   * global lock.
+   */
+  static QMutex globalFwLock;
 
-      /**
-       * Contruct a framework context
-       *
-       */
-      ctkPluginFrameworkContext(const ctkProperties& initProps);
+  /**
+   * Id to use for next instance of plugin framework.
+   */
+  static int globalId;
 
+  ctkProperties props;
 
-      /**
-       * Initialize the framework
-       *
-       */
-      void init();
+  /**
+   * Contruct a framework context
+   *
+   */
+  ctkPluginFrameworkContext(const ctkProperties& initProps);
 
-
-      /**
-       * Undo as much as possible of what init() does.
-       *
-       */
-      void uninit();
-
-
-      /**
-       *
-       */
-      int getId() const;
+  ~ctkPluginFrameworkContext();
 
 
-      /**
-       * Check that the plugin belongs to this framework instance.
-       *
-       */
-      void checkOurPlugin(ctkPlugin* plugin) const;
+  /**
+   * Initialize the framework
+   *
+   */
+  void init();
 
 
-      /**
-       * Check that the plugin specified can resolve all its
-       * Require-ctkPlugin constraints.
-       *
-       * @param plugin ctkPlugin to check, must be in INSTALLED state
-       *
-       * @throws ctkPluginException
-       */
-      void resolvePlugin(ctkPluginPrivate* plugin);
+  /**
+   * Undo as much as possible of what init() does.
+   *
+   */
+  void uninit();
 
 
-      /**
-       * Log message for debugging framework
-       *
-       */
-      QDebug log() const;
+  /**
+   *
+   */
+  int getId() const;
 
-  private:
+  /**
+   * Get private plugin data storage file handle
+   */
+  QFileInfo getDataStorage(long id);
 
-      QSet<ctkPluginPrivate*> tempResolved;
+  /**
+   * Check that the plugin belongs to this framework instance.
+   *
+   */
+  void checkOurPlugin(ctkPlugin* plugin) const;
 
-      void checkRequirePlugin(ctkPluginPrivate* plugin);
-  };
+
+  /**
+   * Check that the plugin specified can resolve all its
+   * Require-ctkPlugin constraints.
+   *
+   * @param plugin ctkPlugin to check, must be in INSTALLED state
+   *
+   * @throws ctkPluginException
+   */
+  void resolvePlugin(ctkPluginPrivate* plugin);
+
+
+  /**
+   * Log message for debugging framework
+   *
+   */
+  QDebug log() const;
+
+private:
+
+  QSet<ctkPluginPrivate*> tempResolved;
+
+  bool initialized;
+
+  /**
+   * Delete framework directory if it exists.
+   *
+   */
+  void deleteFWDir();
+
+  void checkRequirePlugin(ctkPluginPrivate* plugin);
+
+  void initProperties();
+};
 
 
 #endif // CTKPLUGINFRAMEWORKCONTEXT_P_H

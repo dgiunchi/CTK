@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "ui_ctkVTKTextPropertyWidget.h"
 
 // VTK includes
+#include <vtkSmartPointer.h>
 #include <vtkTextProperty.h>
 
 //-----------------------------------------------------------------------------
@@ -37,14 +38,13 @@ protected:
 public:
   void init();
   ctkVTKTextPropertyWidgetPrivate(ctkVTKTextPropertyWidget& object);
-  vtkTextProperty* TextProperty;
+  vtkSmartPointer<vtkTextProperty> TextProperty;
 };
 
 //-----------------------------------------------------------------------------
 ctkVTKTextPropertyWidgetPrivate::ctkVTKTextPropertyWidgetPrivate(ctkVTKTextPropertyWidget& object)
   :q_ptr(&object)
 {
-  this->TextProperty = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -57,7 +57,7 @@ void ctkVTKTextPropertyWidgetPrivate::init()
 {
   Q_Q(ctkVTKTextPropertyWidget);
   this->setupUi(q);
-  q->setEnabled(this->TextProperty != 0);
+  q->updateFromTextProperty();
   QObject::connect(this->TextLineEdit, SIGNAL(textChanged(const QString&)),
                    q, SIGNAL(textChanged(const QString&)));
   QObject::connect(this->ColorPickerButton, SIGNAL(colorChanged(QColor)),
@@ -107,16 +107,22 @@ void ctkVTKTextPropertyWidget::setTextProperty(vtkTextProperty* textProperty)
 vtkTextProperty* ctkVTKTextPropertyWidget::textProperty()const
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  return d->TextProperty;
+  return d->TextProperty.GetPointer();
 }
 
 //-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::updateFromTextProperty()
 {
   Q_D(ctkVTKTextPropertyWidget);
-  this->setEnabled(d->TextProperty != 0);
-  if (d->TextProperty == 0)
+  this->setEnabled(d->TextProperty.GetPointer() != 0);
+  if (d->TextProperty.GetPointer() == 0)
     {
+    d->ColorPickerButton->setColor(QColor());
+    d->OpacitySlider->setValue(1.);
+    d->FontComboBox->setCurrentIndex(-1);
+    d->BoldCheckBox->setChecked(false);
+    d->ItalicCheckBox->setChecked(false);
+    d->ShadowCheckBox->setChecked(false);
     return;
     }
 
@@ -177,10 +183,17 @@ QString ctkVTKTextPropertyWidget::textLabel()const
 }
 
 //-----------------------------------------------------------------------------
+QColor ctkVTKTextPropertyWidget::color()const
+{
+  Q_D(const ctkVTKTextPropertyWidget);
+  return d->ColorPickerButton->color();
+}
+
+//-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::setColor(const QColor& color)
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  if (d->TextProperty)
+  if (d->TextProperty.GetPointer() == 0)
     {
     return;
     }
@@ -188,10 +201,17 @@ void ctkVTKTextPropertyWidget::setColor(const QColor& color)
 }
 
 //-----------------------------------------------------------------------------
+double ctkVTKTextPropertyWidget::opacity()const
+{
+  Q_D(const ctkVTKTextPropertyWidget);
+  return d->OpacitySlider->value();
+}
+
+//-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::setOpacity(double opacity)
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  if (d->TextProperty)
+  if (d->TextProperty.GetPointer() == 0)
     {
     return;
     }
@@ -199,10 +219,17 @@ void ctkVTKTextPropertyWidget::setOpacity(double opacity)
 }
 
 //-----------------------------------------------------------------------------
+QString ctkVTKTextPropertyWidget::font()const
+{
+  Q_D(const ctkVTKTextPropertyWidget);
+  return d->FontComboBox->currentText();
+}
+
+//-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::setFont(const QString& font)
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  if (d->TextProperty)
+  if (d->TextProperty.GetPointer() == 0)
     {
     return;
     }
@@ -210,10 +237,17 @@ void ctkVTKTextPropertyWidget::setFont(const QString& font)
 }
 
 //-----------------------------------------------------------------------------
+bool ctkVTKTextPropertyWidget::isBold()const
+{
+  Q_D(const ctkVTKTextPropertyWidget);
+  return d->BoldCheckBox->isChecked();
+}
+
+//-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::setBold(bool enable)
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  if (d->TextProperty)
+  if (d->TextProperty.GetPointer() == 0)
     {
     return;
     }
@@ -221,10 +255,17 @@ void ctkVTKTextPropertyWidget::setBold(bool enable)
 }
 
 //-----------------------------------------------------------------------------
+bool ctkVTKTextPropertyWidget::isItalic()const
+{
+  Q_D(const ctkVTKTextPropertyWidget);
+  return d->ItalicCheckBox->isChecked();
+}
+
+//-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::setItalic(bool enable)
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  if (d->TextProperty)
+  if (d->TextProperty.GetPointer() == 0)
     {
     return;
     }
@@ -232,10 +273,17 @@ void ctkVTKTextPropertyWidget::setItalic(bool enable)
 }
 
 //-----------------------------------------------------------------------------
+bool ctkVTKTextPropertyWidget::hasShadow()const
+{
+  Q_D(const ctkVTKTextPropertyWidget);
+  return d->ShadowCheckBox->isChecked();
+}
+
+//-----------------------------------------------------------------------------
 void ctkVTKTextPropertyWidget::setShadow(bool enable)
 {
   Q_D(const ctkVTKTextPropertyWidget);
-  if (d->TextProperty)
+  if (d->TextProperty.GetPointer() == 0)
     {
     return;
     }

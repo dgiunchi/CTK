@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  
+
+  Copyright (c)  
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -35,7 +35,7 @@
 void print_usage()
 {
   std::cerr << "Usage:\n";
-  std::cerr << "  ctkDICOMRetrieve SeriesUID OutputDirectory callingAETitle callingPort calledAETitle host calledPort\n";
+  std::cerr << "  ctkDICOMRetrieve StudyUID OutputDirectory callingAETitle callingPort calledAETitle host calledPort moveDestinationAETitle\n";
   return;
 }
 
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
   ctkLogger logger ( "org.commontk.dicom.DICOMRetieveApp" );
   logger.setDebug();
 
-  if (argc < 8)
+  if (argc < 9)
   {
     print_usage();
     return EXIT_FAILURE;
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
   QCoreApplication app(argc, argv);
   QTextStream out(stdout);
 
-  QString SeriesUID ( argv[1] );
+  QString StudyUID ( argv[1] );
   QDir OutputDirectory ( argv[2] );
   QString CallingAETitle ( argv[3] ); 
   bool ok;
@@ -79,6 +79,7 @@ int main(int argc, char** argv)
     print_usage();
     return EXIT_FAILURE;
     }
+  QString MoveDestinationAETitle ( argv[8] ); 
 
   ctkDICOMRetrieve retrieve;
   retrieve.setCallingAETitle ( CallingAETitle );
@@ -86,8 +87,9 @@ int main(int argc, char** argv)
   retrieve.setCalledAETitle ( CalledAETitle );
   retrieve.setCalledPort ( CalledPort );
   retrieve.setHost ( Host );
+  retrieve.setMoveDestinationAETitle ( MoveDestinationAETitle );
 
-  logger.info ( "SeriesUID: " + SeriesUID + "\n" 
+  logger.info ( "StudyUID: " + StudyUID + "\n" 
                 + "OutputDirectory: " + OutputDirectory.absolutePath() + "\n"
                 + "CallingAETitle: " + CallingAETitle + "\n"
                 + "CallingPort: " + QString::number ( CallingPort ) + "\n"
@@ -99,7 +101,7 @@ int main(int argc, char** argv)
   logger.info ( "Starting to retrieve" );
   try
     {
-    retrieve.retrieveSeries ( SeriesUID, OutputDirectory );
+    retrieve.retrieveStudy ( StudyUID, OutputDirectory );
     }
   catch (std::exception e)
     {

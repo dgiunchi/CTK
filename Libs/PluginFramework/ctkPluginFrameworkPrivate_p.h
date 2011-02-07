@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,23 +28,25 @@
 #include <QMutex>
 
 
-  class ctkPluginFrameworkContext;
+class ctkPluginFrameworkContext;
 
-  class ctkPluginFrameworkPrivate : public ctkPluginPrivate
-  {
-  public:
+class ctkPluginFrameworkPrivate : public ctkPluginPrivate
+{
+public:
 
-    QMutex lock;
+  QMutex lock;
 
-    ctkPluginFrameworkPrivate(ctkPluginFramework& qq, ctkPluginFrameworkContext* fw);
+  ctkPluginFrameworkPrivate(QWeakPointer<ctkPlugin> qq, ctkPluginFrameworkContext* fw);
 
-    void init();
+  void init();
 
-    void initSystemPlugin();
+  void initSystemPlugin();
 
-    QHash<QString, QString> systemHeaders;
+  void uninitSystemPlugin();
 
-  };
+  QHash<QString, QString> systemHeaders;
+
+};
 
 
 #endif // CTKPLUGINFRAMEWORKPRIVATE_P_H

@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -42,9 +42,9 @@ QString help(const QString& progName)
 //----------------------------------------------------------------------------
 void displayError(const QString& progName, const QString& msg)
 {
-  std::cerr << QString("%1\n%2\n%3\n").arg(progName).
-                                       arg(msg).
-                                       arg(help(progName)).toStdString();
+  std::cerr << qPrintable(QString("%1\n%2\n%3\n").arg(progName).
+                                                 arg(msg).
+                                                 arg(help(progName)));
 }
 
 //----------------------------------------------------------------------------
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
   QHash<QString, int> vertexLabelToId;
   
   // Regular expression to extract two label
-  QRegExp twolabel_re("^(.+)\\s+(.+)");
+  QRegExp twolabel_re("^\\s*(\\S+)\\s*$|^\\s*(\\S+)\\s*(\\S+)\\s*$");
   
   // Read vertex connection
   int lineNumber = 2;
@@ -185,20 +185,33 @@ int main(int argc, char** argv)
     int pos = twolabel_re.indexIn(line.trimmed());
     if (pos != 0)
       {
-      displayError(argv[0], QString("Error in file '%1' - line:%2 - Expected format is: <label> <label>")
+      displayError(argv[0], QString("Error in file '%1' - line:%2 - Expected format is: <label> [<label>]")
         .arg(filepath).arg(lineNumber));
       return EXIT_FAILURE;
       }
     lineNumber++;
 
     QStringList list = twolabel_re.capturedTexts();
-    Q_ASSERT(list.size() == 3);
+    Q_ASSERT(list.size() == 4);
 
-    int from = getOrGenerateId(vertexIdToLabel, vertexLabelToId, list[1]);
-    int to = getOrGenerateId(vertexIdToLabel, vertexLabelToId, list[2]);
+    int from = -1;
+    int to = -1;
+    if (list[1].isEmpty())
+      {
+      from = getOrGenerateId(vertexIdToLabel, vertexLabelToId, list[2]);
+      to = getOrGenerateId(vertexIdToLabel, vertexLabelToId, list[3]);
+      }
 
-    // Insert edge
-    mygraph.insertEdge(from, to);
+    if (to > -1)
+      {
+      // Insert edge if we got two vertices
+      mygraph.insertEdge(from, to);
+      }
+    else
+      {
+      // Just generate an entry in the vertexIdToLabel map
+      getOrGenerateId(vertexIdToLabel, vertexLabelToId, list[1]);
+      }
 
     line = in.readLine();
     }
@@ -222,7 +235,7 @@ int main(int argc, char** argv)
     
     for(int i = 0; i < path.size(); ++i)
       {
-      std::cerr << vertexIdToLabel[path[i]].toStdString();
+      std::cerr << qPrintable(vertexIdToLabel[path[i]]);
       if (i != path.size() - 1)
         {
         std::cerr << " -> ";
@@ -235,7 +248,7 @@ int main(int argc, char** argv)
 
     for(int i = 0; i < path.size(); ++i)
       {
-      std::cerr << vertexIdToLabel[path[i]].toStdString();
+      std::cerr << qPrintable(vertexIdToLabel[path[i]]);
       if (i != path.size() - 1)
         {
         std::cerr << " -> ";
@@ -257,7 +270,7 @@ int main(int argc, char** argv)
       {
       for(int i=out.size() - 1; i >= 0; --i)
         {
-        std::cout << vertexIdToLabel[out[i]].toStdString();
+        std::cout << qPrintable(vertexIdToLabel[out[i]]);
         if (i != 0)
           {
           std::cout << " ";
@@ -296,7 +309,7 @@ int main(int argc, char** argv)
           for(int j=0; j < p->size(); j++)
             {
             int id = p->at(j);
-            std::cout << vertexIdToLabel[id].toStdString();
+            std::cout << qPrintable(vertexIdToLabel[id]);
             if (j != p->size() - 1)
               {
               std::cout << " ";
@@ -321,7 +334,7 @@ int main(int argc, char** argv)
       for(int i=0; i < out.size(); i++)
         {
         int id = out.at(i);
-        std::cout << vertexIdToLabel[id].toStdString();
+        std::cout << qPrintable(vertexIdToLabel[id]);
 
         if (i != out.size() - 1)
           {

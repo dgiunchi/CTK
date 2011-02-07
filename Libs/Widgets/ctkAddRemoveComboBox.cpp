@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -200,7 +200,7 @@ void ctkAddRemoveComboBox::setEmptyText(const QString& text)
 }
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkAddRemoveComboBox, QString, emptyText, EmptyText);
+CTK_GET_CPP(ctkAddRemoveComboBox, QString, emptyText, EmptyText);
 
 // --------------------------------------------------------------------------
 void ctkAddRemoveComboBox::onRowsInserted(const QModelIndex & _parent, int start, int end)
@@ -394,7 +394,7 @@ int ctkAddRemoveComboBox::count()const
 }
 
 // --------------------------------------------------------------------------
-CTK_GET_CXX(ctkAddRemoveComboBox, bool, empty, HasEmptyItem);
+CTK_GET_CPP(ctkAddRemoveComboBox, bool, empty, HasEmptyItem);
 
 // --------------------------------------------------------------------------
 void ctkAddRemoveComboBox::setCurrentIndex(int index)

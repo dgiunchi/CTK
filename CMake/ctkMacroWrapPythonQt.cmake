@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -62,6 +62,8 @@ FUNCTION(ctkMacroWrapPythonQt_log msg)
   ENDIF()
   FILE(APPEND "${CMAKE_CURRENT_BINARY_DIR}/ctkMacroWrapPythonQt_log.txt" "${msg}\n")
 ENDFUNCTION()
+
+INCLUDE(${CTK_CMAKE_DIR}/ctkMacroSetPaths.cmake)
 
 #
 # Convenient function allowing to invoke re.search(regex, string) using the given interpreter.
@@ -111,7 +113,7 @@ MACRO(ctkMacroWrapPythonQt WRAPPING_NAMESPACE TARGET SRCS_LIST_NAME SOURCES IS_W
   get_filename_component(PYTHON_DIR_PATH ${PYTHON_EXECUTABLE} PATH)
   set(PYTHON_LIBRARY_PATH ${PYTHON_DIR_PATH}/../lib)
   IF(WIN32)
-    set(PYTHON_LIBRARY_PATH ${PYTHON_DIR_PATH}/../bin)
+    set(PYTHON_LIBRARY_PATH ${PYTHON_DIR_PATH})
   ENDIF(WIN32)
   
   # Clear log file
@@ -190,6 +192,7 @@ MACRO(ctkMacroWrapPythonQt WRAPPING_NAMESPACE TARGET SRCS_LIST_NAME SOURCES IS_W
     
     IF(NOT skip_wrapping)
       # Skip wrapping if object has a virtual pure method 
+      # "x3b" is the unicode for semicolon
       SET(regex "virtual[\\w\\n\\s\\*\\(\\)]+\\=[\\s\\n]*(0|NULL)[\\s\\n]*\\x3b")
       ctkMacroWrapPythonQt_reSearchFile(${PYTHON_EXECUTABLE} ${PYTHON_LIBRARY_PATH}
                                         ${regex} ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} is_matching)
@@ -242,6 +245,16 @@ MACRO(ctkMacroWrapPythonQt WRAPPING_NAMESPACE TARGET SRCS_LIST_NAME SOURCES IS_W
   # Create intermediate output directory
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/${wrap_int_dir})
   
+  # On Windows, to avoid "too long input" error, dump INCLUDE_DIRS_TO_WRAP into a file
+  IF(WIN32)
+    # File containing the moc flags
+    SET(include_dirs_to_wrap_filename includeDirsToWrap_${WRAPPING_NAMESPACE_UNDERSCORE}_${TARGET}.txt)
+    SET(include_dirs_to_wrap_file ${CMAKE_CURRENT_BINARY_DIR}/${wrap_int_dir}${include_dirs_to_wrap_filename})
+    FILE(WRITE ${include_dirs_to_wrap_file} ${INCLUDE_DIRS_TO_WRAP})
+    # The arg passed to the custom command will be the file containing the list of include dirs to wrap
+    SET(INCLUDE_DIRS_TO_WRAP ${include_dirs_to_wrap_file})
+  ENDIF()
+  
   set(wrapper_init_cpp_filename ${WRAPPING_NAMESPACE_UNDERSCORE}_${TARGET}_init.cpp)
   set(wrapper_init_cpp_file ${CMAKE_CURRENT_BINARY_DIR}/${wrap_int_dir}${wrapper_init_cpp_filename})
   
@@ -277,7 +290,18 @@ MACRO(ctkMacroWrapPythonQt WRAPPING_NAMESPACE TARGET SRCS_LIST_NAME SOURCES IS_W
   FOREACH(flag ${moc_flags})
     SET(moc_flags_arg "${moc_flags_arg}^^${flag}")
   ENDFOREACH()
+
+  # On Windows, to avoid "too long input" error, dump moc flags.
+  IF(WIN32)
+    # File containing the moc flags
+    SET(wrapper_moc_flags_filename mocflags_${WRAPPING_NAMESPACE_UNDERSCORE}_${TARGET}_all.txt)
+    SET(wrapper_master_moc_flags_file ${CMAKE_CURRENT_BINARY_DIR}/${wrap_int_dir}${wrapper_moc_flags_filename})
+    FILE(WRITE ${wrapper_master_moc_flags_file} ${moc_flags_arg})
+    # The arg passed to the custom command will be the file containing the list of moc flags
+    SET(moc_flags_arg ${wrapper_master_moc_flags_file})
+  ENDIF()
   
+  # File to run through moc
   SET(wrapper_master_moc_filename moc_${WRAPPING_NAMESPACE_UNDERSCORE}_${TARGET}_all.cpp)
   SET(wrapper_master_moc_file ${CMAKE_CURRENT_BINARY_DIR}/${wrap_int_dir}${wrapper_master_moc_filename})
   

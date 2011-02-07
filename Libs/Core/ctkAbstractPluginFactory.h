@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkAbstractPluginFactory_h
@@ -26,16 +26,15 @@
 #include <QFileInfo>
 
 // CTK includes
-#include "ctkAbstractFactory.h"
+#include "ctkAbstractFileBasedFactory.h"
 
 //----------------------------------------------------------------------------
 template<typename BaseClassType>
-class ctkFactoryPluginItem : public ctkAbstractFactoryItem<BaseClassType>
+class ctkFactoryPluginItem : public ctkAbstractFactoryFileBasedItem<BaseClassType>
 {
 public:
   explicit ctkFactoryPluginItem(const QString& path);
   virtual bool load();
-  QString path()const;
   virtual QString loadErrorString()const;
 
 protected:
@@ -43,12 +42,11 @@ protected:
 
 private:
   QPluginLoader    Loader;
-  QString          Path;
 };
 
 //----------------------------------------------------------------------------
 template<typename BaseClassType>
-class ctkAbstractPluginFactory : public ctkAbstractFactory<BaseClassType>
+class ctkAbstractPluginFactory : public ctkAbstractFileBasedFactory<BaseClassType>
 {
 public:
   /// Constructor
@@ -56,9 +54,6 @@ public:
 
   /// Register a plugin in the factory
   virtual bool registerLibrary(const QString& key, const QFileInfo& file);
-
-  /// Get path associated with the plugin identified by \a key
-  virtual QString path(const QString& key);
 
 protected:
   virtual ctkAbstractFactoryItem<BaseClassType>* createFactoryPluginItem(const QFileInfo& file);

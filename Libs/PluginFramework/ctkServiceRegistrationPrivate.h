@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,91 +26,94 @@
 #include <QHash>
 #include <QMutex>
 
+#include "ctkDictionary.h"
 #include "ctkServiceReference.h"
 
 
-  class ctkPluginPrivate;
-  class ctkServiceRegistration;
+class ctkPluginPrivate;
+class ctkServiceRegistration;
 
-  class ctkServiceRegistrationPrivate
-  {
+class ctkServiceRegistrationPrivate
+{
 
-  protected:
+protected:
 
-    ctkServiceRegistration* const q_ptr;
+  friend class ctkServiceRegistration;
 
-    /**
-     * Service or ctkServiceFactory object.
-     */
-    QObject* service;
+  /**
+   * Reference count for implicitly shared private implementation.
+   */
+  QAtomicInt ref;
 
-  public:
+  /**
+   * Service or ctkServiceFactory object.
+   */
+  QObject* service;
 
-    Q_DECLARE_PUBLIC(ctkServiceRegistration);
+public:
 
+  /**
+   * Plugin registering this service.
+   */
+  ctkPluginPrivate* plugin;
 
-    /**
-     * Plugin registering this service.
-     */
-    ctkPluginPrivate* plugin;
+  /**
+   * Reference object to this service registration.
+   */
+  ctkServiceReference reference;
 
-    /**
-     * Reference object to this service registration.
-     */
-    ctkServiceReference* reference;
+  /**
+   * Service properties.
+   */
+  ctkDictionary properties;
 
-    /**
-     * Service properties.
-     */
-    ServiceProperties properties;
+  /**
+   * Plugins dependent on this service. Integer is used as
+   * reference counter, counting number of unbalanced getService().
+   */
+  QHash<QSharedPointer<ctkPlugin>,int> dependents;
 
-    /**
-     * Plugins dependent on this service. Integer is used as
-     * reference counter, counting number of unbalanced getService().
-     */
-    QHash<ctkPlugin*,int> dependents;
+  /**
+   * Object instances that factory has produced.
+   */
+  QHash<QSharedPointer<ctkPlugin>, QObject*> serviceInstances;
 
-    /**
-     * Object instances that factory has produced.
-     */
-    QHash<ctkPlugin*, QObject*> serviceInstances;
+  /**
+   * Is service available. I.e., if <code>true</code> then holders
+   * of a ctkServiceReference for the service are allowed to get it.
+   */
+  volatile bool available;
 
-    /**
-     * Is service available. I.e., if <code>true</code> then holders
-     * of a ctkServiceReference for the service are allowed to get it.
-     */
-    volatile bool available;
+  /**
+   * Avoid recursive unregistrations. I.e., if <code>true</code> then
+   * unregistration of this service has started but is not yet
+   * finished.
+   */
+  volatile bool unregistering;
 
-    /**
-     * Avoid recursive unregistrations. I.e., if <code>true</code> then
-     * unregistration of this service has started but is not yet
-     * finished.
-     */
-    volatile bool unregistering;
+  /**
+   * Lock object for synchronous event delivery.
+   */
+  QMutex eventLock;
 
-    /**
-     * Lock object for synchronous event delivery.
-     */
-    QMutex eventLock;
+  QMutex propsLock;
 
-    QMutex propsLock;
+  ctkServiceRegistrationPrivate(ctkPluginPrivate* plugin, QObject* service,
+                                const ctkDictionary& props);
 
-    ctkServiceRegistrationPrivate(ctkServiceRegistration* sr, ctkPluginPrivate* plugin, QObject* service,
-                               const ServiceProperties& props);
+  virtual ~ctkServiceRegistrationPrivate();
 
-    virtual ~ctkServiceRegistrationPrivate();
+  /**
+   * Check if a plugin uses this service
+   *
+   * @param p Plugin to check
+   * @return true if plugin uses this service
+   */
+  bool isUsedByPlugin(QSharedPointer<ctkPlugin> p);
 
-    /**
-     * Check if a plugin uses this service
-     *
-     * @param p Plugin to check
-     * @return true if plugin uses this service
-     */
-    bool isUsedByPlugin(ctkPlugin* p);
+  virtual QObject* getService();
 
-    virtual QObject* getService();
-
-  };
+};
 
 
 #endif // CTKSERVICEREGISTRATIONPRIVATE_H

@@ -2,7 +2,7 @@
 
   Library:   CTK
 
-  Copyright (c) 2010  Kitware Inc.
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 // CTK includes
 #include "ctkPimpl.h"
 #include "ctkVTKObject.h"
-#include "CTKVisualizationVTKWidgetsExport.h"
+#include "ctkVisualizationVTKWidgetsExport.h"
 
 class ctkVTKTextPropertyWidgetPrivate;
 class vtkTextProperty;
@@ -53,6 +53,19 @@ public:
 
   QString text()const;
   QString textLabel()const;
+  
+  /// Color of vtkTextProperty
+  QColor color()const;
+  /// Opacity of vtkTextProperty
+  double opacity()const;
+  /// Font of vtkTextProperty
+  QString font()const;
+  /// Is the text bold
+  bool isBold()const;
+  /// Is the text italic
+  bool isItalic()const;
+  /// Has the text shadows
+  bool hasShadow()const;
 
 public slots:
   void setTextProperty(vtkTextProperty* textProperty);

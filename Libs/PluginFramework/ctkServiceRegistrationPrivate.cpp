@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,29 +22,28 @@
 #include "ctkServiceRegistrationPrivate.h"
 
 
-  ctkServiceRegistrationPrivate::ctkServiceRegistrationPrivate(ctkServiceRegistration* sr,
-                                                         ctkPluginPrivate* plugin, QObject* service,
-                                                         const ServiceProperties& props)
-                               : q_ptr(sr), service(service), plugin(plugin), reference(new ctkServiceReference(this)),
-                               properties(props), available(true), unregistering(false)
-  {
+ctkServiceRegistrationPrivate::ctkServiceRegistrationPrivate(
+  ctkPluginPrivate* plugin, QObject* service,
+  const ctkDictionary& props)
+  : ref(1), service(service), plugin(plugin), reference(this),
+    properties(props), available(true), unregistering(false),
+    propsLock(QMutex::Recursive)
+{
 
-  }
+}
 
-  ctkServiceRegistrationPrivate::~ctkServiceRegistrationPrivate()
-  {
-    delete reference;
-  }
+ctkServiceRegistrationPrivate::~ctkServiceRegistrationPrivate()
+{
 
-  bool ctkServiceRegistrationPrivate::isUsedByPlugin(ctkPlugin* p)
-  {
-    QHash<ctkPlugin*, int> deps = dependents;
-    return deps.contains(p);
-  }
+}
 
-  QObject* ctkServiceRegistrationPrivate::getService()
-  {
-    return service;
-  }
+bool ctkServiceRegistrationPrivate::isUsedByPlugin(QSharedPointer<ctkPlugin> p)
+{
+  QHash<QSharedPointer<ctkPlugin>, int> deps = dependents;
+  return deps.contains(p);
+}
 
-
+QObject* ctkServiceRegistrationPrivate::getService()
+{
+  return service;
+}

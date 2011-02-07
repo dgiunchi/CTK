@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -104,6 +104,14 @@ FILE(WRITE ${OUTPUT_DIR}/${WRAP_INT_DIR}build_${TARGET}.txt "
   <load-typesystem name=\"${OUTPUT_DIR}/${WRAP_INT_DIR}/typesystem_${TARGET}.xml\" generate=\"yes\" />
 </typesystem>
 ")
+
+# Read include dirs from file
+IF(WIN32)
+  IF(NOT EXISTS ${INCLUDE_DIRS})
+    MESSAGE(SEND_ERROR "On Windows, INCLUDE_DIRS should be the name of the file containing the include directories !")
+  ENDIF()
+  FILE(READ ${INCLUDE_DIRS} INCLUDE_DIRS)
+ENDIF()
 
 # Compute QTDIR
 GET_FILENAME_COMPONENT(QTDIR ${QT_QMAKE_EXECUTABLE}/../../ REALPATH)

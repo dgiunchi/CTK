@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@
 #include <QUrl>
 #include <QHash>
 #include <QReadWriteLock>
-
+#include <QSharedPointer>
 
 
   // CTK class forward declarations
@@ -47,7 +47,7 @@
      * Table of all installed plugins in this framework.
      * Key is the plugin location.
      */
-    QHash<QString, ctkPlugin*> plugins;
+    QHash<QString, QSharedPointer<ctkPlugin> > plugins;
 
     /**
      * Link to framework object.
@@ -76,7 +76,7 @@
      *
      * @param location The location to be installed
      */
-    ctkPlugin* install(const QUrl& location, QIODevice* in);
+    QSharedPointer<ctkPlugin> install(const QUrl& location, QIODevice* in);
 
 
     /**
@@ -94,7 +94,7 @@
      * @return ctkPlugin or null
      *         if the plugin was not found.
      */
-    ctkPlugin* getPlugin(int id) const;
+    QSharedPointer<ctkPlugin> getPlugin(int id) const;
 
 
     /**
@@ -104,7 +104,7 @@
      * @return ctkPlugin or null
      *         if the plugin was not found.
      */
-    ctkPlugin* getPlugin(const QString& location) const;
+    QSharedPointer<ctkPlugin> getPlugin(const QString& location) const;
 
 
     /**
@@ -114,7 +114,7 @@
      * @param version The plugin version of the plugin to get.
      * @return ctkPlugin or null.
      */
-    ctkPlugin* getPlugin(const QString& name, const ctkVersion& version) const;
+    QSharedPointer<ctkPlugin> getPlugin(const QString& name, const ctkVersion& version) const;
 
 
     /**
@@ -122,7 +122,7 @@
      *
      * @return A ctkPlugin list with plugins.
      */
-    QList<ctkPlugin*> getPlugins() const;
+    QList<QSharedPointer<ctkPlugin> > getPlugins() const;
 
 
     /**

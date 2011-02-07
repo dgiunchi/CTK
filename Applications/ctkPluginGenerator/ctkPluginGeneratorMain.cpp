@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 #include <ctkPluginFramework.h>
 #include <ctkPluginException.h>
 #include <ctkPluginGeneratorConstants.h>
+#include <ctkPluginContext.h>
 
 #include "ctkPluginGenerator_p.h"
 
@@ -30,6 +31,7 @@
 #include <QSettings>
 #include <QDirIterator>
 #include <QInputDialog>
+#include <QDebug>
 
 int main(int argv, char** argc)
 {
@@ -59,7 +61,7 @@ int main(int argv, char** argc)
   }
 
   ctkPluginFrameworkFactory fwFactory;
-  ctkPluginFramework* framework = fwFactory.getFramework();
+  QSharedPointer<ctkPluginFramework> framework = fwFactory.getFramework();
 
   try {
     framework->init();
@@ -88,7 +90,7 @@ int main(int argv, char** argc)
       QString fileLocation = dirIter.next();
       if (fileLocation.contains("org_commontk_plugingenerator"))
       {
-        ctkPlugin* plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
+        QSharedPointer<ctkPlugin> plugin = framework->getPluginContext()->installPlugin(QUrl::fromLocalFile(fileLocation));
         plugin->start(ctkPlugin::START_TRANSIENT);
       }
     }
@@ -100,7 +102,7 @@ int main(int argv, char** argc)
 
   framework->start();
 
-  ctkPluginGenerator generator(framework);
+  ctkPluginGenerator generator(framework.data());
   generator.show();
 
   return app.exec();

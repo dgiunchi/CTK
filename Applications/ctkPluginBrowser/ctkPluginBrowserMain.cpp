@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ int main(int argv, char** argc)
   app.setApplicationName("ctkPluginBrowser");
 
   ctkPluginFrameworkFactory fwFactory;
-  ctkPluginFramework* framework = fwFactory.getFramework();
+  QSharedPointer<ctkPluginFramework> framework = fwFactory.getFramework();
 
   try {
     framework->init();
@@ -48,7 +48,7 @@ int main(int argv, char** argc)
     exit(1);
   }
 
-  ctkPluginBrowser browser(framework);
+  ctkPluginBrowser browser(framework.data());
   browser.show();
 
   return app.exec();

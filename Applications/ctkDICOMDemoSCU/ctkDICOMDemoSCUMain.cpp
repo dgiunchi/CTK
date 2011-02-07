@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #include "dcmtk/config/osconfig.h"    /* make sure OS specific configuration is included first */
@@ -44,9 +44,9 @@ int main(int argc, char** argv)
     return 2;
   } 
   
-  std::string host = argv[1];
+  OFString host(argv[1]);
   unsigned int port = atoi(argv[2]);
-  std::string peerAET  = "";
+  OFString peerAET;
   if (argc > 3)
   {
     peerAET = argv[3];

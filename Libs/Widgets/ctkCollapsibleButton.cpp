@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 // Qt includes
@@ -546,7 +546,7 @@ void ctkCollapsibleButton::paintEvent(QPaintEvent * _event)
       opt.rect.setLeft(opt.rect.x() + opt.rect.width() / 2 - textWidth / 2);
       if (d->IndicatorAlignment & Qt::AlignLeft)
         {
-        opt.rect.setLeft( qMin(indicatorOpt.rect.left() + indicatorSpacing, opt.rect.left()) );
+        opt.rect.setLeft( qMax(indicatorOpt.rect.right() + indicatorSpacing, opt.rect.left()) );
         }
       }
     }

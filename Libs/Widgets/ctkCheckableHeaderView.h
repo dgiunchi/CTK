@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 /*=========================================================================
 
@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // CTK includes
 #include <ctkPimpl.h>
 
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class ctkCheckableHeaderViewPrivate;
 
@@ -112,6 +112,9 @@ public:
   ///
   /// If true, the items check states in a row/column are synchronized 
   /// with the check state of the corresponding header section.
+  /// When the property is set to true, the checkstate of the header is
+  /// automatically updated from the checkstate of the items
+  /// True by default
   void setPropagateToItems(bool propagate);
   bool propagateToItems()const;
 
@@ -126,10 +129,13 @@ public slots:
 
 private slots:
   void updateHeaderData(Qt::Orientation orient, int first, int last);
+
   void insertHeaderSection(const QModelIndex &parent, int first, int last);
   inline void updateHeaders();
-  void updateHeadersFromItems(const QModelIndex& topLeft, const QModelIndex& bottomRight);
 
+  void updateHeadersFromItems(const QModelIndex& topLeft, const QModelIndex& bottomRight);
+  void updateHeadersFromItems();
+  
 protected:
   virtual void updateHeaders(int first, int last);
   virtual void initStyleSectionOption(QStyleOptionHeader *option, int section, QRect rect)const;

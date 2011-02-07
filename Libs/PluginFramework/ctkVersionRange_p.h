@@ -2,7 +2,7 @@
 
   Library: CTK
 
-  Copyright (c) 2010 German Cancer Research Center,
+  Copyright (c) German Cancer Research Center,
     Division of Medical and Biological Informatics
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,8 +33,8 @@
 
   private:
 
-    ctkVersion* low;
-    ctkVersion* high;
+    ctkVersion low;
+    ctkVersion high;
     bool lowIncluded;
     bool highIncluded;
 
@@ -43,7 +43,7 @@
     /**
      * The empty version range "[0.0.0,inf)".
      */
-    static const ctkVersionRange& defaultVersionRange();
+    static ctkVersionRange defaultVersionRange();
 
     /**
      * Construct a ctkVersionRange object.

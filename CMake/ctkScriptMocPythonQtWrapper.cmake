@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 #
@@ -50,6 +50,14 @@ ENDFOREACH()
 
 # Convert wrapping namespace to subdir
 STRING(REPLACE "." "_" WRAPPING_NAMESPACE_UNDERSCORE ${WRAPPING_NAMESPACE})
+
+# Read moc flags from file
+IF(WIN32)
+  IF(NOT EXISTS ${MOC_FLAGS})
+    MESSAGE(SEND_ERROR "On Windows, MOC_FLAGS should be the name of the file containing the moc flags !")
+  ENDIF()
+  FILE(READ ${MOC_FLAGS} MOC_FLAGS)
+ENDIF()
 
 # Convert ^^ separated string to list
 STRING(REPLACE "^^" ";" MOC_FLAGS "${MOC_FLAGS}")

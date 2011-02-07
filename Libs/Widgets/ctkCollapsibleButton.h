@@ -1,8 +1,8 @@
 /*=========================================================================
 
   Library:   CTK
- 
-  Copyright (c) 2010  Kitware Inc.
+
+  Copyright (c) Kitware Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- 
+
 =========================================================================*/
 
 #ifndef __ctkCollapsibleButton_h
@@ -27,7 +27,7 @@
 
 // CTK includes
 #include <ctkPimpl.h>
-#include "CTKWidgetsExport.h"
+#include "ctkWidgetsExport.h"
 
 class ctkCollapsibleButtonPrivate;
 class QStyleOptionButton;
@@ -39,6 +39,8 @@ class QStyleOptionButton;
 /// will then be visible. To avoid this behavior, use an intermediate widget that
 /// contains all the children (they would become grandchildren and their Visibility property
 /// will remain relative to their parent, ctkCollapsibleButton's unique child widget.
+/// The user QAbstractButton::icon is not visible (it's placeholder is used to display the
+/// collapsible state
 class CTK_WIDGETS_EXPORT ctkCollapsibleButton : public QAbstractButton
 {
   Q_OBJECT

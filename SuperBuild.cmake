@@ -1,8 +1,8 @@
 ###########################################################################
 #
 #  Library:   CTK
-# 
-#  Copyright (c) 2010  Kitware Inc.
+#
+#  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-# 
+#
 ###########################################################################
 
 # 
@@ -108,27 +108,45 @@ ctkMacroGetAllNonCTKTargetLibraries("${ALL_TARGET_LIBRARIES}" NON_CTK_DEPENDENCI
 #
 
 #-----------------------------------------------------------------------------
-# ExternalProjects
+# ExternalProjects - Project should be topologically ordered
 #
 SET(external_projects
   CTKData
   Log4Qt
   KWStyle
+  VTK
   PythonQt
   PythonQtGenerator # Should be added after PythonQt - See comment in CMakeExternals/PythonQtGenerator.cmake
   DCMTK
   ZMQ
   QtMobility
   QtSOAP
+  qxmlrpc
   OpenIGTLink
-  VTK
   XIP
   )
 
 # Include external projects
+SET(dependency_args )
 FOREACH(p ${external_projects})
   INCLUDE(CMakeExternals/${p}.cmake)
+  IF(${p}_enabling_variable)
+    # Provide the include directories either directly or provide the variable name
+    # used by the corresponding Find<package>.cmake files. 
+    # The top-level CMakeLists.txt file will expand the variable names if not in
+    # superbuild mode. The include dirs are then used in 
+    # ctkMacroBuildApp, ctkMacroBuildLib, and ctkMacroBuildPlugin
+    STRING(REPLACE ";" "^" _include_dirs "${${${p}_enabling_variable}_INCLUDE_DIRS}")
+    LIST(APPEND dependency_args 
+         -D${${p}_enabling_variable}_INCLUDE_DIRS:STRING=${_include_dirs})
+    IF(${${p}_enabling_variable}_FIND_PACKAGE_CMD)
+      LIST(APPEND dependency_args
+           -D${${p}_enabling_variable}_FIND_PACKAGE_CMD:STRING=${${${p}_enabling_variable}_FIND_PACKAGE_CMD})
+    ENDIF()
+  ENDIF()
 ENDFOREACH()
+
+#MESSAGE("Superbuild args: ${dependency_args}")
    
 #-----------------------------------------------------------------------------
 # CTK Utilities
@@ -146,6 +164,7 @@ ExternalProject_Add(${proj}
     ${CTKData_DEPENDS}
     ${QtMobility_DEPENDS}
     ${QtSOAP_DEPENDS}
+    ${qxmlrpc_DEPENDS}
     ${kwstyle_DEPENDS}
     ${DCMTK_DEPENDS}
     ${PythonQt_DEPENDS}
@@ -218,6 +237,10 @@ ExternalProject_Add(${proj}
     -DCTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
     -DCTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY}
     -DCTK_CMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CTK_CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    -DCTK_INSTALL_BIN_DIR:STRING=${CTK_INSTALL_BIN_DIR}
+    -DCTK_INSTALL_LIB_DIR:STRING=${CTK_INSTALL_LIB_DIR}
+    -DCTK_INSTALL_INCLUDE_DIR:STRING=${CTK_INSTALL_INCLUDE_DIR}
+    -DCTK_INSTALL_DOC_DIR:STRING=${CTK_INSTALL_DOC_DIR}
     -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     -DCTK_CXX_FLAGS:STRING=${CTK_CXX_FLAGS}
@@ -238,6 +261,9 @@ ExternalProject_Add(${proj}
     -DPYTHONQTGENERATOR_EXECUTABLE:FILEPATH=${PYTHONQTGENERATOR_EXECUTABLE} #FindPythonQtGenerator expects PYTHONQTGENERATOR_EXECUTABLE to be defined
     -DLog4Qt_DIR:PATH=${Log4Qt_DIR} # FindLog4Qt expects Log4Qt_DIR variable to be defined
     -DQtSOAP_DIR:PATH=${QtSOAP_DIR} # FindQtSOAP expects QtSOAP_DIR variable to be defined
+    -Dqxmlrpc_DIR:PATH=${qxmlrpc_DIR} # Findqxmlrpc expects qxmlrpc_DIR variable to be defined
+    -DQtMobility_DIR:PATH=${QtMobility_DIR}
+    ${dependency_args}
   SOURCE_DIR ${CTK_SOURCE_DIR}
   BINARY_DIR ${CTK_BINARY_DIR}/CTK-build
   BUILD_COMMAND ""

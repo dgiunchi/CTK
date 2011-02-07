@@ -3,20 +3,21 @@
  *  mafEventBus
  *
  *  Created by Paolo Quadrani on 27/03/09.
- *  Copyright 2009 B3C. All rights reserved.
+ *  Copyright 2010 B3C. All rights reserved.
  *
  *  See Licence at: http://tiny.cc/QXJ4D
  *
  */
 
 #include "mafEventBusManager.h"
+#include "mafTopicRegistry.h"
 #include "mafNetworkConnectorQtSoap.h"
+#include "mafNetworkConnectorQXMLRPC.h"
 
 using namespace mafEventBus;
 
 
-mafEventBusManager::mafEventBusManager() : m_EnableEventLogging(false), m_LogEventTopic("*") {
-
+mafEventBusManager::mafEventBusManager() : m_EnableEventLogging(false), m_LogEventTopic("*"), m_SkipDetach(false) {
     // Create local event dispatcher.
     m_LocalDispatcher = new mafEventDispatcherLocal();
     m_LocalDispatcher->setObjectName("Local Event Dispatcher");
@@ -24,10 +25,6 @@ mafEventBusManager::mafEventBusManager() : m_EnableEventLogging(false), m_LogEve
     // Create the remote event dispatcher.
     m_RemoteDispatcher = new mafEventDispatcherRemote();
     m_RemoteDispatcher->setObjectName("Remote Event Dispatcher");
-
-    // register default remote connection protocol.
-    //plugNetworkConnector("XMLRPC", new mafNetworkConnectorQXMLRPC());
-    plugNetworkConnector("SOAP", new mafNetworkConnectorQtSoap());
 }
 
 mafEventBusManager::~mafEventBusManager() {
@@ -36,8 +33,27 @@ mafEventBusManager::~mafEventBusManager() {
         delete i.value();
         ++i;
     }
-    if(m_LocalDispatcher) delete m_LocalDispatcher;
-    if(m_RemoteDispatcher) delete m_RemoteDispatcher;
+    m_NetworkConnectorHash.clear();
+
+    //disconnet detachFromEventBus
+    m_SkipDetach = true;
+
+    if(m_LocalDispatcher) {
+        m_LocalDispatcher->resetHashes();
+        delete m_LocalDispatcher;
+    }
+    if(m_RemoteDispatcher) {
+        m_RemoteDispatcher->resetHashes();
+        delete m_RemoteDispatcher;
+    }
+}
+
+void mafEventBusManager::plugNetworkConnector(const mafString &protocol, mafNetworkConnector *connector) {
+    m_NetworkConnectorHash.insert(protocol, connector);
+}
+
+bool mafEventBusManager::isLocalSignalPresent(const mafString topic) const {
+    return m_LocalDispatcher->isLocalSignalPresent(topic);
 }
 
 mafEventBusManager* mafEventBusManager::instance() {
@@ -46,35 +62,82 @@ mafEventBusManager* mafEventBusManager::instance() {
 }
 
 void mafEventBusManager::shutdown() {
+    mafEventBus::mafTopicRegistry::instance()->shutdown();
+}
+
+void mafEventBusManager::initializeNetworkConnectors() {
+    plugNetworkConnector("SOAP", new mafNetworkConnectorQtSoap());
+    plugNetworkConnector("XMLRPC", new mafNetworkConnectorQXMLRPC());
 }
 
 bool mafEventBusManager::addEventProperty(const mafEvent &props) const {
-    // Design by contract condition.
-    //REQUIRE(!props[TOPIC].toString().isEmpty());
+    bool result(false);
+    mafString topic = props[TOPIC].toString();
+    QObject *obj = props[OBJECT].value<QObject*>();
 
     if(props[TYPE].toInt() == mafEventTypeLocal) {
         // Local event dispatching.
         if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
-            return m_LocalDispatcher->addObserver(props);
+            result = m_LocalDispatcher->addObserver(props);
         } else {
-            return m_LocalDispatcher->registerSignal(props);
+            //Add topic to the mafTopicRegistry
+            result = mafEventBus::mafTopicRegistry::instance()->registerTopic(topic, obj);
+            if(!result) {
+                return result;
+            }
+            result = m_LocalDispatcher->registerSignal(props);
         }
     } else {
         // Remote event dispatching.
         if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
-            mafMsgWarning("%s", mafTr("Local Observer can't register in Remote dispatcher").toAscii().data());
-            return false;
+            result = m_RemoteDispatcher->addObserver(props);
         } else {
-            return m_RemoteDispatcher->registerSignal(props);
+            //Add topic to the mafTopicRegistry
+            result = mafEventBus::mafTopicRegistry::instance()->registerTopic(topic, obj);
+            if(!result) {
+                return result;
+            }
+            result = m_RemoteDispatcher->registerSignal(props);
         }
     }
-    return false;
+
+    result = connect(obj, SIGNAL(destroyed()), this, SLOT(detachObjectFromBus()));
+    return result;
+}
+
+void mafEventBusManager::detachObjectFromBus() {
+    if(m_SkipDetach) {
+        return;
+    }
+
+    QObject *obj = QObject::sender();
+    removeObserver(obj, "", false);
+    removeSignal(obj, "", false);
+}
+
+void mafEventBusManager::removeObserver(const QObject *obj, const mafString topic, bool qt_disconnect) {
+    if(obj == NULL) {
+        return;
+    }
+    m_LocalDispatcher->removeObserver(obj, topic, qt_disconnect);
+    m_RemoteDispatcher->removeObserver(obj, topic, qt_disconnect);
+}
+
+void mafEventBusManager::removeSignal(const QObject *obj, mafString topic, bool qt_disconnect) {
+    if(obj == NULL) {
+        return;
+    }
+    //remove topic from the mafTopicRegistry
+    bool result = mafEventBus::mafTopicRegistry::instance()->unregisterTopic(topic);
+    if(result) {
+        return;
+    }
+
+    m_LocalDispatcher->removeSignal(obj, topic, qt_disconnect);
+    m_RemoteDispatcher->removeSignal(obj, topic, qt_disconnect);
 }
 
 bool mafEventBusManager::removeEventProperty(const mafEvent &props) const {
-    // Design by contract condition.
-    //REQUIRE(!props.eventTopic().isEmpty());
-
     if(props.eventType() == mafEventTypeLocal) {
         // Local event dispatching.
         if(props[SIGTYPE].toInt() == mafSignatureTypeCallback) {
@@ -93,22 +156,10 @@ bool mafEventBusManager::removeEventProperty(const mafEvent &props) const {
     return false;
 }
 
-/*void mafEventBusManager::notifyEvent(const mafString id, mafEventType ev_type, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
-    mafId numeric_id = mafIdProvider::instance()->idValue(id);
-    if(numeric_id != -1) {
-        notifyEvent(numeric_id, ev_type, argList, returnArg);
-    } else {
-        mafMsgWarning("%s", mafTr("ID named '%1' is not mapped into the mafIdProvider!!").arg(id).toAscii().data());
-    }
-}*/
-
 void mafEventBusManager::notifyEvent(const mafString topic, mafEventType ev_type, mafEventArgumentsList *argList, mafGenericReturnArgument *returnArg) const {
-    // Design by contract condition.
-    //REQUIRE(!topic.isEmpty());
-
     if(m_EnableEventLogging) {
         if(m_LogEventTopic == "*" || m_LogEventTopic == topic) {
-            mafMsgDebug() << mafTr("Event notification for ID: ") << topic << mafTr(" named: ") << topic << "\n";
+            mafMsgDebug() << mafTr("Event notification for TOPIC: %1").arg(topic);
         }
     }
 
@@ -134,9 +185,6 @@ void mafEventBusManager::enableEventLogging(bool enable) {
 }
 
 void mafEventBusManager::logEventTopic(const mafString topic) {
-    // Design by contract condition.
-    //REQUIRE(!topic.isEmpty());
-
     m_LogEventTopic = topic;
 }
 
@@ -145,6 +193,10 @@ void mafEventBusManager::logAllEvents() {
 }
 
 bool mafEventBusManager::createServer(const mafString &communication_protocol, unsigned int listen_port) {
+    if(m_NetworkConnectorHash.count() == 0) {
+        initializeNetworkConnectors();
+    }
+
     bool res(m_NetworkConnectorHash.contains(communication_protocol));
     if(res) {
         mafNetworkConnector *connector = m_NetworkConnectorHash.value(communication_protocol);
@@ -152,7 +204,7 @@ bool mafEventBusManager::createServer(const mafString &communication_protocol, u
         //mafNetworkConnector *connector = m_RemoteDispatcher->networkConnectorServer();
         res = connector != NULL;
         if(res) {
-            connector->createServer(listen_port);
+            m_RemoteDispatcher->networkConnectorServer()->createServer(listen_port);
         }
     }
     return res;
@@ -168,13 +220,17 @@ void mafEventBusManager::startListen() {
 }
 
 bool mafEventBusManager::createClient(const mafString &communication_protocol, const mafString &server_host, unsigned int port) {
+    if(m_NetworkConnectorHash.count() == 0) {
+        initializeNetworkConnectors();
+    }
+
     bool res(m_NetworkConnectorHash.contains(communication_protocol));
     if(res) {
         m_RemoteDispatcher->setNetworkConnectorClient(m_NetworkConnectorHash.value(communication_protocol));
         mafNetworkConnector *connector = m_RemoteDispatcher->networkConnectorClient();
         res = connector != NULL;
         if(res) {
-            connector->createClient(server_host, port);
+            m_RemoteDispatcher->networkConnectorClient()->createClient(server_host, port);
         }
     }
     return res;
