@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef MAFEVENTDISPATCHERLOCAL_H
-#define MAFEVENTDISPATCHERLOCAL_H
+#ifndef CTKEVENTDISPATCHERLOCAL_H
+#define CTKEVENTDISPATCHERLOCAL_H
 
 #include "mafEventDefinitions.h"
 #include "mafEventDispatcher.h"
@@ -21,7 +21,7 @@ namespace mafEventBus {
  Class name: mafEventDispatcherLocal
  This allows dispatching events coming from local application to attached observers.
  */
-class MAFEVENTBUSSHARED_EXPORT mafEventDispatcherLocal : public mafEventDispatcher {
+class CTKEVENTBUSSHARED_EXPORT mafEventDispatcherLocal : public mafEventDispatcher {
     Q_OBJECT
 
 public:
@@ -32,7 +32,7 @@ public:
     virtual void notifyEvent(const mafEvent &event_dictionary, mafEventArgumentsList *argList = NULL, mafGenericReturnArgument *returnArg = NULL) const;
 
 protected:
-    /// Register MAF global events
+    /// Register CTK global events
     /*virtual*/ void initializeGlobalEvents();
 
 private:
@@ -40,4 +40,4 @@ private:
 
 }
 
-#endif // MAFEVENTDISPATCHERLOCAL_H
+#endif // CTKEVENTDISPATCHERLOCAL_H

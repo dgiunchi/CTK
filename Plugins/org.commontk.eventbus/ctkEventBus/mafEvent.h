@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef MAFEVENT_H
-#define MAFEVENT_H
+#ifndef CTKEVENT_H
+#define CTKEVENT_H
 
 #include "mafEventDefinitions.h"
 
@@ -18,11 +18,11 @@ namespace mafEventBus {
 
  /**
 Class name: mafEvent
-This class defines the MAF3 Event which inherit from mafDictionary, and contains
+This class defines the CTK3 Event which inherit from mafDictionary, and contains
 constructor for rapid dictionary creation.
 @sa mafDictionary
 */
-class MAFEVENTBUSSHARED_EXPORT mafEvent : public QObject {
+class CTKEVENTBUSSHARED_EXPORT mafEvent : public QObject {
 
 public:
     /// Object constructor.
@@ -71,4 +71,4 @@ typedef mafEvent * mafEventPointer;
 
 Q_DECLARE_METATYPE(mafEventBus::mafEventPointer);
 
-#endif // MAFEVENT_H
+#endif // CTKEVENT_H

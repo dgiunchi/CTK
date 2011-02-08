@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef MAFEVENTDEFINITIONS_H
-#define MAFEVENTDEFINITIONS_H
+#ifndef CTKEVENTDEFINITIONS_H
+#define CTKEVENTDEFINITIONS_H
 
 // Qt includes
 #include <QByteArray>
@@ -149,4 +149,4 @@ typedef QMap<mafString, mafList<mafVariant::Type> >  mafRegisterMethodsMap;
 Q_DECLARE_METATYPE(mafEventBus::mafEventArgumentsListPointer);
 Q_DECLARE_METATYPE(mafEventBus::mafRegisterMethodsMap);
 
-#endif // MAFEVENTDEFINITIONS_H
+#endif // CTKEVENTDEFINITIONS_H

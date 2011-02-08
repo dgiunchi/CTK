@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef MAFEVENTDISPATCHER_H
-#define MAFEVENTDISPATCHER_H
+#ifndef CTKEVENTDISPATCHER_H
+#define CTKEVENTDISPATCHER_H
 
 #include "mafEventDefinitions.h"
 
@@ -20,7 +20,7 @@ namespace mafEventBus {
  Class name: mafEventDispatcher
  This allows dispatching events coming from local application to attached observers.
  */
-class MAFEVENTBUSSHARED_EXPORT mafEventDispatcher : public QObject {
+class CTKEVENTBUSSHARED_EXPORT mafEventDispatcher : public QObject {
     Q_OBJECT
 
 public:
@@ -73,7 +73,7 @@ signals:
     void remoteCommunicationFailed();
 
 protected:
-    /// Register MAF global events
+    /// Register CTK global events
     virtual void initializeGlobalEvents();
 
     /// Interanl method used to remove the given event property.
@@ -110,4 +110,4 @@ inline mafEventItemListType mafEventDispatcher::signalItemProperty(const mafStri
 
 } // namespace mafEventBus
 
-#endif // MAFEVENTDISPATCHER_H
+#endif // CTKEVENTDISPATCHER_H

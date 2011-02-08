@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef MAFEVENTDISPATCHERREMOTE_H
-#define MAFEVENTDISPATCHERREMOTE_H
+#ifndef CTKEVENTDISPATCHERREMOTE_H
+#define CTKEVENTDISPATCHERREMOTE_H
 
 //include list
 #include "mafEventDefinitions.h"
@@ -24,7 +24,7 @@ class ctkNetworkConnector;
  Class name: mafEventDispatcherRemote
  This allows dispatching events coming from local application to attached observers.
  */
-class MAFEVENTBUSSHARED_EXPORT mafEventDispatcherRemote : public mafEventDispatcher {
+class CTKEVENTBUSSHARED_EXPORT mafEventDispatcherRemote : public mafEventDispatcher {
     Q_OBJECT
 
 public:
@@ -50,7 +50,7 @@ public:
     ctkNetworkConnector *networkConnectorClient();
 
 protected:
-    /// Register MAF global events
+    /// Register CTK global events
     /*virtual*/ void initializeGlobalEvents();
 
 private:
@@ -63,4 +63,4 @@ private:
 
 Q_DECLARE_METATYPE(QList<QVariant>);
 
-#endif // MAFEVENTDISPATCHERREMOTE_H
+#endif // CTKEVENTDISPATCHERREMOTE_H

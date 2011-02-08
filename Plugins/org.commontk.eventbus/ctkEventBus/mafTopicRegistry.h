@@ -10,8 +10,8 @@
  */
 
 
-#ifndef MAFTOPICREGISTRY_H
-#define MAFTOPICREGISTRY_H
+#ifndef CTKTOPICREGISTRY_H
+#define CTKTOPICREGISTRY_H
 
 // Includes list
 #include "mafEventDefinitions.h"
@@ -22,7 +22,7 @@ namespace mafEventBus {
   Class name: mafTopicRegistry
   This singletone provides the registration of topic and topic owner in a hash.
 */
-class MAFEVENTBUSSHARED_EXPORT mafTopicRegistry {
+class CTKEVENTBUSSHARED_EXPORT mafTopicRegistry {
 public:
     /// Return an instance of the event bus.
     static mafTopicRegistry *instance();
@@ -54,4 +54,4 @@ private:
 
 } //nameSpace mafEventBus
 
-#endif // MAFTOPICREGISTRY_H
+#endif // CTKTOPICREGISTRY_H
