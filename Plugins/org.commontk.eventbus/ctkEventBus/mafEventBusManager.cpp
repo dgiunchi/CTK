@@ -62,7 +62,7 @@ mafEventBusManager* mafEventBusManager::instance() {
 }
 
 void mafEventBusManager::shutdown() {
-    mafEventBus::mafTopicRegistry::instance()->shutdown();
+    mafEventBus::ctkTopicRegistry::instance()->shutdown();
 }
 
 void mafEventBusManager::initializeNetworkConnectors() {
@@ -81,7 +81,7 @@ bool mafEventBusManager::addEventProperty(const mafEvent &props) const {
             result = m_LocalDispatcher->addObserver(props);
         } else {
             //Add topic to the mafTopicRegistry
-            result = mafEventBus::mafTopicRegistry::instance()->registerTopic(topic, obj);
+            result = mafEventBus::ctkTopicRegistry::instance()->registerTopic(topic, obj);
             if(!result) {
                 return result;
             }
@@ -93,7 +93,7 @@ bool mafEventBusManager::addEventProperty(const mafEvent &props) const {
             result = m_RemoteDispatcher->addObserver(props);
         } else {
             //Add topic to the mafTopicRegistry
-            result = mafEventBus::mafTopicRegistry::instance()->registerTopic(topic, obj);
+            result = mafEventBus::ctkTopicRegistry::instance()->registerTopic(topic, obj);
             if(!result) {
                 return result;
             }
@@ -128,7 +128,7 @@ void mafEventBusManager::removeSignal(const QObject *obj, mafString topic, bool 
         return;
     }
     //remove topic from the mafTopicRegistry
-    bool result = mafEventBus::mafTopicRegistry::instance()->unregisterTopic(topic);
+    bool result = mafEventBus::ctkTopicRegistry::instance()->unregisterTopic(topic);
     if(result) {
         return;
     }

@@ -1,5 +1,5 @@
 /*
- *  mafTopicRegistry.h
+ *  ctkTopicRegistry.h
  *  mafEventBus
  *
  *  Created by Roberto Mucci on 26/01/11.
@@ -19,13 +19,13 @@
 namespace mafEventBus {
 
 /**
-  Class name: mafTopicRegistry
+  Class name: ctkTopicRegistry
   This singletone provides the registration of topic and topic owner in a hash.
 */
-class CTKEVENTBUSSHARED_EXPORT mafTopicRegistry {
+class CTKEVENTBUSSHARED_EXPORT ctkTopicRegistry {
 public:
     /// Return an instance of the event bus.
-    static mafTopicRegistry *instance();
+    static ctkTopicRegistry *instance();
 
     /// Destroy the singleton instance. To be called at the end of the application.
     void shutdown();
@@ -47,7 +47,7 @@ public:
 
 private:
     /// Object constructor.
-    mafTopicRegistry();
+    ctkTopicRegistry();
 
     mafHash<mafString, const QObject*> m_TopicHash; ///< Hash containing pairs (topic,owner).
 };

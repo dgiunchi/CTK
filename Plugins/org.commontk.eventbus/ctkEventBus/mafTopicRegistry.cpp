@@ -1,5 +1,5 @@
 /*
- *  mafTopicRegistry.cpp
+ *  ctkTopicRegistry.cpp
  *  mafEventBus
  *
  *  Created by Roberto Mucci on 26/01/11.
@@ -13,19 +13,19 @@
 
 using namespace mafEventBus;
 
-mafTopicRegistry* mafTopicRegistry::instance() {
-    static mafTopicRegistry instanceTopicRegistry;
+ctkTopicRegistry* ctkTopicRegistry::instance() {
+    static ctkTopicRegistry instanceTopicRegistry;
     return &instanceTopicRegistry;
 }
 
-mafTopicRegistry::mafTopicRegistry() {
+ctkTopicRegistry::ctkTopicRegistry() {
 }
 
-void mafTopicRegistry::shutdown() {
+void ctkTopicRegistry::shutdown() {
     m_TopicHash.clear();
 }
 
-bool mafTopicRegistry::registerTopic(const mafString topic, const QObject *owner) {
+bool ctkTopicRegistry::registerTopic(const mafString topic, const QObject *owner) {
     if(topic.isEmpty() || owner == NULL ){
         return false;
     }
@@ -40,7 +40,7 @@ bool mafTopicRegistry::registerTopic(const mafString topic, const QObject *owner
     return true;
 }
 
-bool mafTopicRegistry::unregisterTopic(const mafString topic) {
+bool ctkTopicRegistry::unregisterTopic(const mafString topic) {
     bool result = false;
     if(m_TopicHash.contains(topic)){
         if (m_TopicHash.remove(topic) > 0) {
@@ -50,15 +50,15 @@ bool mafTopicRegistry::unregisterTopic(const mafString topic) {
     return result;
 }
 
-const QObject *mafTopicRegistry::owner(const mafString topic) const {
+const QObject *ctkTopicRegistry::owner(const mafString topic) const {
     return m_TopicHash.value(topic,NULL);
 }
 
-bool mafTopicRegistry::isTopicRegistered(const mafString topic) const {
+bool ctkTopicRegistry::isTopicRegistered(const mafString topic) const {
     return m_TopicHash.contains(topic);
 }
 
-void mafTopicRegistry::dump() {
+void ctkTopicRegistry::dump() {
     mafHash<mafString, const QObject*>::const_iterator i = m_TopicHash.constBegin();
     while (i != m_TopicHash.constEnd()) {
         const QObject *obj = i.value();
