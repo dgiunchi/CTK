@@ -1,5 +1,5 @@
 /*
- *  mafNetworkConnectorQtSoap.cpp
+ *  ctkNetworkConnectorQtSoap.cpp
  *  mafEventBus
  *
  *  Created by Daniele Giunchi on 14/07/10.
@@ -16,32 +16,32 @@
 
 using namespace mafEventBus;
 
-mafNetworkConnectorQtSoap::mafNetworkConnectorQtSoap() : mafNetworkConnector(), m_Http(NULL), m_WSDLUrl(""),m_Response(NULL) {
+ctkNetworkConnectorQtSoap::ctkNetworkConnectorQtSoap() : ctkNetworkConnector(), m_Http(NULL), m_WSDLUrl(""),m_Response(NULL) {
     m_Protocol = "SOAP";
 }
 
-mafNetworkConnectorQtSoap::~mafNetworkConnectorQtSoap() {
+ctkNetworkConnectorQtSoap::~ctkNetworkConnectorQtSoap() {
     if(m_Http) {
         delete m_Http;
     }
 }
 
-mafNetworkConnector *mafNetworkConnectorQtSoap::clone() {
-    mafNetworkConnectorQtSoap *copy = new mafNetworkConnectorQtSoap();
+ctkNetworkConnector *ctkNetworkConnectorQtSoap::clone() {
+    ctkNetworkConnectorQtSoap *copy = new ctkNetworkConnectorQtSoap();
     return copy;
 }
 
-void mafNetworkConnectorQtSoap::initializeForEventBus() {
+void ctkNetworkConnectorQtSoap::initializeForEventBus() {
     mafRegisterRemoteSignal("maf.remote.eventBus.comunication.soap", this, "remoteCommunication(const mafString, mafEventArgumentsList *)");
     mafRegisterRemoteCallback("maf.remote.eventBus.comunication.soap", this, "send(const mafString, mafEventArgumentsList *)");
 }
 
 
-void mafNetworkConnectorQtSoap::registerServerMethod(mafString methodName, mafList<mafVariant::Type> types) {
+void ctkNetworkConnectorQtSoap::registerServerMethod(mafString methodName, mafList<mafVariant::Type> types) {
    m_RegisterMethodsMap.insert(methodName, types);
 }
 
-void mafNetworkConnectorQtSoap::createClient(const mafString hostName, const unsigned int port) {
+void ctkNetworkConnectorQtSoap::createClient(const mafString hostName, const unsigned int port) {
     if(m_Http == NULL) {
         m_Http = new mafSoapHttpTransport();
         QObject::connect(m_Http, SIGNAL(responseReady()), this, SLOT(retrieveRemoteResponse()));
@@ -112,20 +112,20 @@ void mafNetworkConnectorQtSoap::createClient(const mafString hostName, const uns
     
 }
 
-void mafNetworkConnectorQtSoap::createServer(const unsigned int port) {
+void ctkNetworkConnectorQtSoap::createServer(const unsigned int port) {
     Q_UNUSED(port);
     mafMsgDebug() << mafTr("QtSoap doesn't support server side implementation.").toAscii();
 }
 
-void mafNetworkConnectorQtSoap::stopServer() {
+void ctkNetworkConnectorQtSoap::stopServer() {
     mafMsgDebug() << mafTr("QtSoap doesn't support server side implementation.").toAscii();
 }
 
-void mafNetworkConnectorQtSoap::startListen() {
+void ctkNetworkConnectorQtSoap::startListen() {
     mafMsgDebug() << mafTr("QtSoap doesn't support server side implementation.").toAscii();
 }
 
-mafSoapType *mafNetworkConnectorQtSoap::marshall(const mafString name, const mafVariant &parameter) {
+mafSoapType *ctkNetworkConnectorQtSoap::marshall(const mafString name, const mafVariant &parameter) {
     mafSoapType *returnValue = NULL;
     switch( parameter.type() ){
         case mafVariant::Int:
@@ -211,7 +211,7 @@ mafSoapType *mafNetworkConnectorQtSoap::marshall(const mafString name, const maf
     return returnValue;
 }
 
-void mafNetworkConnectorQtSoap::send(const mafString methodName, mafEventArgumentsList *argList) {
+void ctkNetworkConnectorQtSoap::send(const mafString methodName, mafEventArgumentsList *argList) {
     //REQUIRE(!params->at(0).isNull());
     //REQUIRE(params->at(0).canConvert(mafVariant::Hash) == true);
 
@@ -237,7 +237,7 @@ void mafNetworkConnectorQtSoap::send(const mafString methodName, mafEventArgumen
 
 }
 
-void mafNetworkConnectorQtSoap::retrieveRemoteResponse()
+void ctkNetworkConnectorQtSoap::retrieveRemoteResponse()
 {
     // Get a reference to the response message.
     const mafSoapMessage &message = m_Http->getResponse();
@@ -255,20 +255,20 @@ void mafNetworkConnectorQtSoap::retrieveRemoteResponse()
 
 
 /*
-void mafNetworkConnectorQtSoap::processReturnValue( int requestId, QVariant value ) {
+void ctkNetworkConnectorQtSoap::processReturnValue( int requestId, QVariant value ) {
     Q_UNUSED( requestId );
     Q_ASSERT( value.canConvert( QVariant::String ) );
     mafMsgDebug("%s", value.toString().toAscii().data());
     mafEventBusManager::instance()->notifyEvent("maf.local.eventBus.remoteCommunicationDone", mafEventTypeLocal);
 }
 
-void mafNetworkConnectorQtSoap::processFault( int requestId, int errorCode, QString errorString ) {
+void ctkNetworkConnectorQtSoap::processFault( int requestId, int errorCode, QString errorString ) {
     // Log the error.
     mafMsgDebug("%s", mafTr("Process Fault for requestID %1 with error %2 - %3").arg(mafString::number(requestId), mafString::number(errorCode), errorString).toAscii().data());
     mafEventBusManager::instance()->notifyEvent("maf.local.eventBus.remoteCommunicationFailed", mafEventTypeLocal);
 }
 
-void mafNetworkConnectorQtSoap::processRequest( int requestId, QString methodName, QList<xmlrpc::Variant> parameters ) {
+void ctkNetworkConnectorQtSoap::processRequest( int requestId, QString methodName, QList<xmlrpc::Variant> parameters ) {
     Q_UNUSED( methodName );
     REQUIRE(parameters.count() >= 2);
     //first parameter is mafEventBus message

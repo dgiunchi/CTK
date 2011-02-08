@@ -1,5 +1,5 @@
 /*
- *  mafNetworkConnectorQtSoap.h
+ *  ctkNetworkConnectorQtSoap.h
  *  mafEventBus
  *
  *  Created by Daniele Giunchi on 14/07/10.
@@ -21,19 +21,19 @@
 namespace mafEventBus {
 
 /**
- Class name: mafNetworkConnectorQtSoap
+ Class name: ctkNetworkConnectorQtSoap
  This class is the implementation class for client/server objects that works over network
  with soap protocol. It has been implemented only client side.
  */
-class MAFEVENTBUSSHARED_EXPORT mafNetworkConnectorQtSoap : public mafNetworkConnector {
+class MAFEVENTBUSSHARED_EXPORT ctkNetworkConnectorQtSoap : public ctkNetworkConnector {
     Q_OBJECT
 
 public:
     /// object constructor.
-    mafNetworkConnectorQtSoap();
+    ctkNetworkConnectorQtSoap();
 
     /// object destructor.
-    /*virtual*/ ~mafNetworkConnectorQtSoap();
+    /*virtual*/ ~ctkNetworkConnectorQtSoap();
 
     /// create the unique instance of the client.
     /*virtual*/ void createClient(const mafString hostName, const unsigned int port);
@@ -70,7 +70,7 @@ public:
     /*virtual*/ void initializeForEventBus();
 
     //retrieve an instance of the object
-    virtual mafNetworkConnector *clone();
+    virtual ctkNetworkConnector *clone();
 
 signals:
     /// signal for the registration of the functions with parameters
@@ -101,23 +101,23 @@ private:
 // Inline methods
 /////////////////////////////////////////////////////////////
 
-inline void mafNetworkConnectorQtSoap::setWSDL(const mafString wsdlUrl) {
+inline void ctkNetworkConnectorQtSoap::setWSDL(const mafString wsdlUrl) {
     m_WSDLUrl = wsdlUrl;
 }
 
-inline void mafNetworkConnectorQtSoap::setAction(const mafString action) {
+inline void ctkNetworkConnectorQtSoap::setAction(const mafString action) {
     m_Action = action;
 }
 
-inline void mafNetworkConnectorQtSoap::setPath(const mafString path) {
+inline void ctkNetworkConnectorQtSoap::setPath(const mafString path) {
     m_Path = path;
 }
 
-inline mafSoapType *mafNetworkConnectorQtSoap::response() {
+inline mafSoapType *ctkNetworkConnectorQtSoap::response() {
     return m_Response;
 }
 
-inline void mafNetworkConnectorQtSoap::registerNamespace(mafString prefix, mafString namespaceURI) {
+inline void ctkNetworkConnectorQtSoap::registerNamespace(mafString prefix, mafString namespaceURI) {
     m_Request.useNamespace(prefix, namespaceURI);
 }
 
